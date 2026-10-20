@@ -1,0 +1,122 @@
+@import "tailwindcss";
+
+/* Leonida Live — the state's own road signs and local news.
+   Interstate green, reflective sign yellow, safety orange, poured concrete, asphalt. */
+:root {
+  --dusk: #eef0ea;      /* page: concrete */
+  --ink: #ffffff;       /* raised surface */
+  --ink-2: #e2e5dd;     /* recessed */
+  --line: #cfd3c8;
+  --flamingo: #ff5a1f;  /* safety orange: primary action */
+  --mango: #ffc72c;     /* sign yellow */
+  --gulf: #00704a;      /* interstate green */
+  --foam: #15191c;      /* text: asphalt */
+  --haze: #596168;      /* muted text */
+  --asphalt: #1f2427;
+  --video-dim: 0.78;
+}
+
+/* Night: Vice City after dark — violet sky, neon signs. */
+:root[data-theme="night"] {
+  --dusk: #140a26; --ink: #21103d; --ink-2: #2e1854; --line: #44296f;
+  --flamingo: #ff3d8b; --mango: #ffc23d; --gulf: #8a2be2; --foam: #fff1e8; --haze: #bfaedc;
+  --asphalt: #0c0618; --video-dim: 0.6; color-scheme: dark;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="day"]) {
+    --dusk: #140a26; --ink: #21103d; --ink-2: #2e1854; --line: #44296f;
+    --flamingo: #ff3d8b; --mango: #ffc23d; --gulf: #8a2be2; --foam: #fff1e8; --haze: #bfaedc;
+    --asphalt: #0c0618; --video-dim: 0.6; color-scheme: dark;
+  }
+}
+
+@theme inline {
+  --color-dusk: var(--dusk);
+  --color-ink: var(--ink);
+  --color-ink-2: var(--ink-2);
+  --color-line: var(--line);
+  --color-flamingo: var(--flamingo);
+  --color-mango: var(--mango);
+  --color-gulf: var(--gulf);
+  --color-foam: var(--foam);
+  --color-haze: var(--haze);
+  --color-asphalt: var(--asphalt);
+  --font-sans: var(--font-overpass);
+}
+
+html { background: var(--dusk); }
+body {
+  background: var(--dusk);
+  color: var(--foam);
+  font-family: var(--font-overpass), system-ui, sans-serif;
+  font-size: 17px;
+  line-height: 1.55;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Highway Gothic–style display (Overpass is derived from it) */
+.display { font-weight: 900; line-height: 0.92; letter-spacing: -0.025em; text-wrap: balance; }
+.sunset-text { color: var(--gulf); }
+.sunset-bg { background: var(--mango); color: var(--foam); }
+
+/* Road sign panel — the signature element */
+.sign {
+  background: var(--gulf); color: #fff; border-radius: 14px;
+  box-shadow: inset 0 0 0 4px var(--gulf), inset 0 0 0 7px #fff, 0 24px 50px -24px rgba(0,0,0,.55);
+  padding: 1.6rem 1.9rem;
+}
+.sign .sunset-text { color: var(--mango); }
+.sign-yellow { background: var(--mango); color: var(--foam); box-shadow: inset 0 0 0 4px var(--mango), inset 0 0 0 7px var(--foam), 0 24px 50px -24px rgba(0,0,0,.45); }
+.shield { display: inline-grid; place-items: center; min-width: 3.2rem; height: 3.2rem; padding: 0 .6rem; border-radius: 10px 10px 50% 50% / 10px 10px 40% 40%; background: #fff; color: var(--gulf); font-weight: 900; font-size: 1.5rem; box-shadow: inset 0 0 0 3px var(--gulf); }
+
+/* Small "live" plate used on cards and screens */
+.lower-third { display: inline-flex; align-items: stretch; border-radius: 6px; overflow: hidden; font-weight: 800; }
+.lower-third > .tag { background: var(--flamingo); color: #fff; padding: .3rem .7rem; display: flex; align-items: center; gap: .45rem; }
+.lower-third > .txt { background: #fff; color: #15191c; padding: .3rem .8rem; }
+.rec { width: .5rem; height: .5rem; border-radius: 99px; background: #fff; animation: rec 1.4s steps(2) infinite; }
+@keyframes rec { 50% { opacity: .2; } }
+
+/* Ticker: yellow work-zone bar */
+.ticker { overflow: hidden; white-space: nowrap; }
+.ticker-track { display: inline-flex; gap: 3rem; padding-left: 100%; animation: tick 45s linear infinite; }
+@keyframes tick { to { transform: translateX(-100%); } }
+
+/* Controls */
+.btn { display: inline-flex; align-items: center; justify-content: center; gap: .5rem; font-weight: 800; padding: .8rem 1.4rem; border-radius: 8px; transition: transform .15s, background .15s; }
+.btn:active { transform: translateY(1px); }
+.btn-hot { background: var(--flamingo); color: #fff; }
+.btn-hot:hover { background: #e94a10; }
+.btn-ghost { border: 2px solid currentColor; }
+.btn-ghost:hover { background: var(--foam); color: var(--dusk); border-color: var(--foam); }
+.sign .btn-ghost:hover { background: #fff; color: var(--gulf); border-color: #fff; }
+.field { width: 100%; background: var(--ink); border: 2px solid var(--line); border-radius: 8px; padding: .7rem .9rem; color: var(--foam); }
+.field:focus { outline: none; border-color: var(--gulf); }
+:focus-visible { outline: 3px solid var(--mango); outline-offset: 2px; }
+
+.grain::after { content: none; }
+
+@media (prefers-reduced-motion: reduce) {
+  .ticker-track, .rec { animation: none; }
+  .ticker-track { padding-left: 0; }
+}
+
+/* Small sign for logo lockups: thinner border, text sized to the plate */
+.sign-sm { display: inline-block; background: var(--gulf); color: #fff; border-radius: 8px; font-weight: 900; letter-spacing: -0.01em; line-height: 1;
+  font-size: 0.95rem; padding: 0.5rem 0.75rem 0.4rem; box-shadow: inset 0 0 0 2px var(--gulf), inset 0 0 0 3.5px #fff; }
+
+html { transition: background-color .4s; }
+/* Hero sign drops onto its posts once, on load */
+@keyframes sign-drop { from { transform: translateY(-24px) rotate(-1.5deg); opacity: 0; } 60% { transform: translateY(4px) rotate(.4deg); opacity: 1; } to { transform: none; } }
+.sign-drop { animation: sign-drop .9s cubic-bezier(.2,.8,.2,1) .2s both; }
+@keyframes bump { 40% { transform: scale(1.25); } }
+.bump { animation: bump .35s ease-out; display: inline-block; }
+.hero-video { filter: brightness(var(--video-dim)) saturate(1.05); }
+@media (prefers-reduced-motion: reduce) { .sign-drop, .bump { animation: none; } }
+
+/* Phones: cap the big display headings so they never push the page sideways */
+.display { overflow-wrap: break-word; }
+@media (max-width: 640px) {
+  .display.text-6xl, .display.text-7xl, .display.text-8xl { font-size: clamp(2.3rem, 11vw, 3.6rem); }
+  .shield { min-width: 2.6rem; height: 2.6rem; font-size: 1.2rem; }
+  body { padding-bottom: 4.5rem; } /* room for the radio button */
+}
