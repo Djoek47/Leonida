@@ -1,4 +1,4 @@
--- Leonida Live — Supabase schema
+-- Live From Leonida — Supabase schema
 -- Run in Supabase SQL editor. Creates tables, RLS policies, storage bucket and voting/payout functions.
 
 create extension if not exists "pgcrypto";

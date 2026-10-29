@@ -2,7 +2,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 /*
-  Leonida Live map: our own styling, place curation and layers, adapted from GTADB community data
+  Live From Leonida map: our own styling, place curation and layers, adapted from GTADB community data
   (CC BY 4.0, https://map.gtadb.org). Attribution lives on /credits and under the map; keep it.
   Tiles: 256px, z0-5, centred on world (0,0); at z0 the 32,768 m world is 1,024 px; files "z,y,x.jpg".
   Place: [id, name, area, x, y, realLife, layer]
@@ -41,7 +41,7 @@ function recolor(img: HTMLImageElement, night: boolean) {
       if (water) { const k = b / 255; p[i] = 70 * k + 20; p[i + 1] = 26 * k + 8; p[i + 2] = 150 * k + 40; } // violet sea
       else { const l = (r + gg + b) / 3; p[i] = l * 0.42 + 18; p[i + 1] = l * 0.36 + 10; p[i + 2] = l * 0.55 + 30; } // dusk land
     } else if (water) { p[i] = r * 0.55 + 20; p[i + 1] = gg * 0.75 + 40; p[i + 2] = b * 0.85 + 30; } // gulf teal
-    else { const l = (r + gg + b) / 3; p[i] = r * 0.8 + l * 0.2; p[i + 1] = gg * 0.8 + l * 0.2; p[i + 2] = b * 0.8 + l * 0.2; } // softened land
+    else { const l = (r + gg + b) / 3; p[i] = Math.min(255, r * 0.80 + l * 0.20 + 15); p[i + 1] = gg * 0.80 + l * 0.20 + 5; p[i + 2] = b * 0.76 + l * 0.18; } // sun-warmed land
   }
   g.putImageData(d, 0, 0);
   return c;
@@ -120,13 +120,13 @@ export function LeonidaMap() {
       if (sx < -40 || sy < -40 || sx > w + 40 || sy > h + 40) continue;
       const L = layerOf(p[6]), active = sel?.[0] === p[0], k = active ? sz + 8 : sz;
       g.fillStyle = "#fff"; g.beginPath(); g.roundRect(sx - k / 2 - 2, sy - k / 2 - 2, k + 4, k + 4, 6); g.fill();
-      g.fillStyle = active ? "#ffc72c" : L.color; g.beginPath(); g.roundRect(sx - k / 2, sy - k / 2, k, k, 5); g.fill();
-      g.font = glyphFont; g.fillStyle = active ? "#15191c" : "#fff"; g.fillText(L.glyph, sx, sy + 1);
+      g.fillStyle = active ? "#ffc12b" : L.color; g.beginPath(); g.roundRect(sx - k / 2, sy - k / 2, k, k, 5); g.fill();
+      g.font = glyphFont; g.fillStyle = active ? "#1c1710" : "#fff"; g.fillText(L.glyph, sx, sy + 1);
       if (big || active) {
         g.font = "700 12px system-ui, sans-serif";
         const tw2 = g.measureText(p[1]).width + 10;
         g.fillStyle = night ? "rgba(20,10,38,.85)" : "rgba(255,255,255,.92)"; g.beginPath(); g.roundRect(sx - tw2 / 2, sy + k / 2 + 4, tw2, 18, 4); g.fill();
-        g.fillStyle = night ? "#fff1e8" : "#15191c"; g.fillText(p[1], sx, sy + k / 2 + 13.5);
+        g.fillStyle = night ? "#fff1e8" : "#1c1710"; g.fillText(p[1], sx, sy + k / 2 + 13.5);
       }
     }
   }, [shown, sel, night]); // eslint-disable-line react-hooks/exhaustive-deps

@@ -74,7 +74,7 @@ export function Radio() {
           </p>
         </div>
       )}
-      <button onClick={() => setOpen((o) => !o)} aria-expanded={open} className="btn bg-mango text-[#15191c] shadow-lg !rounded-full !p-3 sm:!px-4">
+      <button onClick={() => setOpen((o) => !o)} aria-expanded={open} className="btn bg-mango text-[#1c1710] shadow-lg !rounded-full !p-3 sm:!px-4">
         <svg viewBox="0 0 24 24" className="size-5" fill="currentColor" aria-hidden><path d="M3 9h18v11H3zM7 9l9-5 .9 1.8L10.6 9zM8 14.5a2 2 0 1 0 0 .01zM14 12h4v1.5h-4zm0 3h4v1.5h-4z" /></svg>
         <span className={open ? "" : "sr-only sm:not-sr-only"}>{open ? "Close radio" : "Radio"}</span>
       </button>

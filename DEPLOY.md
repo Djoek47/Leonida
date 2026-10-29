@@ -1,4 +1,4 @@
-# Leonida Live: GitHub, Vercel, Supabase, Cursor
+# Live From Leonida: GitHub, Vercel, Supabase, Cursor
 
 ## 1. GitHub (5 min)
 1. github.com/new, name `leonida-live`, Private, leave every box unticked (no README, no .gitignore).
@@ -13,7 +13,7 @@
 1. supabase.com, New project, name `leonida-live`, region `Canada (Central)` or `US East`.
 2. SQL Editor, paste all of `supabase/schema.sql`, Run.
 3. Authentication, Providers: turn on Email, Discord, Twitch, Google (each needs a client ID/secret from that platform's developer portal; callback URL is shown on the provider screen).
-4. Authentication, URL Configuration: Site URL `https://leonidalive.com` (or the Vercel URL); add `http://localhost:3000/**` and `https://*.vercel.app/**` to Redirect URLs.
+4. Authentication, URL Configuration: Site URL `https://livefromleonida.com` (or the Vercel URL); add `http://localhost:3000/**` and `https://*.vercel.app/**` to Redirect URLs.
 5. Project Settings, API: copy the Project URL and the `anon` public key.
 6. After you sign in once on the live site, make yourself owner in the SQL editor:
    ```sql
@@ -25,7 +25,7 @@
 2. Environment Variables (Production + Preview):
    - `NEXT_PUBLIC_SUPABASE_URL` = Project URL
    - `NEXT_PUBLIC_SUPABASE_ANON_KEY` = anon key
-3. Deploy. Then Settings, Domains: add `leonidalive.com` if you buy it.
+3. Deploy. Then Settings, Domains: add `livefromleonida.com` if you buy it.
 
 ## 4. Working in Cursor
 ```bash
@@ -38,6 +38,6 @@ npm run dev                   # http://localhost:3000
 - Map refresh after GTADB updates: `./scripts/gtadb-sync.sh` (needs Python + Pillow).
 - Static artifact preview build: `./scripts/preview.sh`.
 
-## 5. Socials to register (handle `leonidalive` everywhere)
-YouTube, Twitch, TikTok, X, Instagram, Facebook, Discord server (invite `discord.gg/leonidalive` needs Server Boost level 3 for a vanity URL; otherwise update the link in `src/lib/content.ts`).
-Profile picture: `brand/leonida-live-avatar-1000.png`. Banners: `brand/banner-*.png` (YouTube 2560×1440, X 1500×500, Twitch 1200×480, Facebook 1640×624).
+## 5. Socials to register (handle `livefromleonida` everywhere)
+YouTube, Twitch, TikTok, X, Instagram, Facebook, Discord server (invite `discord.gg/livefromleonida` needs Server Boost level 3 for a vanity URL; otherwise update the link in `src/lib/content.ts`).
+Profile picture: `brand/live-from-leonida-avatar-1000.png`. Banners: `brand/banner-*.png` (YouTube 2560×1440, X 1500×500, Twitch 1200×480, Facebook 1640×624).

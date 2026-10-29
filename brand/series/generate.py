@@ -34,8 +34,8 @@ def seal(name, subject, bot, horizon=620, sun_y=470):
             f'<g clip-path="url(#ci)">{scene(subject, horizon, sun_y)}{plate()}</g>'
             f'<circle cx="500" cy="500" r="330" fill="none" stroke="{DRED}" stroke-width="10"/>'
             f'<circle cx="136" cy="548" r="17" fill="{DRED}"/><circle cx="864" cy="548" r="17" fill="{DRED}"/>'
-            f'<text font-weight="900" font-size="90" fill="{DRED}" letter-spacing="10" text-anchor="middle">'
-            f'<textPath href="#t" startOffset="50%"><tspan dy="-28">LEONIDA LIVE</tspan></textPath></text>'
+            f'<text font-weight="900" font-size="74" fill="{DRED}" letter-spacing="6" text-anchor="middle">'
+            f'<textPath href="#t" startOffset="50%"><tspan dy="-34">LIVE FROM LEONIDA</tspan></textPath></text>'
             f'<text font-weight="900" font-size="{fs}" fill="{DRED}" letter-spacing="{ls}" text-anchor="middle">'
             f'<textPath href="#b" startOffset="50%"><tspan dy="88">{bot}</tspan></textPath></text>')
     open(f"series/{name}.svg","w").write(

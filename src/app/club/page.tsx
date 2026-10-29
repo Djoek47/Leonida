@@ -47,9 +47,9 @@ export default function Club() {
       <section className="bg-asphalt text-white">
         <div className="mx-auto max-w-7xl px-4 py-16 md:py-24 grid gap-10 md:grid-cols-[1.3fr_1fr] items-center [&>*]:min-w-0">
           <div>
-            <p className="inline-flex items-center gap-2 rounded-full bg-mango text-[#15191c] px-3 py-1 text-sm font-black">Members only</p>
+            <p className="inline-flex items-center gap-2 rounded-full bg-mango text-[#1c1710] px-3 py-1 text-sm font-black">Members only</p>
             <h1 className="display mt-5 text-[clamp(2.4rem,9vw,7rem)] break-words">The Triple Comma Club <span className="text-mango" aria-hidden>’’’</span></h1>
-            <p className="mt-4 max-w-xl text-lg text-white/85">For players who made $1’000’000’000 in GTA Online. Prove it once and you&apos;re in the Leonida Live VIP Discord for GTA VI.</p>
+            <p className="mt-4 max-w-xl text-lg text-white/85">For players who made $1’000’000’000 in GTA Online. Prove it once and you&apos;re in the Live From Leonida VIP Discord for GTA VI.</p>
           </div>
           <div className="sign sign-yellow text-center py-10">
             <p className="display text-[clamp(1.6rem,7.5vw,4.5rem)] leading-none whitespace-nowrap">$1’000’000’000</p>
@@ -137,7 +137,7 @@ function MembersRoom({ userId }: { userId: string }) {
           <ul className="mt-3 grid gap-1 font-semibold">
             <li>Vote on this week&apos;s clips: <Link href="/clips" className="underline">go vote</Link></li>
             <li>Spotlight: 1 left this round, use it from any clip</li>
-            <li>Discord: <a href="https://discord.gg/leonidalive" target="_blank" rel="noreferrer" className="underline">open the club server</a></li>
+            <li>Discord: <a href="https://discord.gg/livefromleonida" target="_blank" rel="noreferrer" className="underline">open the club server</a></li>
           </ul>
         </div>
         <div>
@@ -145,8 +145,8 @@ function MembersRoom({ userId }: { userId: string }) {
           <ul className="mt-3 grid gap-2">
             {themes.map((t) => (
               <li key={t}>
-                <button onClick={() => pick(t)} aria-pressed={theme === t} className={`relative w-full overflow-hidden rounded-lg border-2 border-[#15191c] px-4 py-2.5 text-left font-bold ${theme === t ? "bg-[#15191c] text-[#ffc72c]" : "bg-white/60 text-[#15191c]"}`}>
-                  <span className="absolute inset-y-0 left-0 bg-[#15191c]/10" style={{ width: `${(tally[t] / total) * 100}%` }} aria-hidden />
+                <button onClick={() => pick(t)} aria-pressed={theme === t} className={`relative w-full overflow-hidden rounded-lg border-2 border-[#1c1710] px-4 py-2.5 text-left font-bold ${theme === t ? "bg-[#1c1710] text-[#ffc12b]" : "bg-white/60 text-[#1c1710]"}`}>
+                  <span className="absolute inset-y-0 left-0 bg-[#1c1710]/10" style={{ width: `${(tally[t] / total) * 100}%` }} aria-hidden />
                   <span className="relative flex justify-between"><span>{t}</span><span>{Math.round((tally[t] / total) * 100)}%</span></span>
                 </button>
               </li>

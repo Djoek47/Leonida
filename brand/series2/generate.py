@@ -118,8 +118,8 @@ def seal(name, scene, subject, bot, ring, arc, inner=CRM):
           f'<g clip-path="url(#ci)">{bg}{subject}</g>'
           f'<circle cx="500" cy="500" r="330" fill="none" stroke="{arc}" stroke-width="10"/>'
           f'<circle cx="136" cy="548" r="16" fill="{arc}"/><circle cx="864" cy="548" r="16" fill="{arc}"/>'
-          f'<text font-weight="900" font-size="90" fill="{arc}" letter-spacing="10" text-anchor="middle">'
-          f'<textPath href="#t" startOffset="50%"><tspan dy="-28">LEONIDA LIVE</tspan></textPath></text>'
+          f'<text font-weight="900" font-size="74" fill="{arc}" letter-spacing="6" text-anchor="middle">'
+          f'<textPath href="#t" startOffset="50%"><tspan dy="-34">LIVE FROM LEONIDA</tspan></textPath></text>'
           f'<text font-weight="900" font-size="{fs}" fill="{arc}" letter-spacing="{ls}" text-anchor="middle">'
           f'<textPath href="#b" startOffset="50%"><tspan dy="88">{bot}</tspan></textPath></text>')
     open(f"series2/{name}.svg","w").write(

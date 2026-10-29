@@ -59,13 +59,13 @@ export const shop = [
   { title: "Capture card for clipping", where: "Amazon", href: "https://www.amazon.com/" },
 ] as const;
 
-/** Official Leonida Live accounts. Handle: leonidalive everywhere. Update the URLs once each account exists. */
+/** Official Live From Leonida accounts. Handle: livefromleonida everywhere. Update the URLs once each account exists. */
 export const socials = [
-  { id: "youtube", label: "YouTube", href: "https://www.youtube.com/@leonidalive" },
-  { id: "twitch", label: "Twitch", href: "https://www.twitch.tv/leonidalive" },
-  { id: "tiktok", label: "TikTok", href: "https://www.tiktok.com/@leonidalive" },
-  { id: "x", label: "X", href: "https://x.com/leonidalive" },
-  { id: "instagram", label: "Instagram", href: "https://www.instagram.com/leonidalive" },
-  { id: "facebook", label: "Facebook", href: "https://www.facebook.com/leonidalive" },
-  { id: "discord", label: "Discord", href: "https://discord.gg/leonidalive" },
+  { id: "youtube", label: "YouTube", href: "https://www.youtube.com/@livefromleonida" },
+  { id: "twitch", label: "Twitch", href: "https://www.twitch.tv/livefromleonida" },
+  { id: "tiktok", label: "TikTok", href: "https://www.tiktok.com/@livefromleonida" },
+  { id: "x", label: "X", href: "https://x.com/livefromleonida" },
+  { id: "instagram", label: "Instagram", href: "https://www.instagram.com/livefromleonida" },
+  { id: "facebook", label: "Facebook", href: "https://www.facebook.com/livefromleonida" },
+  { id: "discord", label: "Discord", href: "https://discord.gg/livefromleonida" },
 ] as const;

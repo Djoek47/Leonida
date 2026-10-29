@@ -1,4 +1,4 @@
-# Leonida Live
+# Live From Leonida
 
 Weekly GTA VI clip contest (send → staff review → compilation video → public vote → top 3 paid 50/30/20) plus **Versus**: live console-vs-console challenges on Twitch, and a Leonida guide built from Rockstar's official press kit.
 

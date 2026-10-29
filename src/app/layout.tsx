@@ -12,7 +12,7 @@ import { shop, socials } from "@/lib/content";
 const archivo = localFont({ src: "../fonts/overpass-latin-wght-normal.woff2", variable: "--font-overpass", weight: "100 900", display: "swap" });
 
 export const metadata: Metadata = {
-  title: "Leonida Live — get paid for your GTA VI clips",
+  title: "Live From Leonida — get paid for your GTA VI clips",
   description: "Send your GTA VI clips, let Leonida vote, and win cash every week. Plus Versus: live console-vs-console challenges on Twitch.",
 };
 
@@ -31,10 +31,10 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <body className="min-h-screen flex flex-col">
         <header className="sticky top-0 z-40 bg-ink border-b border-line">
           <div className="mx-auto max-w-7xl px-4 h-16 flex items-center gap-3 sm:gap-6">
-            <Link href="/" className="flex items-center gap-2 sm:gap-3 shrink-0" aria-label="Leonida Live home">
+            <Link href="/" className="flex items-center gap-2 sm:gap-3 shrink-0" aria-label="Live From Leonida home">
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img src="/media/brand/gta6-logo.png" alt="" className="h-8 sm:h-9 w-auto" />
-              <span className="sign-sm">Leonida Live</span>
+              <span className="sign-sm text-center leading-[1.08] max-sm:!px-2 max-sm:!py-1.5 max-sm:!text-[13px]"><span className="block sm:inline">Live From</span><span className="block sm:inline sm:ml-[0.3em]">Leonida</span></span>
             </Link>
             <nav className="hidden md:flex gap-5 text-sm font-semibold text-haze">
               {nav.map((n) => (
@@ -53,9 +53,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <footer className="bg-asphalt text-white/80 mt-24 [&_a:hover]:text-mango">
           <div className="mx-auto max-w-7xl px-4 py-12 grid gap-8 md:grid-cols-[2fr_1fr_1fr_1fr] text-sm">
             <div>
-              <div className="flex items-center gap-3">{/* eslint-disable-next-line @next/next/no-img-element */}<img src="/brand/leonida-live-avatar-180.png" alt="Leonida Live logo" className="size-16 rounded-full" /><p className="sign-sm !text-lg !px-4 !py-2.5">Leonida Live</p></div>
+              <div className="flex items-center gap-3">{/* eslint-disable-next-line @next/next/no-img-element */}<img src="/brand/live-from-leonida-avatar-180.png" alt="Live From Leonida logo" className="size-16 rounded-full" /><p className="sign-sm !text-lg !px-4 !py-2.5">Live From Leonida</p></div>
               <p className="mt-3 max-w-md">Free to enter. Votes can&apos;t be bought. Winners are paid by PayPal, Venmo, Cash App, Interac or Wise after we confirm the gamertag is theirs.</p>
-              <p className="mt-4 max-w-md text-xs opacity-70">Leonida Live is a fan-run community and is not affiliated with, endorsed or sponsored by Rockstar Games or Take-Two Interactive. Grand Theft Auto, GTA VI and related logos and artwork are trademarks and copyright of Take-Two Interactive Software, Inc.</p>
+              <p className="mt-4 max-w-md text-xs opacity-70">Live From Leonida is a fan-run community and is not affiliated with, endorsed or sponsored by Rockstar Games or Take-Two Interactive. Grand Theft Auto, GTA VI and related logos and artwork are trademarks and copyright of Take-Two Interactive Software, Inc.</p>
             </div>
             <div className="flex flex-col gap-2">
               <Link href="/rules">Contest rules</Link>

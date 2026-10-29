@@ -99,7 +99,7 @@ function SendForm({ userId }: { userId: string }) {
       </div>
       <label className="flex gap-3 items-start text-sm text-haze">
         <input type="checkbox" required className="mt-1 accent-[var(--flamingo)]" />
-        This is my own gameplay, and Leonida Live can edit it and publish it in its videos. I&apos;ve read the <Link href="/rules" className="underline">contest rules</Link>.
+        This is my own gameplay, and Live From Leonida can edit it and publish it in its videos. I&apos;ve read the <Link href="/rules" className="underline">contest rules</Link>.
       </label>
       {state === "error" && <p role="alert" className="text-flamingo font-semibold">{err}</p>}
       <button disabled={state === "sending"} className="btn btn-hot w-fit">{state === "sending" ? "Sending…" : "Send clip"}</button>

@@ -97,7 +97,7 @@ def orn_diamond(c):
 def orn_none(c):
     return ""
 
-def seal(name, ring, inner, arc, orn, motif, ring_edge=None, rope=False, top="LEONIDA LIVE", bot="IN CLIPS WE TRUST"):
+def seal(name, ring, inner, arc, orn, motif, ring_edge=None, rope=False, top="LIVE FROM LEONIDA", bot="IN CLIPS WE TRUST"):
     edge = ring_edge or arc
     rope_ring = ""
     if rope:
@@ -110,8 +110,8 @@ def seal(name, ring, inner, arc, orn, motif, ring_edge=None, rope=False, top="LE
             f'<clipPath id="ci"><circle cx="500" cy="500" r="330"/></clipPath>'
             f'<g clip-path="url(#ci)">{motif}</g>'
             f'<circle cx="500" cy="500" r="330" fill="none" stroke="{edge}" stroke-width="10"/>'
-            f'<text font-weight="900" font-size="90" fill="{arc}" letter-spacing="10" text-anchor="middle">'
-            f'<textPath href="#t" startOffset="50%"><tspan dy="-28">{top}</tspan></textPath></text>'
+            f'<text font-weight="900" font-size="74" fill="{arc}" letter-spacing="6" text-anchor="middle">'
+            f'<textPath href="#t" startOffset="50%"><tspan dy="-34">{top}</tspan></textPath></text>'
             f'<text font-weight="900" font-size="58" fill="{arc}" letter-spacing="8" text-anchor="middle">'
             f'<textPath href="#b" startOffset="50%"><tspan dy="88">{bot}</tspan></textPath></text>'
             + orn)

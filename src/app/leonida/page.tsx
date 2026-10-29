@@ -2,7 +2,7 @@ import { garage, guides, people, regions } from "@/lib/content";
 import Link from "@/components/A";
 import { LeonidaMap } from "@/components/LeonidaMap";
 
-export const metadata = { title: "Leonida guide — Leonida Live" };
+export const metadata = { title: "Leonida guide — Live From Leonida" };
 
 export default function Guide() {
   return (

@@ -25,7 +25,7 @@ export default function Home() {
             <h1 className="display mt-4 text-[clamp(2.1rem,4.2vw,3.8rem)]">Your best clip in Leonida pays <span className="sunset-text">$50</span> this week</h1>
           </div>
           <div className="flex flex-wrap gap-3 shrink-0">
-            <Link href="/submit" className="btn bg-mango text-[#15191c] hover:brightness-110">Send a clip</Link>
+            <Link href="/submit" className="btn bg-mango text-[#1c1710] hover:brightness-110">Send a clip</Link>
             <Link href="/clips" className="btn btn-ghost">Watch and vote</Link>
           </div>
         </div>
@@ -60,7 +60,7 @@ export default function Home() {
           <img src="/media/people/lucia_caminos_2.webp" alt="Lucia Caminos" className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-105" />
           <span className="absolute left-3 top-3 lower-third text-xs"><span className="tag !bg-[#0070D1] gap-1.5"><PlatformIcon name="ps5" className="size-3.5" />PS5</span><span className="txt">Player one</span></span>
           <span className="absolute right-3 top-3 lower-third text-xs"><span className="tag !bg-[#107C10] gap-1.5"><PlatformIcon name="xbox" className="size-3.5" />Xbox</span><span className="txt">Player two</span></span>
-          <span className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 grid place-items-center size-20 md:size-32 rotate-45 rounded-xl bg-mango shadow-[inset_0_0_0_4px_var(--mango),inset_0_0_0_8px_#15191c]"><span className="-rotate-45 display text-3xl md:text-6xl text-[#15191c]">VS</span></span>
+          <span className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 grid place-items-center size-20 md:size-32 rotate-45 rounded-xl bg-mango shadow-[inset_0_0_0_4px_var(--mango),inset_0_0_0_8px_#1c1710]"><span className="-rotate-45 display text-3xl md:text-6xl text-[#1c1710]">VS</span></span>
           <span className="absolute inset-x-0 bottom-0 p-4 md:p-6 bg-gradient-to-t from-black/75 to-transparent text-white">
             <span className="block display text-3xl md:text-5xl">Versus</span>
             <span className="block text-white/85">Same task, two consoles, live on Twitch.</span>
@@ -72,7 +72,7 @@ export default function Home() {
       <section className="mx-auto max-w-7xl px-4 pb-16">
         <Link href="/club" className="sign sign-yellow flex flex-col md:flex-row md:items-center justify-between gap-4 hover:brightness-105">
           <span><span className="block display text-3xl md:text-5xl">The Triple Comma Club ’’’</span><span className="block font-semibold">Made $1 billion in GTA Online? Prove it and join the VIP Discord.</span></span>
-          <span className="btn bg-[#15191c] text-white shrink-0">See how to get in</span>
+          <span className="btn bg-[#1c1710] text-white shrink-0">See how to get in</span>
         </Link>
       </section>
 

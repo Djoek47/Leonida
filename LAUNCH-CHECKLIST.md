@@ -1,4 +1,4 @@
-# Leonida Live: launch session checklist
+# Live From Leonida: launch session checklist
 
 Everything is built and committed. When you're back, we go through this in order.
 Have these logins ready; each step tells you what to paste where.
@@ -14,7 +14,7 @@ Have these logins ready; each step tells you what to paste where.
 | Google Cloud | Google sign-in + YouTube Data API (auto-upload compilations) | OAuth client ID + secret |
 | Microsoft Azure (Entra) | Xbox gamertag check via Microsoft sign-in | Application ID + secret; Xbox Live access needs Microsoft approval (weeks) |
 | PayPal Business | payouts (PayPal Payouts API needs approval) | Client ID + secret, later |
-| Domain | leonidalive.com (or similar) | add in Vercel → Domains |
+| Domain | livefromleonida.com (or similar) | add in Vercel → Domains |
 
 PlayStation has no public sign-in for third-party sites, so PSN stays on the profile-code check that's already built.
 
@@ -45,9 +45,9 @@ Clip upload (Supabase Storage) → staff review queue → auto-trim and caption 
 
 ## Open items only you can decide
 - Company running the contest: rules name Mytikas 73 Inc.; confirm or change.
-- Contact email: rules use contact@leonidalive.com (placeholder).
+- Contact email: rules use contact@livefromleonida.com (placeholder).
 - Legal review of the contest rules before the first paid round.
-- Social handles: check `leonidalive` is free on each platform.
+- Social handles: check `livefromleonida` is free on each platform.
 
 ## 6. Pre-launch: recruit the Triple Comma Club (start right after deploy)
 The club page already takes applications and works before GTA VI is out, since proof comes from GTA Online.

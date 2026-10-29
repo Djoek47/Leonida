@@ -28,8 +28,8 @@ P
 for f in $(find media -type f); do grep -rqF "${f#media/}" . --include=*.html --include=*.js || grep -rqF "$(basename ${f%.*})" nx || rm "$f"; done
 cd ..
 cat > index.html <<'H'
-<title>Leonida Live</title>
+<title>Live From Leonida</title>
 <style>html,body{height:100%;margin:0;background:#eef0ea}iframe{display:block;width:100%;height:100%;border:0}</style>
-<iframe src="site/index.html" title="Leonida Live"></iframe>
+<iframe src="site/index.html" title="Live From Leonida"></iframe>
 H
 find site -type f | wc -l

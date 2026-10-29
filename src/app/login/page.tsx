@@ -24,7 +24,7 @@ export default function Login() {
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img src="/media/art/jason_lucia_motel_portrait.webp" alt="" className="hidden md:block h-full w-full object-cover" />
       <div className="px-4 py-16 md:px-16 flex flex-col justify-center max-w-xl">
-        <h1 className="display text-6xl md:text-7xl">Sign in to Leonida Live</h1>
+        <h1 className="display text-6xl md:text-7xl">Sign in to Live From Leonida</h1>
         <p className="text-haze mt-3">One account to send clips, vote and collect winnings.</p>
         <div className="mt-8 grid gap-3">
           <button onClick={() => oauth("discord")} className="btn bg-[#5865F2] text-white">Continue with Discord</button>

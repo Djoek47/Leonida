@@ -20,8 +20,8 @@ export function Ticker() {
     "Traffic on I-95 into Vice City: heavy. Police activity reported on Ocean Drive",
   ];
   return (
-    <div className="ticker bg-mango text-[#15191c] text-xs font-bold h-7 flex items-center" aria-label="News ticker">
-      <span className="shrink-0 h-full flex items-center px-3 bg-[#15191c] text-[#ffc72c] z-10">Leonida Live</span>
+    <div className="ticker bg-mango text-[#1c1710] text-xs font-bold h-7 flex items-center" aria-label="News ticker">
+      <span className="shrink-0 h-full flex items-center px-3 bg-[#1c1710] text-[#ffc12b] z-10">Live From Leonida</span>
       <div className="ticker overflow-hidden flex-1">
         <div className="ticker-track">
           {items.map((i, k) => <span key={k}>{i}</span>)}

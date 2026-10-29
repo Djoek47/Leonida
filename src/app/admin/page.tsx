@@ -201,7 +201,7 @@ function Staff({ isOwner }: { isOwner: boolean }) {
         <ul className="mt-3 divide-y divide-line border-y border-line">
           {shown.map((p) => (
             <li key={p.id} className="py-3 flex flex-wrap items-center gap-3">
-              <span className="flex-1 min-w-0"><span className="font-bold">{p.display_name}</span>{p.is_club && <span className="ml-2 text-xs font-black text-[#15191c] bg-mango px-1.5 rounded">’’’</span>}<span className="block text-sm text-haze truncate">{p.gamertag}</span></span>
+              <span className="flex-1 min-w-0"><span className="font-bold">{p.display_name}</span>{p.is_club && <span className="ml-2 text-xs font-black text-[#1c1710] bg-mango px-1.5 rounded">’’’</span>}<span className="block text-sm text-haze truncate">{p.gamertag}</span></span>
               <select disabled={!isOwner} value={p.role} onChange={(e) => setRole(p, e.target.value)} className="field !w-auto">
                 {ROLES.map(([v, l]) => <option key={v} value={v}>{l}</option>)}
               </select>
