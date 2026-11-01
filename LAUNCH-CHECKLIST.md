@@ -9,11 +9,12 @@ Have these logins ready; each step tells you what to paste where.
 | GitHub | code | empty private repo `leonida-live` |
 | Vercel | hosting | import the repo (see DEPLOY.md) |
 | Supabase | database, sign-in, clip storage | Project URL + anon key |
-| Discord Developer Portal | "Sign in with Discord" + club role bot | Client ID + secret → Supabase Auth |
+| Discord Developer Portal | "Sign in with Discord" only — chat is now on-site | Client ID + secret → Supabase Auth |
 | Twitch Developer Console | "Sign in with Twitch" | Client ID + secret → Supabase Auth |
 | Google Cloud | Google sign-in + YouTube Data API (auto-upload compilations) | OAuth client ID + secret |
 | Microsoft Azure (Entra) | Xbox gamertag check via Microsoft sign-in | Application ID + secret; Xbox Live access needs Microsoft approval (weeks) |
-| PayPal Business | payouts (PayPal Payouts API needs approval) | Client ID + secret, later |
+| Stripe | subscriptions and $0.99 downloads | secret key + webhook secret → Vercel |
+| PayPal / Venmo / Cash App / Interac / Wise | paying winners and creators by hand | your own accounts, no API needed |
 | Domain | livefromleonida.com (or similar) | add in Vercel → Domains |
 
 PlayStation has no public sign-in for third-party sites, so PSN stays on the profile-code check that's already built.
@@ -32,11 +33,17 @@ PlayStation has no public sign-in for third-party sites, so PSN stays on the pro
 - [ ] Sign in with email, Discord, Twitch, Google
 - [ ] Send a clip (file upload and link) → appears in Staff → Review queue
 - [ ] Approve it, set the YouTube timestamp
-- [ ] Vote: blocked while club-only → set yourself `is_club` → vote counts, vote moves
+- [ ] Vote as a free account: one vote, totals hidden, a new pick moves it
+- [ ] Vote as a member: 4 votes on different clips, each worth the tier weight, totals visible
 - [ ] Staff → Staff and settings: switch voting to everyone, give a second account the reviewer role
 - [ ] Close the round → winnings appear on the winner's dashboard → Redeem → Staff → Payouts → Mark paid
 - [ ] Claim a clip from a second account → approve in Staff → Claims
-- [ ] Club application → approve → member sees the Members' room
+- [ ] Subscribe with Stripe test card 4242… → tier and credits land on the profile
+- [ ] Download with a credit → balance drops, creator earns $0.70
+- [ ] Download with no credits → $0.99 checkout → webhook writes the row
+- [ ] Send 3 clips on a free account → third is refused
+- [ ] Send a 3-minute contest clip → refused before upload
+- [ ] Chat: post in the Lobby, confirm a free account can't open Members
 - [ ] Versus application → Staff → Versus
 - [ ] Phone check on the live URL (iPhone + Android), day and night mode
 
@@ -49,9 +56,15 @@ Clip upload (Supabase Storage) → staff review queue → auto-trim and caption 
 - Legal review of the contest rules before the first paid round.
 - Social handles: check `livefromleonida` is free on each platform.
 
-## 6. Pre-launch: recruit the Triple Comma Club (start right after deploy)
-The club page already takes applications and works before GTA VI is out, since proof comes from GTA Online.
-- Offer "Founding member" status to everyone approved before Nov 19 (first 100): permanent badge, and they're the very first voters in Week 1.
-- Where to find $1B GTA Online players: r/gtaonline money threads, GTA Online grinding Discords, TikTok/YouTube creators who post bank balances, Twitch GTA Online streamers.
-- Post on the new socials with the seal logo (D or O): "Made $1’000’000’000 in GTA Online? Prove it. Founding seats open until Nov 19."
-- Review every application by hand (Staff → ’’’ Club). Watch for edited clips; the club code in their Social Club bio is the main check.
+## 6. Pre-launch: get the first paying members (start right after deploy)
+The prize pool is $25 a week until 200 people subscribe, so the first members are what
+make the pot worth entering. Say that out loud on the pricing page and in the videos —
+it's the honest pitch and it's also the strongest one.
+
+Targets, roughly in order of how well they convert:
+- People who already upload GTA clips to TikTok and YouTube Shorts. They want downloads.
+- Twitch streamers who need clip material and would use Versus as content.
+- GTA Online veterans with money and hours — the people who'd have joined the old club.
+
+Push the yearly plan: it's 20–22% cheaper for them and it funds a quarter of a year of
+prizes up front for you.

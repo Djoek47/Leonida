@@ -10,7 +10,8 @@ export type Clip = {
   id: string; contest_id: string | null; owner_id: string | null; title: string;
   platform: "ps5" | "xbox" | "pc"; gamertag: string; storage_path: string | null;
   source_url: string | null; edited_url: string | null; youtube_timestamp: number | null;
-  status: string; votes: number; created_at: string; thumb?: string;
+  status: string; votes: number | null; created_at: string; thumb?: string;
+  duration_seconds?: number | null; for_contest?: boolean;
 };
 export type Winning = { id: string; contest_id: string; clip_id: string; place: number; amount_cents: number; status: string };
 
@@ -52,11 +53,12 @@ export async function contestClips(contestId: string): Promise<Clip[]> {
   return (data as Clip[]) ?? [];
 }
 
-export async function myVote(contestId: string): Promise<string | null> {
+/** Clip ids this account has voted for in the round. Paying members hold several. */
+export async function myVotes(contestId: string): Promise<string[]> {
   const c = sb();
-  if (!c) return null;
-  const { data } = await c.from("votes").select("clip_id").eq("contest_id", contestId).maybeSingle();
-  return data?.clip_id ?? null;
+  if (!c) return [];
+  const { data } = await c.from("votes").select("clip_id").eq("contest_id", contestId);
+  return (data ?? []).map((v: { clip_id: string }) => v.clip_id);
 }
 
 export async function castVote(clipId: string): Promise<string | null> {
@@ -75,9 +77,44 @@ export function ytAt(url: string | null, t: number | null) {
   return `${url}${url.includes("?") ? "&" : "?"}t=${t}s`;
 }
 
-export type VotingMode = "club" | "everyone";
-export async function votingMode(): Promise<VotingMode> {
-  const c = sb(); if (!c) return "club";
-  const { data } = await c.from("site_settings").select("voting_mode").maybeSingle();
-  return (data?.voting_mode as VotingMode) ?? "club";
+export async function clearVote(clipId: string): Promise<string | null> {
+  const c = sb(); if (!c) return null;
+  const { error } = await c.rpc("clear_vote", { p_clip: clipId });
+  return error?.message ?? null;
 }
+
+/** Paying members, and the pools that follow from the count. Public. */
+export type Pool = { paying_users: number; weekly_cents: number; monthly_cents: number };
+export async function poolNow(): Promise<Pool> {
+  const c = sb();
+  if (!c) return { paying_users: 0, weekly_cents: 2500, monthly_cents: 10000 };
+  const { data } = await c.from("pool_now").select("*").maybeSingle();
+  return (data as Pool) ?? { paying_users: 0, weekly_cents: 2500, monthly_cents: 10000 };
+}
+
+export type DownloadRow = {
+  id: string; clip_id: string; credit_type: "credit" | "paid";
+  charged_cents: number; creator_cents: number; created_at: string;
+};
+
+/** Spend one monthly credit. Throws NO_CREDITS when the allowance is gone. */
+export async function downloadWithCredit(clipId: string): Promise<{ row?: DownloadRow; error?: string }> {
+  const c = sb();
+  if (!c) return { error: "DEMO" };
+  const { data, error } = await c.rpc("download_with_credit", { p_clip: clipId });
+  if (error) return { error: error.message.includes("NO_CREDITS") ? "NO_CREDITS" : error.message };
+  return { row: data as DownloadRow };
+}
+
+/** Money a creator has earned from downloads and not yet been paid. */
+export async function myEarnings(): Promise<{ pending_cents: number; downloads: number }> {
+  const c = sb();
+  if (!c) return { pending_cents: 1890, downloads: 27 };
+  const { data } = await c.from("creator_balances").select("pending_cents,downloads").maybeSingle();
+  return { pending_cents: data?.pending_cents ?? 0, downloads: data?.downloads ?? 0 };
+}
+
+export const exactMoney = (cents: number) =>
+  `$${(cents / 100).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+
+export const mmss = (s: number) => `${Math.floor(s / 60)}:${String(Math.floor(s % 60)).padStart(2, "0")}`;

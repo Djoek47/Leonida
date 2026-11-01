@@ -16,7 +16,8 @@
     "next": "^15.5.28",
     "react": "19.1.0",
     "react-dom": "19.1.0",
-    "simple-icons": "^13.21.0"
+    "simple-icons": "^13.21.0",
+    "stripe": "^19.1.0"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3",

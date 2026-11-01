@@ -24,7 +24,7 @@ const sections: [string, string[]][] = [
     "Staff review every clip. We choose which clips go in the weekly compilation on the Live From Leonida YouTube channel, and we may trim, caption or edit them. Clips we don't select can't win that round.",
   ]],
   ["7. Voting", [
-    "For Season 1, only verified members of the Triple Comma Club can vote. We'll announce on the site before voting opens to all account holders.",
+    "Everyone with an account gets a vote. Paying members get extra votes and their votes carry more weight, as set out on the pricing page.",
     "One vote per eligible account per round. You can move your vote until voting closes. You can't vote for your own clip. Buying, trading or automating votes, or using multiple accounts, gets the votes removed and can disqualify the clip and ban the accounts.",
   ]],
   ["8. Winners and prizes", [

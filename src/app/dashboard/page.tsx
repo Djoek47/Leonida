@@ -3,19 +3,28 @@ import { useEffect, useState } from "react";
 import Link from "@/components/A";
 import { sb } from "@/lib/supabase";
 import { useUser } from "@/lib/useUser";
-import { DEMO_CLIPS, money, platformName, type Clip, type Winning } from "@/lib/api";
+import { DEMO_CLIPS, exactMoney, money, platformName, type Clip, type Winning } from "@/lib/api";
+import { tierById } from "@/lib/tiers";
 import { DemoNote } from "@/components/DemoNote";
 
 const statusText: Record<string, string> = {
   pending: "Waiting for review", approved: "In this week's vote", featured: "Featured", rejected: "Not selected",
   unclaimed: "Ready to redeem", requested: "Payout requested", verifying: "Checking your gamertag", sent: "Paid", held: "On hold, check your email",
 };
+const payoutStatus: Record<string, string> = {
+  pending: "Queued for the next run", approved: "Approved, going out", sent: "Paid",
+  failed: "Payment failed, check your details", held: "On hold, check your email",
+};
 const methods = [["paypal", "PayPal"], ["venmo", "Venmo"], ["cashapp", "Cash App"], ["interac", "Interac e-Transfer"], ["wise", "Wise"]] as const;
 
+type Payout = { id: string; period_start: string; period_end: string; amount_cents: number;
+  download_count: number; status: string; method: string | null; sent_at: string | null };
+
 export default function Dashboard() {
-  const { user, profile, setProfile, loading } = useUser();
+  const { user, profile, account, setProfile, paying, loading } = useUser();
   const [clips, setClips] = useState<Clip[]>([]);
   const [wins, setWins] = useState<Winning[]>([]);
+  const [payouts, setPayouts] = useState<Payout[]>([]);
   const [note, setNote] = useState("");
 
   useEffect(() => {
@@ -24,17 +33,23 @@ export default function Dashboard() {
     if (!c) {
       setClips([DEMO_CLIPS[3], { ...DEMO_CLIPS[6], id: "p", status: "pending", votes: 0, owner_id: "demo" }]);
       setWins([{ id: "w", contest_id: "w0", clip_id: "x", place: 2, amount_cents: 3000, status: "unclaimed" }]);
+      setPayouts([{ id: "p1", period_start: "2026-09-01", period_end: "2026-09-30", amount_cents: 2310,
+        download_count: 33, status: "sent", method: "paypal", sent_at: "2026-10-03" }]);
       return;
     }
     c.from("clip_scores").select("*").eq("owner_id", user.id).order("created_at", { ascending: false }).then(({ data }) => setClips((data as Clip[]) ?? []));
     c.from("winnings").select("*").eq("owner_id", user.id).then(({ data }) => setWins((data as Winning[]) ?? []));
+    c.from("payouts").select("*").eq("creator_id", user.id).order("period_end", { ascending: false })
+      .then(({ data }) => setPayouts((data as Payout[]) ?? []));
   }, [user]);
 
   if (loading) return null;
   if (!user || !profile) return <div className="mx-auto max-w-xl px-4 py-24"><h1 className="display text-6xl">Sign in to see your clips</h1><Link href="/login" className="btn btn-hot mt-6">Sign in</Link></div>;
 
-  const totalVotes = clips.reduce((s, c) => s + c.votes, 0);
+  const totalVotes = clips.reduce((s, c) => s + (c.votes ?? 0), 0);
   const owed = wins.filter((w) => w.status !== "sent").reduce((s, w) => s + w.amount_cents, 0);
+  const pending = account?.pending_cents ?? 0;
+  const plan = tierById(profile?.tier);
 
   async function savePayout(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -54,9 +69,21 @@ export default function Dashboard() {
     <div className="mx-auto max-w-6xl px-4 py-12">
       <DemoNote />
       <h1 className="display text-[clamp(2.2rem,10vw,6rem)] break-words">{profile.display_name}</h1>
-      <dl className="mt-8 grid grid-cols-3 border-y border-line divide-x divide-line">
-        {[["Clips sent", clips.length], ["Votes received", totalVotes.toLocaleString()], ["To redeem", money(owed)]].map(([k, v]) => (
-          <div key={k as string} className="py-5 px-4"><dt className="text-sm text-haze">{k}</dt><dd className="display text-[clamp(1.8rem,8vw,3rem)] mt-1">{v}</dd></div>
+      <p className="mt-2 flex flex-wrap items-center gap-3 text-sm font-semibold">
+        <span className={`rounded-full px-3 py-1 ${paying ? "bg-gulf text-white" : "bg-ink-2"}`}>{plan.label}</span>
+        {paying
+          ? <><span className="text-haze">{account?.credits_remaining ?? 0} of {plan.creditsPerMonth} download credits left
+              {account?.current_period_end ? `, renews ${new Date(account.current_period_end).toLocaleDateString()}` : ""}</span>
+             <Link href="/pricing" className="text-gulf underline underline-offset-4">Change plan</Link></>
+          : <Link href="/pricing" className="text-gulf underline underline-offset-4">Go Pro for heavier votes and downloads</Link>}
+      </p>
+
+      <dl className="mt-8 grid grid-cols-2 lg:grid-cols-4 border-y border-line lg:divide-x divide-line">
+        {[["Clips sent", String(clips.length)],
+          ["Vote points", totalVotes.toLocaleString()],
+          ["Prize money to redeem", money(owed)],
+          ["Download earnings", exactMoney(pending)]].map(([k, v]) => (
+          <div key={k} className="py-5 px-4"><dt className="text-sm text-haze">{k}</dt><dd className="display text-[clamp(1.6rem,7vw,2.6rem)] mt-1 break-words">{v}</dd></div>
         ))}
       </dl>
       {note && <p role="status" className="mt-6 inline-block bg-ink-2 px-4 py-2 rounded font-semibold">{note}</p>}
@@ -72,12 +99,43 @@ export default function Dashboard() {
               </li>))}</ul>
           )}
 
+          <h2 className="text-2xl font-extrabold mt-12">Download earnings</h2>
+          <p className="text-haze mt-1 text-sm">
+            Every time a member downloads one of your clips you earn {exactMoney(70)}, whether they spend
+            a free credit or pay the {exactMoney(99)}. Balances are totted up as they happen and paid once a month.
+          </p>
+          <div className="mt-4 rounded-lg bg-ink border-2 border-gulf p-4 flex flex-wrap items-center justify-between gap-4">
+            <div>
+              <p className="display text-4xl sunset-text">{exactMoney(pending)}</p>
+              <p className="text-sm text-haze">
+                building up now{account?.lifetime_downloads ? ` · ${account.lifetime_downloads} downloads all time` : ""}
+              </p>
+            </div>
+            <p className="text-sm text-haze max-w-[18rem]">
+              Paid out at the start of each month to the account below, once the balance passes {exactMoney(1000)}.
+            </p>
+          </div>
+          {payouts.length > 0 && (
+            <ul className="mt-4 divide-y divide-line border-y border-line">{payouts.map((p) => (
+              <li key={p.id} className="py-3 flex items-center justify-between gap-4">
+                <div>
+                  <p className="font-bold">{exactMoney(p.amount_cents)}</p>
+                  <p className="text-sm text-haze">
+                    {new Date(p.period_start).toLocaleDateString(undefined, { month: "short", day: "numeric" })} – {new Date(p.period_end).toLocaleDateString(undefined, { month: "short", day: "numeric" })} · {p.download_count} downloads
+                  </p>
+                </div>
+                <span className={`shrink-0 rounded-full px-3 py-1 text-xs font-black ${p.status === "sent" ? "bg-gulf text-white" : "bg-ink-2"}`}>
+                  {payoutStatus[p.status] ?? p.status}
+                </span>
+              </li>))}</ul>
+          )}
+
           <h2 className="text-2xl font-extrabold mt-12">My clips</h2>
           {clips.length === 0 ? <p className="text-haze mt-3">No clips yet. <Link href="/submit" className="text-gulf underline">Send your first one</Link>.</p> : (
             <ul className="mt-4 divide-y divide-line border-y border-line">{clips.map((c) => (
               <li key={c.id} className="py-4 flex items-center justify-between gap-4">
                 <div><p className="font-bold">{c.title}</p><p className="text-sm text-haze">{statusText[c.status]}</p></div>
-                <p className="shrink-0"><span className="display text-3xl">{c.votes}</span> <span className="text-sm text-haze">votes</span></p>
+                <p className="shrink-0"><span className="display text-3xl">{c.votes ?? "—"}</span> <span className="text-sm text-haze">points</span></p>
               </li>))}</ul>
           )}
         </section>

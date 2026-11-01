@@ -21,7 +21,8 @@ const nav = [
   { href: "/submit", label: "Send a clip" },
   { href: "/versus", label: "Versus" },
   { href: "/leonida", label: "Leonida guide" },
-  { href: "/club", label: "’’’ Club" },
+  { href: "/pricing", label: "Go Pro" },
+  { href: "/chat", label: "Chat" },
 ];
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
@@ -36,14 +37,14 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
               <img src="/media/brand/gta6-logo.png" alt="" className="h-8 sm:h-9 w-auto" />
               <span className="sign-sm text-center leading-[1.08] max-sm:!px-2 max-sm:!py-1.5 max-sm:!text-[13px]"><span className="block sm:inline">Live From</span><span className="block sm:inline sm:ml-[0.3em]">Leonida</span></span>
             </Link>
-            <nav className="hidden md:flex gap-5 text-sm font-semibold text-haze">
+            <nav className="hidden lg:flex gap-5 text-sm font-semibold text-haze">
               {nav.map((n) => (
                 <Link key={n.href} href={n.href} className="hover:text-foam">{n.label}</Link>
               ))}
             </nav>
             <div className="ml-auto flex items-center gap-2"><ThemeToggle /><NavAuth /></div>
           </div>
-          <nav className="md:hidden flex gap-4 overflow-x-auto px-4 pb-2 text-sm font-semibold text-haze">
+          <nav className="lg:hidden flex gap-4 overflow-x-auto px-4 pb-2 text-sm font-semibold text-haze">
             {nav.map((n) => <Link key={n.href} href={n.href} className="shrink-0">{n.label}</Link>)}
           </nav>
           <Ticker />

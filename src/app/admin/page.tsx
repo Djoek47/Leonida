@@ -2,10 +2,11 @@
 import { useCallback, useEffect, useState } from "react";
 import { sb } from "@/lib/supabase";
 import { useUser } from "@/lib/useUser";
-import { DEMO_CLIPS, DEMO_CONTEST, money, platformName, type Clip, type Contest } from "@/lib/api";
+import { DEMO_CLIPS, DEMO_CONTEST, exactMoney, money, platformName, poolNow, type Clip, type Contest, type Pool } from "@/lib/api";
+import { POOL_LADDER } from "@/lib/tiers";
 import { DemoNote } from "@/components/DemoNote";
 
-type Tab = "review" | "contest" | "payouts" | "claims" | "versus" | "club" | "staff";
+type Tab = "review" | "contest" | "payouts" | "creators" | "claims" | "versus" | "staff";
 type Row = Record<string, unknown> & { id: string };
 
 export default function Admin() {
@@ -13,7 +14,7 @@ export default function Admin() {
   const [tab, setTab] = useState<Tab>("review");
   if (loading) return null;
   if (!profile?.is_admin) return <div className="mx-auto max-w-xl px-4 py-24"><h1 className="display text-6xl">Staff only</h1><p className="text-haze mt-3">Ask an admin to set <code>is_admin</code> on your profile.</p></div>;
-  const tabs: [Tab, string][] = [["review", "Review queue"], ["contest", "Weekly round"], ["payouts", "Payouts"], ["claims", "Claims"], ["versus", "Versus"], ["club", "’’’ Club"], ["staff", "Staff and settings"]];
+  const tabs: [Tab, string][] = [["review", "Review queue"], ["contest", "Weekly round"], ["payouts", "Prize payouts"], ["creators", "Creator payouts"], ["claims", "Claims"], ["versus", "Versus"], ["staff", "Staff and settings"]];
   return (
     <div className="mx-auto max-w-7xl px-4 py-10">
       <DemoNote />
@@ -28,7 +29,7 @@ export default function Admin() {
           actions={[["verifying", "Checking gamertag"], ["sent", "Mark paid"], ["held", "Hold"]]} refField="payout_ref" />}
         {tab === "claims" && <Table table="claims" filter={["status", ["open"]]} cols={["clip_id", "claimant_id", "evidence"]} actions={[["approved", "Approve"], ["rejected", "Reject"]]} />}
         {tab === "staff" && <Staff isOwner={profile.role === "owner"} />}
-        {tab === "club" && <Table table="club_applications" filter={["status", ["applied"]]} cols={["social_club", "platform", "discord", "proof_url", "profile_url"]} actions={[["approved", "Approve"], ["declined", "Decline"]]} />}
+        {tab === "creators" && <CreatorPayouts />}
         {tab === "versus" && <Table table="versus_applications" filter={["status", ["applied"]]} cols={["gamertag", "platform", "can_stream", "note"]} actions={[["selected", "Select"], ["declined", "Decline"]]} />}
       </div>
     </div>
@@ -42,7 +43,7 @@ function Review() {
   const load = useCallback(async () => {
     const c = sb();
     if (!c) { setClips(DEMO_CLIPS.map((x) => ({ ...x, status: "pending" }))); return; }
-    const { data } = await c.from("clips").select("*").eq("status", "pending").order("spotlighted_by", { ascending: true, nullsFirst: false }).order("created_at"); // club spotlights first
+    const { data } = await c.from("clips").select("*").eq("status", "pending").order("created_at");
     setClips((data as Clip[]) ?? []);
   }, []);
   useEffect(() => { load(); }, [load]);
@@ -166,31 +167,25 @@ function Table({ table, filter, cols, actions, refField }: { table: string; filt
   );
 }
 
-const ROLES = [["member", "Member"], ["reviewer", "Reviewer: clips and claims"], ["moderator", "Moderator: + payouts, club, Versus"], ["owner", "Owner: everything, manages staff"]] as const;
-type Person = { id: string; display_name: string; gamertag: string | null; role: string; is_club: boolean };
+const ROLES = [["member", "Member"], ["reviewer", "Reviewer: clips and claims"], ["moderator", "Moderator: + payouts and Versus"], ["owner", "Owner: everything, manages staff"]] as const;
+type Person = { id: string; display_name: string; gamertag: string | null; role: string; tier: string };
 function Staff({ isOwner }: { isOwner: boolean }) {
   const [people, setPeople] = useState<Person[]>([]);
   const [q, setQ] = useState("");
-  const [mode, setMode] = useState("club");
   const [note, setNote] = useState("");
   useEffect(() => {
     const s = sb();
     if (!s) { setPeople([
-      { id: "demo", display_name: "ViceCityVandal", gamertag: "ViceCityVandal", role: "owner", is_club: true },
-      { id: "a", display_name: "KeysKingpin", gamertag: "KeysKingpin", role: "reviewer", is_club: true },
-      { id: "b", display_name: "SwampSaint", gamertag: "SwampSaint", role: "member", is_club: false },
-      { id: "c", display_name: "NeonDrifter", gamertag: "NeonDrifter", role: "moderator", is_club: false },
+      { id: "demo", display_name: "ViceCityVandal", gamertag: "ViceCityVandal", role: "owner", tier: "kingpin" },
+      { id: "a", display_name: "KeysKingpin", gamertag: "KeysKingpin", role: "reviewer", tier: "hustler" },
+      { id: "b", display_name: "SwampSaint", gamertag: "SwampSaint", role: "member", tier: "street" },
+      { id: "c", display_name: "NeonDrifter", gamertag: "NeonDrifter", role: "moderator", tier: "cartel" },
     ]); return; }
-    s.from("profiles").select("id,display_name,gamertag,role,is_club").order("role").limit(200).then(({ data }) => setPeople((data as Person[]) ?? []));
-    s.from("site_settings").select("voting_mode").maybeSingle().then(({ data }) => data && setMode(data.voting_mode));
+    s.from("profiles").select("id,display_name,gamertag,role,tier").order("role").limit(200).then(({ data }) => setPeople((data as Person[]) ?? []));
   }, []);
   async function setRole(p: Person, role: string) {
     const s = sb(); if (s) { const { error } = await s.rpc("set_role", { p_user: p.id, p_role: role }); if (error) { setNote(error.message); return; } }
     setPeople((xs) => xs.map((x) => x.id === p.id ? { ...x, role } : x)); setNote(`${p.display_name} is now ${role}.`);
-  }
-  async function saveMode(m: string) {
-    const s = sb(); if (s) { const { error } = await s.from("site_settings").update({ voting_mode: m }).eq("id", true); if (error) { setNote(error.message); return; } }
-    setMode(m); setNote(m === "club" ? "Only club members can vote now." : "Everyone can vote now.");
   }
   const shown = people.filter((p) => `${p.display_name} ${p.gamertag ?? ""}`.toLowerCase().includes(q.toLowerCase()));
   return (
@@ -201,7 +196,7 @@ function Staff({ isOwner }: { isOwner: boolean }) {
         <ul className="mt-3 divide-y divide-line border-y border-line">
           {shown.map((p) => (
             <li key={p.id} className="py-3 flex flex-wrap items-center gap-3">
-              <span className="flex-1 min-w-0"><span className="font-bold">{p.display_name}</span>{p.is_club && <span className="ml-2 text-xs font-black text-[#1c1710] bg-mango px-1.5 rounded">’’’</span>}<span className="block text-sm text-haze truncate">{p.gamertag}</span></span>
+              <span className="flex-1 min-w-0"><span className="font-bold">{p.display_name}</span>{p.tier !== "street" && <span className="ml-2 text-[10px] font-black uppercase tracking-wide text-white bg-gulf px-1.5 py-0.5 rounded">{p.tier}</span>}<span className="block text-sm text-haze truncate">{p.gamertag}</span></span>
               <select disabled={!isOwner} value={p.role} onChange={(e) => setRole(p, e.target.value)} className="field !w-auto">
                 {ROLES.map(([v, l]) => <option key={v} value={v}>{l}</option>)}
               </select>
@@ -211,15 +206,117 @@ function Staff({ isOwner }: { isOwner: boolean }) {
         {!isOwner && <p className="mt-2 text-sm text-haze">Only owners can change roles.</p>}
       </section>
       <section>
-        <h2 className="text-xl font-extrabold">Who can vote</h2>
-        <div className="mt-3 grid gap-2">
-          {[["club", "Triple Comma Club only", "Season 1 launch setting"], ["everyone", "Everyone with an account", "Open it up later"]].map(([v, l, d]) => (
-            <button key={v} onClick={() => saveMode(v)} aria-pressed={mode === v} className={`text-left rounded-lg border-2 px-4 py-3 ${mode === v ? "border-gulf bg-ink" : "border-line"}`}>
-              <span className="block font-bold">{l}</span><span className="block text-sm text-haze">{d}</span>
-            </button>
-          ))}
-        </div>
+        <PoolPanel />
         {note && <p role="status" className="mt-4 font-semibold text-gulf">{note}</p>}
+      </section>
+    </div>
+  );
+}
+
+/** Live pool, driven by the paying-member count. Read-only: the ladder lives in the database. */
+function PoolPanel() {
+  const [pool, setPool] = useState<Pool | null>(null);
+  useEffect(() => { poolNow().then(setPool); }, []);
+  return (
+    <>
+      <h2 className="text-xl font-extrabold">Prize pool right now</h2>
+      <div className="mt-3 rounded-lg border-2 border-gulf bg-ink p-5">
+        <p className="display text-5xl">{pool ? money(pool.weekly_cents) : "—"}</p>
+        <p className="font-semibold">this week</p>
+        <dl className="mt-4 grid grid-cols-2 gap-3 text-sm">
+          <div><dt className="text-haze">Paying members</dt><dd className="display text-2xl">{pool?.paying_users ?? "—"}</dd></div>
+          <div><dt className="text-haze">Clip of the Month</dt><dd className="display text-2xl">{pool ? money(pool.monthly_cents) : "—"}</dd></div>
+        </dl>
+        <p className="mt-4 text-sm text-haze">
+          The pool is locked when you open a round, so it can&apos;t move once people have entered.
+        </p>
+      </div>
+      <h3 className="text-sm font-extrabold mt-6">How it scales</h3>
+      <ul className="mt-2 text-sm text-haze grid gap-1">
+        {POOL_LADDER.map(([a, b, c]) => <li key={a}><b className="text-foam">{a}</b> → {b} · {c}</li>)}
+      </ul>
+    </>
+  );
+}
+
+/** Close a month and cut one payout row per creator, then mark them paid as the money goes out. */
+type PayoutRow = { id: string; creator_id: string; amount_cents: number; download_count: number;
+  method: string | null; handle: string | null; status: string; period_start: string; period_end: string };
+
+function CreatorPayouts() {
+  const [rows, setRows] = useState<PayoutRow[]>([]);
+  const [owed, setOwed] = useState<{ creator_id: string; pending_cents: number; downloads: number }[]>([]);
+  const [note, setNote] = useState("");
+  const first = new Date(); first.setDate(1);
+  const [from, setFrom] = useState(new Date(first.getFullYear(), first.getMonth() - 1, 1).toISOString().slice(0, 10));
+  const [to, setTo] = useState(new Date(first.getFullYear(), first.getMonth(), 0).toISOString().slice(0, 10));
+
+  const load = useCallback(async () => {
+    const s = sb(); if (!s) {
+      setOwed([{ creator_id: "KeysKingpin", pending_cents: 2310, downloads: 33 }]);
+      setRows([{ id: "p1", creator_id: "SwampSaint", amount_cents: 1540, download_count: 22, method: "paypal",
+        handle: "swamp@x.com", status: "pending", period_start: from, period_end: to }]);
+      return;
+    }
+    const [{ data: b }, { data: p }] = await Promise.all([
+      s.from("creator_balances").select("creator_id,pending_cents,downloads").order("pending_cents", { ascending: false }),
+      s.from("payouts").select("*").order("period_end", { ascending: false }).limit(100),
+    ]);
+    setOwed(b ?? []); setRows((p as PayoutRow[]) ?? []);
+  }, [from, to]);
+  useEffect(() => { load(); }, [load]);
+
+  async function runMonth() {
+    const s = sb(); if (!s) { setNote("Demo mode: nothing was written."); return; }
+    const { data, error } = await s.rpc("run_monthly_payouts", { p_start: from, p_end: to });
+    if (error) { setNote(error.message); return; }
+    setNote(`${data} payout${data === 1 ? "" : "s"} created for ${from} to ${to}.`);
+    load();
+  }
+  async function mark(r: PayoutRow, status: string) {
+    const s = sb();
+    if (s) { const { error } = await s.from("payouts").update({ status, sent_at: status === "sent" ? new Date().toISOString() : null }).eq("id", r.id);
+      if (error) { setNote(error.message); return; } }
+    setRows((xs) => xs.map((x) => x.id === r.id ? { ...x, status } : x));
+  }
+
+  const totalOwed = owed.reduce((s, o) => s + o.pending_cents, 0);
+  return (
+    <div className="grid gap-8">
+      <section className="rounded-lg border-2 border-line bg-ink p-5">
+        <h2 className="text-xl font-extrabold">Run a month</h2>
+        <p className="text-sm text-haze mt-1">
+          Totals every unpaid download in the window and cuts one payout per creator over the minimum.
+          Then pay each one by hand and mark it sent.
+        </p>
+        <div className="mt-4 flex flex-wrap items-end gap-3">
+          <label className="grid gap-1 text-sm font-bold">From<input type="date" value={from} onChange={(e) => setFrom(e.target.value)} className="field !w-auto font-normal" /></label>
+          <label className="grid gap-1 text-sm font-bold">To<input type="date" value={to} onChange={(e) => setTo(e.target.value)} className="field !w-auto font-normal" /></label>
+          <button onClick={runMonth} className="btn btn-hot">Create payouts</button>
+          <span className="text-sm text-haze">Unpaid across everyone: <b className="text-foam">{exactMoney(totalOwed)}</b></span>
+        </div>
+        {note && <p role="status" className="mt-3 font-semibold text-gulf">{note}</p>}
+      </section>
+
+      <section>
+        <h2 className="text-xl font-extrabold">Payouts</h2>
+        {rows.length === 0 ? <p className="text-haze mt-2">Nothing yet.</p> : (
+          <ul className="mt-3 divide-y divide-line border-y border-line">
+            {rows.map((r) => (
+              <li key={r.id} className="py-3 flex flex-wrap items-center gap-3">
+                <span className="flex-1 min-w-0">
+                  <span className="display text-2xl">{exactMoney(r.amount_cents)}</span>
+                  <span className="block text-sm text-haze truncate">
+                    {r.creator_id} · {r.download_count} downloads · {r.method ?? "no method set"} {r.handle ?? ""}
+                  </span>
+                </span>
+                <span className={`rounded-full px-3 py-1 text-xs font-black ${r.status === "sent" ? "bg-gulf text-white" : "bg-ink-2"}`}>{r.status}</span>
+                {r.status !== "sent" && <button onClick={() => mark(r, "sent")} className="btn btn-ghost !py-1.5 !px-3 text-sm">Mark paid</button>}
+                {r.status === "pending" && <button onClick={() => mark(r, "held")} className="btn btn-ghost !py-1.5 !px-3 text-sm">Hold</button>}
+              </li>
+            ))}
+          </ul>
+        )}
       </section>
     </div>
   );

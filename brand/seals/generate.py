@@ -97,12 +97,13 @@ def orn_diamond(c):
 def orn_none(c):
     return ""
 
-def seal(name, ring, inner, arc, orn, motif, ring_edge=None, rope=False, top="LIVE FROM LEONIDA", bot="IN CLIPS WE TRUST"):
+def seal(name, ring, inner, arc, orn, motif, ring_edge=None, rope=False, top="LEONIDA", bot="IN CLIPS WE TRUST"):
     edge = ring_edge or arc
     rope_ring = ""
     if rope:
         rope_ring = "".join(f'<circle cx="{500+472*math.cos(a/57.3):.1f}" cy="{500+472*math.sin(a/57.3):.1f}" r="9" fill="{edge}"/>'
                             for a in range(0, 360, 6))
+    tfs, tls, tdy = (90, 10, -28) if len(top) <= 9 else (74, 6, -34)
     body = (f'<circle cx="500" cy="500" r="500" fill="{ring}"/>'
             f'<circle cx="500" cy="500" r="470" fill="none" stroke="{edge}" stroke-width="10"/>'
             + rope_ring +
@@ -110,8 +111,8 @@ def seal(name, ring, inner, arc, orn, motif, ring_edge=None, rope=False, top="LI
             f'<clipPath id="ci"><circle cx="500" cy="500" r="330"/></clipPath>'
             f'<g clip-path="url(#ci)">{motif}</g>'
             f'<circle cx="500" cy="500" r="330" fill="none" stroke="{edge}" stroke-width="10"/>'
-            f'<text font-weight="900" font-size="74" fill="{arc}" letter-spacing="6" text-anchor="middle">'
-            f'<textPath href="#t" startOffset="50%"><tspan dy="-34">{top}</tspan></textPath></text>'
+            f'<text font-weight="900" font-size="{tfs}" fill="{arc}" letter-spacing="{tls}" text-anchor="middle">'
+            f'<textPath href="#t" startOffset="50%"><tspan dy="{tdy}">{top}</tspan></textPath></text>'
             f'<text font-weight="900" font-size="58" fill="{arc}" letter-spacing="8" text-anchor="middle">'
             f'<textPath href="#b" startOffset="50%"><tspan dy="88">{bot}</tspan></textPath></text>'
             + orn)

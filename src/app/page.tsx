@@ -68,14 +68,6 @@ export default function Home() {
         </Link>
       </section>
 
-      {/* Club teaser */}
-      <section className="mx-auto max-w-7xl px-4 pb-16">
-        <Link href="/club" className="sign sign-yellow flex flex-col md:flex-row md:items-center justify-between gap-4 hover:brightness-105">
-          <span><span className="block display text-3xl md:text-5xl">The Triple Comma Club ’’’</span><span className="block font-semibold">Made $1 billion in GTA Online? Prove it and join the VIP Discord.</span></span>
-          <span className="btn bg-[#1c1710] text-white shrink-0">See how to get in</span>
-        </Link>
-      </section>
-
       {/* Guide: postcards only */}
       <section className="pb-8">
         <div className="mx-auto max-w-7xl px-4 flex items-end justify-between gap-6">

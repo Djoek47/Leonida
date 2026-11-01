@@ -210,29 +210,9 @@ create policy "upload own folder" on storage.objects for insert
 create policy "read own or admin" on storage.objects for select
   using (bucket_id = 'clips' and ((storage.foldername(name))[1] = auth.uid()::text or public.is_admin()));
 
--- ───────── Three Comma Club ($1B GTA Online VIP Discord) ─────────
-create table if not exists public.club_applications (
-  id uuid primary key default gen_random_uuid(),
-  player_id uuid not null references public.profiles(id) on delete cascade,
-  platform text not null,
-  social_club text not null,
-  proof_url text not null,          -- clip of Stats > Career + Maze Bank balance
-  profile_url text not null,        -- Social Club profile screenshot showing the club code
-  discord text not null,
-  status text not null default 'applied' check (status in ('applied','approved','declined')),
-  reviewer_note text,
-  created_at timestamptz not null default now(),
-  unique (player_id)
-);
-alter table public.club_applications enable row level security;
-create policy "club own" on public.club_applications for select using (player_id = auth.uid() or public.is_admin());
-create policy "club apply" on public.club_applications for insert with check (player_id = auth.uid() and status = 'applied');
-create policy "club admin" on public.club_applications for update using (public.is_admin());
-
 -- ───────── Staff roles ─────────
 alter table public.profiles add column if not exists role text not null default 'member'
   check (role in ('member','reviewer','moderator','owner'));
-alter table public.profiles add column if not exists is_club boolean not null default false;
 
 -- Only owners change roles; is_admin follows the role so existing policies keep working.
 create or replace function public.set_role(p_user uuid, p_role text) returns void
@@ -245,7 +225,6 @@ end $$;
 -- ───────── Site settings ─────────
 create table if not exists public.site_settings (
   id boolean primary key default true check (id),
-  voting_mode text not null default 'club' check (voting_mode in ('club','everyone')),
   next_theme_options text[] not null default '{"Getaways","Stunts","Heists","Funniest fail"}'
 );
 insert into public.site_settings default values on conflict do nothing;
@@ -253,55 +232,3 @@ alter table public.site_settings enable row level security;
 create policy "settings public" on public.site_settings for select using (true);
 create policy "settings admin" on public.site_settings for update using (public.is_admin());
 
--- Club membership follows approval
-create or replace function public.club_approved() returns trigger language plpgsql security definer set search_path = public as $$
-begin
-  update public.profiles set is_club = (new.status = 'approved') where id = new.player_id;
-  return new;
-end $$;
-drop trigger if exists club_status on public.club_applications;
-create trigger club_status after update of status on public.club_applications for each row execute function public.club_approved();
-
--- ───────── Club powers ─────────
--- 1) While voting_mode = 'club', only Triple Comma Club members can vote.
-create or replace function public.cast_vote(p_clip uuid) returns void
-language plpgsql security definer set search_path = public as $$
-declare k public.contests; mode text;
-begin
-  if auth.uid() is null then raise exception 'Sign in to vote'; end if;
-  select voting_mode into mode from public.site_settings;
-  if mode = 'club' and not exists (select 1 from public.profiles where id = auth.uid() and is_club) then
-    raise exception 'Voting is open to Triple Comma Club members for now';
-  end if;
-  select ct.* into k from public.contests ct join public.clips cl on cl.contest_id = ct.id
-   where cl.id = p_clip and cl.status in ('approved','featured');
-  if k.id is null then raise exception 'Clip is not in a voting round'; end if;
-  if now() < k.voting_opens or now() > k.voting_closes then raise exception 'Voting is closed'; end if;
-  if exists (select 1 from public.clips where id = p_clip and owner_id = auth.uid()) then raise exception 'You cannot vote for your own clip'; end if;
-  insert into public.votes(contest_id, voter_id, clip_id) values (k.id, auth.uid(), p_clip)
-  on conflict (contest_id, voter_id) do update set clip_id = excluded.clip_id, created_at = now();
-end $$;
-
--- 2) Spotlight: one per member per round; pushes a pending clip to the top of staff review.
-alter table public.clips add column if not exists spotlighted_by uuid references public.profiles(id);
-create or replace function public.spotlight(p_clip uuid) returns void
-language plpgsql security definer set search_path = public as $$
-declare c public.clips;
-begin
-  if not exists (select 1 from public.profiles where id = auth.uid() and is_club) then raise exception 'Members only'; end if;
-  select * into c from public.clips where id = p_clip;
-  if exists (select 1 from public.clips where contest_id = c.contest_id and spotlighted_by = auth.uid()) then
-    raise exception 'You already used your spotlight this round'; end if;
-  update public.clips set spotlighted_by = auth.uid() where id = p_clip and spotlighted_by is null;
-end $$;
-
--- 3) Members pick next week's theme.
-create table if not exists public.theme_votes (
-  week date not null, voter_id uuid not null references public.profiles(id) on delete cascade,
-  theme text not null, primary key (week, voter_id)
-);
-alter table public.theme_votes enable row level security;
-create policy "theme read" on public.theme_votes for select using (true);
-create policy "theme vote" on public.theme_votes for insert with check (
-  voter_id = auth.uid() and exists (select 1 from public.profiles where id = auth.uid() and is_club));
-create policy "theme change" on public.theme_votes for update using (voter_id = auth.uid());

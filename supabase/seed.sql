@@ -11,5 +11,5 @@ from public.contests c,
           ('One-take bank exit','ps5','LuciaMain',76)) as t(title, platform, tag, ts)
 where c.title = 'Test round: Vice City getaways';
 
--- Let yourself vote while voting is club-only:
--- update public.profiles set is_club = true where id = (select id from auth.users where email = 'YOUR@EMAIL');
+-- Give yourself a paid tier for testing:
+-- update public.profiles set tier = 'cartel', subscription_status = 'active' where id = (select id from auth.users where email = 'YOUR@EMAIL');

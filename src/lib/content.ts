@@ -67,5 +67,4 @@ export const socials = [
   { id: "x", label: "X", href: "https://x.com/livefromleonida" },
   { id: "instagram", label: "Instagram", href: "https://www.instagram.com/livefromleonida" },
   { id: "facebook", label: "Facebook", href: "https://www.facebook.com/livefromleonida" },
-  { id: "discord", label: "Discord", href: "https://discord.gg/livefromleonida" },
 ] as const;

@@ -3,13 +3,13 @@ import { useEffect, useState } from "react";
 import Link from "@/components/A";
 import { sb } from "@/lib/supabase";
 import { useUser } from "@/lib/useUser";
-import { contestClips, currentContest, platformName, type Clip } from "@/lib/api";
+import { contestClips, currentContest, mmss, platformName, type Clip } from "@/lib/api";
 import { DemoNote } from "@/components/DemoNote";
 
 type Tab = "send" | "claim";
 
 export default function SubmitPage() {
-  const { user, loading } = useUser();
+  const { user, account, paying, tier, loading } = useUser();
   const [tab, setTab] = useState<Tab>("send");
   if (loading) return null;
   if (!user) return (
@@ -29,15 +29,47 @@ export default function SubmitPage() {
             className={`px-4 py-2 rounded font-bold text-sm ${tab === k ? "bg-foam text-dusk" : "text-haze"}`}>{l}</button>
         ))}
       </div>
-      {tab === "send" ? <SendForm userId={user.id} /> : <ClaimForm userId={user.id} />}
+      {tab === "send" && (
+        <p className="mt-6 flex flex-wrap items-center gap-x-4 gap-y-2 rounded-lg border-2 border-line bg-ink px-4 py-3 text-sm font-semibold">
+          <span>
+            <span className="display text-2xl text-gulf">{Math.max(0, tier.dailySubmissions - (account?.submitted_today ?? 0))}</span>
+            {" "}of {tier.dailySubmissions} clips left today
+          </span>
+          {!paying && <><span className="text-haze">·</span>
+            <Link href="/pricing" className="text-gulf underline underline-offset-4">Members send up to 100 a day</Link></>}
+        </p>
+      )}
+      {tab === "send"
+        ? <SendForm userId={user.id} cap={tier.dailySubmissions} usedToday={account?.submitted_today ?? 0} />
+        : <ClaimForm userId={user.id} />}
     </div>
   );
 }
 
-function SendForm({ userId }: { userId: string }) {
+/** Contest entries must come in under three minutes. */
+const MAX_CONTEST_SECONDS = 180;
+
+/** Read the duration out of the file in the browser, so we can refuse a long clip
+ *  before uploading 400 MB of it. The database enforces the same rule. */
+function durationOf(file: File): Promise<number | null> {
+  return new Promise((resolve) => {
+    const v = document.createElement("video");
+    v.preload = "metadata";
+    const done = (n: number | null) => { URL.revokeObjectURL(v.src); resolve(n); };
+    v.onloadedmetadata = () => done(Number.isFinite(v.duration) ? v.duration : null);
+    v.onerror = () => done(null);
+    v.src = URL.createObjectURL(file);
+  });
+}
+
+function SendForm({ userId, cap, usedToday }: { userId: string; cap: number; usedToday: number }) {
   const [mode, setMode] = useState<"file" | "link">("file");
   const [state, setState] = useState<"idle" | "sending" | "sent" | "error">("idle");
   const [err, setErr] = useState("");
+  const [forContest, setForContest] = useState(true);
+  const [len, setLen] = useState<number | null>(null);
+  const atCap = usedToday >= cap;
+  const tooLong = forContest && len != null && len >= MAX_CONTEST_SECONDS;
 
   async function submit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -51,6 +83,9 @@ function SendForm({ userId }: { userId: string }) {
       const file = f.get("file") as File | null;
       if (mode === "file" && file && file.size) {
         if (file.size > 500 * 1024 * 1024) throw new Error("That file is over 500 MB. Trim it or paste a link instead.");
+        if (forContest && len != null && len >= MAX_CONTEST_SECONDS) {
+          throw new Error(`Contest clips have to come in under 3 minutes. Yours is ${mmss(len)}.`);
+        }
         storage_path = `${userId}/${crypto.randomUUID()}-${file.name.replace(/[^\w.-]/g, "_")}`;
         const up = await c.storage.from("clips").upload(storage_path, file);
         if (up.error) throw up.error;
@@ -59,11 +94,18 @@ function SendForm({ userId }: { userId: string }) {
         contest_id: contest.id === "none" ? null : contest.id, owner_id: userId, submitted_by: userId,
         title: f.get("title"), platform: f.get("platform"), gamertag: f.get("gamertag"),
         storage_path, source_url: mode === "link" ? f.get("url") : null,
+        for_contest: forContest, duration_seconds: len == null ? null : Math.round(len),
       });
       if (error) throw error;
       await c.from("profiles").update({ platform: f.get("platform"), gamertag: f.get("gamertag") }).eq("id", userId);
       setState("sent");
-    } catch (x) { setErr((x as Error).message); setState("error"); }
+    } catch (x) {
+      const m = (x as Error).message;
+      setErr(m.includes("DAILY_LIMIT") ? `That's your ${cap} clips for today. The limit resets at midnight.`
+           : m.includes("CLIP_TOO_LONG") ? "Contest clips have to come in under 3 minutes."
+           : m);
+      setState("error");
+    }
   }
 
   if (state === "sent") return (
@@ -93,16 +135,41 @@ function SendForm({ userId }: { userId: string }) {
           <button type="button" onClick={() => setMode("link")} className={mode === "link" ? "text-foam underline underline-offset-4" : "text-haze"}>Paste a link</button>
         </div>
         {mode === "file"
-          ? <input name="file" type="file" accept="video/mp4,video/quicktime,video/webm" required className="field file:mr-4 file:rounded file:border-0 file:bg-flamingo file:px-3 file:py-1.5 file:font-bold file:text-white" />
+          ? <input name="file" type="file" accept="video/mp4,video/quicktime,video/webm" required
+              onChange={async (e) => { const f = e.target.files?.[0]; setLen(f ? await durationOf(f) : null); }}
+              className="field file:mr-4 file:rounded file:border-0 file:bg-flamingo file:px-3 file:py-1.5 file:font-bold file:text-white" />
           : <input name="url" type="url" required className="field" placeholder="YouTube, TikTok, Twitch clip or PlayStation share link" />}
-        <p className="text-xs text-haze mt-1.5">MP4, MOV or WebM up to 500 MB. Keep it under 60 seconds; raw footage is fine, we edit.</p>
+        <p className="text-xs text-haze mt-1.5">
+          MP4, MOV or WebM up to 500 MB. Raw footage is fine, we edit.
+          {forContest && " Contest clips must be under 3 minutes."}
+        </p>
+        {len != null && (
+          <p className={`text-sm mt-1.5 font-semibold ${tooLong ? "text-flamingo" : "text-gulf"}`}>
+            {tooLong
+              ? `${mmss(len)} — too long for a contest clip. Trim it under 3:00, or untick the box below and send it as a regular upload.`
+              : `${mmss(len)} — good for the contest.`}
+          </p>
+        )}
       </div>
+      <label className="flex gap-3 items-start text-sm">
+        <input type="checkbox" checked={forContest} onChange={(e) => setForContest(e.target.checked)} className="mt-1 accent-[var(--flamingo)]" />
+        <span>Enter this in Clip of the Week and Clip of the Month.
+          <span className="block text-haze">Untick to post it without entering — then it can run any length.</span></span>
+      </label>
       <label className="flex gap-3 items-start text-sm text-haze">
         <input type="checkbox" required className="mt-1 accent-[var(--flamingo)]" />
         This is my own gameplay, and Live From Leonida can edit it and publish it in its videos. I&apos;ve read the <Link href="/rules" className="underline">contest rules</Link>.
       </label>
       {state === "error" && <p role="alert" className="text-flamingo font-semibold">{err}</p>}
-      <button disabled={state === "sending"} className="btn btn-hot w-fit">{state === "sending" ? "Sending…" : "Send clip"}</button>
+      {atCap && (
+        <p role="alert" className="rounded-lg border-2 border-mango bg-mango/20 px-4 py-3 font-semibold">
+          That&apos;s your {cap} clips for today. The limit resets at midnight.{" "}
+          <Link href="/pricing" className="underline">Members get more</Link>.
+        </p>
+      )}
+      <button disabled={state === "sending" || atCap || tooLong} className="btn btn-hot w-fit disabled:opacity-60">
+        {state === "sending" ? "Sending…" : "Send clip"}
+      </button>
     </form>
   );
 }

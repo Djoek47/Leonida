@@ -1,8 +1,13 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import Link from "@/components/A";
-import { castVote, contestClips, currentContest, money, myVote, platformName, votingMode, ytAt, type Clip, type Contest, type VotingMode } from "@/lib/api";
+import {
+  castVote, clearVote, contestClips, currentContest, downloadWithCredit, exactMoney,
+  money, myVotes, platformName, poolNow, ytAt, type Clip, type Contest, type Pool,
+} from "@/lib/api";
 import { useUser } from "@/lib/useUser";
+import { sb } from "@/lib/supabase";
+import { DOWNLOAD } from "@/lib/tiers";
 import { DemoNote } from "@/components/DemoNote";
 import { PlatformIcon } from "@/components/Icons";
 
@@ -15,41 +20,79 @@ function left(iso: string) {
 const embed = (u: string) => u.replace("watch?v=", "embed/").replace("youtu.be/", "www.youtube.com/embed/");
 
 export default function ClipsPage() {
-  const { user, profile } = useUser();
-  const [mode, setMode] = useState<VotingMode>("club");
+  const { user, account, paying, tier, demo } = useUser();
   const [contest, setContest] = useState<Contest | null>(null);
   const [clips, setClips] = useState<Clip[]>([]);
-  const [voted, setVoted] = useState<string | null>(null);
+  const [voted, setVoted] = useState<string[]>([]);
+  const [pool, setPool] = useState<Pool | null>(null);
+  const [credits, setCredits] = useState(0);
   const [msg, setMsg] = useState<string | null>(null);
+  const [ask, setAsk] = useState<Clip | null>(null);
 
   useEffect(() => {
     currentContest().then(async (c) => {
       setContest(c);
       setClips(await contestClips(c.id));
-      setVoted(await myVote(c.id));
-      setMode(await votingMode());
+      setVoted(await myVotes(c.id));
     });
+    poolNow().then(setPool);
   }, []);
+  useEffect(() => { setCredits(account?.credits_remaining ?? 0); }, [account]);
 
-  async function vote(id: string) {
+  const maxVotes = 1 + (paying ? tier.extraVotes : 0);
+  const votesLeft = maxVotes - voted.length;
+
+  async function vote(c: Clip) {
     if (!user) { setMsg("Sign in to vote. It's free and takes ten seconds."); return; }
-    if (mode === "club" && !profile?.is_club) { setMsg("Voting is open to Triple Comma Club members for now."); return; }
+    if (voted.includes(c.id)) {
+      setVoted((v) => v.filter((x) => x !== c.id));
+      const err = await clearVote(c.id);
+      if (err) setMsg(err); else setMsg("Vote taken back.");
+      return;
+    }
+    if (votesLeft <= 0 && paying) { setMsg(`You've used all ${maxVotes} of your votes this round. Take one back to move it.`); return; }
     const prev = voted;
-    setVoted(id);
-    setClips((cs) => cs.map((c) => ({ ...c, votes: c.votes + (c.id === id ? 1 : 0) - (c.id === prev ? 1 : 0) })));
-    const err = await castVote(id);
-    if (err) { setMsg(err); setVoted(prev); } else setMsg(prev ? "Vote moved." : "Vote counted.");
+    setVoted(paying ? [...voted, c.id] : [c.id]);
+    const err = await castVote(c.id);
+    if (err) {
+      setVoted(prev);
+      setMsg(err.includes("OUT_OF_VOTES") ? `You've used all ${maxVotes} of your votes this round.` : err);
+    } else setMsg(paying ? `Vote cast. It counts for ${tier.voteWeight}.` : "Vote counted.");
   }
 
+  const download = useCallback(async (c: Clip) => {
+    if (!user) { setMsg("Sign in to download."); return; }
+    if (!paying) { setAsk(c); return; }
+    if (demo) { setMsg("Demo mode: a real download would spend a credit here."); return; }
+    if (credits > 0) {
+      const { error } = await downloadWithCredit(c.id);
+      if (error === "NO_CREDITS") { setCredits(0); setMsg("That was your last credit. The next download is 99¢."); return; }
+      if (error) { setMsg(error); return; }
+      setCredits((n) => Math.max(0, n - 1));
+      setMsg(`Downloading. ${exactMoney(DOWNLOAD.creatorCents)} goes to ${c.gamertag}.`);
+      return;
+    }
+    const token = (await sb()?.auth.getSession())?.data.session?.access_token;
+    const r = await fetch("/api/download", {
+      method: "POST",
+      headers: { "content-type": "application/json", ...(token ? { authorization: `Bearer ${token}` } : {}) },
+      body: JSON.stringify({ clipId: c.id }),
+    });
+    const j = await r.json();
+    if (j.url) location.href = j.url; else setMsg(j.error ?? "Could not start the download.");
+  }, [user, paying, credits, demo]);
+
   if (!contest) return <div className="mx-auto max-w-7xl px-4 py-24 text-haze">Loading this week&apos;s round…</div>;
-  const sorted = [...clips].sort((a, b) => b.votes - a.votes);
+
+  // Free accounts don't see tallies, so the order they get is the submission order.
+  const sorted = paying ? [...clips].sort((a, b) => (b.votes ?? 0) - (a.votes ?? 0)) : clips;
   const open = contest.status === "voting" && new Date(contest.voting_closes) > new Date();
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-12">
       <DemoNote />
       <div className="flex flex-wrap items-end justify-between gap-6">
-        <div>
+        <div className="min-w-0">
           <div className="lower-third text-sm mb-4"><span className="tag">{open ? <><span className="rec" />Voting</> : "Round"}</span><span className="txt">{left(contest.voting_closes)}</span></div>
           <h1 className="display text-6xl md:text-8xl">{contest.title}</h1>
         </div>
@@ -68,13 +111,24 @@ export default function ClipsPage() {
         <p className="mt-8 text-haze">The compilation video goes up when voting opens. Each clip below links to its moment in it.</p>
       )}
 
-      {mode === "club" && (
-        <p className="mt-6 flex flex-wrap items-center gap-x-3 gap-y-1 rounded-lg border-2 border-mango bg-mango/20 px-4 py-3 text-sm font-semibold">
-          <span>Right now, only Triple Comma Club members vote. Everyone can watch.</span>
-          <Link href="/club" className="underline">How to join</Link>
-        </p>
-      )}
-      {msg && <p role="status" className="mt-6 inline-block bg-ink-2 px-4 py-2 rounded font-semibold">{msg} {!user && <Link className="text-gulf underline" href="/login">Sign in</Link>}</p>}
+      {/* What this account can do in this round */}
+      <div className="mt-8 flex flex-wrap items-center gap-x-6 gap-y-3 rounded-lg border-2 border-line bg-ink px-4 py-3 text-sm font-semibold">
+        {paying ? (
+          <>
+            <span><span className="display text-2xl text-gulf">{votesLeft}</span> of {maxVotes} votes left, each worth {tier.voteWeight}</span>
+            <span className="text-haze hidden sm:inline">·</span>
+            <span><span className="display text-2xl text-gulf">{credits}</span> download credit{credits === 1 ? "" : "s"} this month</span>
+          </>
+        ) : (
+          <>
+            <span>You get one vote. Totals and the ranking are hidden on free accounts.</span>
+            <Link href="/pricing" className="btn btn-hot !py-1.5 !px-3 text-sm">Get 4 heavier votes</Link>
+          </>
+        )}
+        {pool && <span className="sm:ml-auto text-haze">Pool grows with members: {money(pool.weekly_cents)} this week</span>}
+      </div>
+
+      {msg && <p role="status" className="mt-5 inline-block bg-ink-2 px-4 py-2 rounded font-semibold">{msg} {!user && <Link className="text-gulf underline" href="/login">Sign in</Link>}</p>}
 
       {sorted.length === 0 ? (
         <div className="mt-16 text-center py-20 border border-dashed border-line rounded-lg">
@@ -83,27 +137,37 @@ export default function ClipsPage() {
           <Link href="/submit" className="btn btn-hot mt-6">Send a clip</Link>
         </div>
       ) : (
-        <ol className="mt-10 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+        <ol className="mt-8 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
           {sorted.map((c, i) => {
             const at = ytAt(contest.youtube_url, c.youtube_timestamp);
-            const mine = voted === c.id;
+            const mine = voted.includes(c.id);
+            const top = paying && i < 3;
             return (
-              <li key={c.id} className={`rounded-lg overflow-hidden bg-ink border ${i < 3 ? "border-gulf border-2" : "border-line"}`}>
+              <li key={c.id} className={`rounded-lg overflow-hidden bg-ink border ${top ? "border-gulf border-2" : "border-line"}`}>
                 <div className="relative aspect-video bg-ink-2">
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   {c.thumb && <img src={c.thumb} alt="" className="h-full w-full object-cover" />}
-                  <span className={`absolute left-0 top-3 display text-3xl px-3 py-1 ${i < 3 ? "bg-mango text-foam" : "bg-white text-foam"}`}>{i + 1}</span>
+                  {paying && <span className={`absolute left-0 top-3 display text-3xl px-3 py-1 ${top ? "bg-mango text-foam" : "bg-white text-foam"}`}>{i + 1}</span>}
+                  {!paying && <span className="absolute left-0 top-3 bg-white/90 text-foam px-2.5 py-1 text-[11px] font-black tracking-wide">{c.gamertag.toUpperCase()}</span>}
                   {at && <a href={at} target="_blank" rel="noreferrer" className="absolute right-3 bottom-3 btn !py-1.5 !px-3 text-sm bg-white text-foam">Watch</a>}
                 </div>
                 <div className="p-4">
                   <p className="font-bold leading-snug">{c.title}</p>
                   <p className="text-sm text-haze mt-1 flex items-center gap-1.5"><PlatformIcon name={c.platform} className="size-4" />{c.gamertag} on {platformName[c.platform]}</p>
-                  <div className="mt-4 flex items-center justify-between">
-                    <span><span key={c.votes} className="display text-3xl bump">{c.votes.toLocaleString()}</span> <span className="text-sm text-haze">votes</span></span>
-                    <button disabled={!open || mine} onClick={() => vote(c.id)}
-                      className={`btn !py-2 text-sm ${mine ? "bg-gulf text-white" : "btn-hot"} disabled:opacity-90`}>
-                      {mine ? "Your vote" : voted ? "Move my vote here" : "Vote"}
-                    </button>
+                  <div className="mt-4 flex items-center justify-between gap-2">
+                    {paying ? (
+                      <span><span key={c.votes ?? 0} className="display text-3xl bump">{(c.votes ?? 0).toLocaleString()}</span> <span className="text-sm text-haze">points</span></span>
+                    ) : (
+                      <Link href="/pricing" className="text-sm font-bold text-gulf underline-offset-4 hover:underline">Totals hidden</Link>
+                    )}
+                    <div className="flex gap-2">
+                      <button onClick={() => download(c)} title={paying ? "Download this clip" : "Downloads are for members"}
+                        className="btn btn-ghost !py-2 !px-3 text-sm">↓</button>
+                      <button disabled={!open} onClick={() => vote(c)}
+                        className={`btn !py-2 text-sm ${mine ? "bg-gulf text-white" : "btn-hot"} disabled:opacity-60`}>
+                        {mine ? "Voted ✓" : "Vote"}
+                      </button>
+                    </div>
                   </div>
                 </div>
               </li>
@@ -111,7 +175,34 @@ export default function ClipsPage() {
           })}
         </ol>
       )}
-      <p className="mt-10 text-sm text-haze">{mode === "club" ? "Club members get one vote per round." : "One vote per account per round."}{" "}You can move it until voting closes. You can&apos;t vote for your own clip.</p>
+
+      <p className="mt-10 text-sm text-haze">
+        {paying
+          ? `Your plan gives you ${maxVotes} votes a round, each counting ${tier.voteWeight}, spread across different clips. Tap a vote again to take it back.`
+          : "One vote per free account per round. You can move it until voting closes."}{" "}
+        You can&apos;t vote for your own clip. Free accounts can win every prize.
+      </p>
+
+      {/* Download is members-only: explain and offer the upgrade rather than a dead button */}
+      {ask && (
+        <div role="dialog" aria-modal="true" aria-labelledby="dl-t"
+          className="fixed inset-0 z-50 grid place-items-center bg-black/60 p-4" onClick={() => setAsk(null)}>
+          <div className="w-full max-w-md rounded-xl bg-ink border-2 border-line p-6" onClick={(e) => e.stopPropagation()}>
+            <h2 id="dl-t" className="display text-4xl">Downloads are for members</h2>
+            <p className="mt-3 text-haze">
+              Free accounts stream everything. Members get free download credits every month, and once
+              those run out a download is {exactMoney(DOWNLOAD.priceCents)} —{" "}
+              <strong className="text-foam">{exactMoney(DOWNLOAD.creatorCents)} of which goes to {ask.gamertag}</strong>,
+              the player who made the clip.
+            </p>
+            <p className="mt-2 text-sm text-haze">Every file carries the uploader&apos;s name on the video.</p>
+            <div className="mt-6 flex gap-3">
+              <Link href="/pricing" className="btn btn-hot">See the plans</Link>
+              <button onClick={() => setAsk(null)} className="btn btn-ghost">Not now</button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

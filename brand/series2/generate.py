@@ -108,9 +108,10 @@ def sc_crate():
 SCENES={"sunset":sc_sunset,"night":sc_night,"swamp":sc_swamp,"water":sc_water,"storm":sc_storm,
         "noon":sc_noon,"blaze":sc_blaze,"dawn":sc_dawn,"asphalt":sc_asphalt,"crate":sc_crate}
 
-def seal(name, scene, subject, bot, ring, arc, inner=CRM):
+def seal(name, scene, subject, bot, ring, arc, inner=CRM, top="LIVE FROM LEONIDA"):
     defs, bg = SCENES[scene]()
     L=len(bot); fs=58 if L<=18 else (50 if L<=22 else 43); ls=8 if L<=18 else 5
+    tfs,tls,tdy=(90,10,-28) if len(top)<=9 else (74,6,-34)
     body=(f'<circle cx="500" cy="500" r="500" fill="{ring}"/>'
           f'<circle cx="500" cy="500" r="470" fill="none" stroke="{arc}" stroke-width="10"/>'
           f'<circle cx="500" cy="500" r="330" fill="{inner}"/>'
@@ -118,8 +119,8 @@ def seal(name, scene, subject, bot, ring, arc, inner=CRM):
           f'<g clip-path="url(#ci)">{bg}{subject}</g>'
           f'<circle cx="500" cy="500" r="330" fill="none" stroke="{arc}" stroke-width="10"/>'
           f'<circle cx="136" cy="548" r="16" fill="{arc}"/><circle cx="864" cy="548" r="16" fill="{arc}"/>'
-          f'<text font-weight="900" font-size="74" fill="{arc}" letter-spacing="6" text-anchor="middle">'
-          f'<textPath href="#t" startOffset="50%"><tspan dy="-34">LIVE FROM LEONIDA</tspan></textPath></text>'
+          f'<text font-weight="900" font-size="{tfs}" fill="{arc}" letter-spacing="{tls}" text-anchor="middle">'
+          f'<textPath href="#t" startOffset="50%"><tspan dy="{tdy}">{top}</tspan></textPath></text>'
           f'<text font-weight="900" font-size="{fs}" fill="{arc}" letter-spacing="{ls}" text-anchor="middle">'
           f'<textPath href="#b" startOffset="50%"><tspan dy="88">{bot}</tspan></textPath></text>')
     open(f"series2/{name}.svg","w").write(
@@ -304,7 +305,11 @@ ITEMS=[
  ("B26","Paper plane","dawn",          g(PLANE,500,440,.80,CRM),            "AIM FOR THE ROOFTOPS",   CRM, DRED),
  ("B27","3am sprinkler","night",       g(SPRINK,500,440,.82,CRM),           "EVERY LAWN, EVERY NIGHT", N1, Y),
 ]
-for n,l,sc,su,bot,ring,arc in ITEMS: seal(n,sc,su,bot,ring,arc)
+# these three already show the word LIVE / ON AIR / LEONIDA inside the seal,
+# so the arc carries only LEONIDA and the art supplies the rest
+SHORT_ARC = {"B02", "B03", "B04"}
+for n,l,sc,su,bot,ring,arc in ITEMS:
+    seal(n,sc,su,bot,ring,arc, top="LEONIDA" if n in SHORT_ARC else "LIVE FROM LEONIDA")
 open("series2/list.txt","w").write("\n".join(n for n,*_ in ITEMS))
 html=('<body style="margin:0;background:#ececec;font:600 15px system-ui;display:grid;'
       'grid-template-columns:repeat(5,250px);gap:20px;padding:22px">'

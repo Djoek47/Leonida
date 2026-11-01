@@ -3,6 +3,10 @@
 set -e
 cd "$(dirname "$0")/.."
 rm -rf out preview
+# api-aside: route handlers can't be statically exported, so hide them for the preview
+mkdir -p .preview-aside && [ -d src/app/api ] && mv src/app/api .preview-aside/api
+restore_api() { [ -d .preview-aside/api ] && mv .preview-aside/api src/app/api; rmdir .preview-aside 2>/dev/null || true; }
+trap restore_api EXIT
 STATIC_EXPORT=1 NEXT_PUBLIC_STATIC=1 npx next build >/dev/null
 mkdir -p preview && mv out preview/site
 cd preview/site

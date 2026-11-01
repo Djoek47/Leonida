@@ -14,7 +14,7 @@ export function Ticker() {
   useEffect(() => { setT(untilLaunch()); const i = setInterval(() => setT(untilLaunch()), 60000); return () => clearInterval(i); }, []);
   const items = [
     t || "Counting down to launch",
-    "Season 1 prize pool: $100 a week, split 50 / 30 / 20",
+    "Weekly prize pool grows with every member, split 50 / 30 / 20",
     "Clip submissions open on launch day",
     "Versus sign-ups are open: one task, two consoles, live on Twitch",
     "Traffic on I-95 into Vice City: heavy. Police activity reported on Ocean Drive",
