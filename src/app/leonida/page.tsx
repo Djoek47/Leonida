@@ -1,6 +1,9 @@
 import { garage, guides, people, regions } from "@/lib/content";
+import { PortraitClip } from "@/components/PortraitClip";
 import Link from "@/components/A";
 import { LeonidaMap } from "@/components/LeonidaMap";
+import { GuideNews } from "@/components/GuideNews";
+import { Arsenal } from "@/components/Arsenal";
 
 export const metadata = { title: "Leonida guide — Live From Leonida" };
 
@@ -12,15 +15,17 @@ export default function Guide() {
         <img src="/media/art/jason_and_lucia_beach_landscape.webp" alt="Jason and Lucia on a Leonida beach" className="absolute inset-0 -z-10 h-full w-full object-cover" />
         <div className="mx-auto w-full max-w-7xl px-4 pb-10">
           <div className="sign max-w-2xl"><h1 className="display text-[clamp(2.8rem,7vw,6rem)]">The Leonida guide</h1>
-          <p className="max-w-xl text-white/90 mt-3">Everything Rockstar has shown so far, in one place. Gameplay guides arrive at launch, tested by our crew, never copied from rumours.</p></div>
+          <p className="max-w-xl text-white/90 mt-3">Built from every new release — trailers, Rockstar drops and hands-on previews — and updated as they land.</p></div>
         </div>
       </section>
 
       <nav className="sticky top-[5.75rem] z-30 bg-ink border-b border-line">
         <div className="mx-auto max-w-7xl px-4 flex gap-6 overflow-x-auto py-3 text-sm font-bold text-haze">
-          {[["#map", "Map"], ["#places", "Places"], ["#people", "People"], ["#garage", "Cars, weapons and extras"], ["#guides", "Guides"]].map(([h, l]) => <a key={h} href={h} className="shrink-0 hover:text-foam">{l}</a>)}
+          {[["#how-it-plays", "How it plays"], ["#map", "Map"], ["#places", "Places"], ["#people", "People"], ["#garage", "Cars and weapons"], ["#guides", "Guides"]].map(([h, l]) => <a key={h} href={h} className="shrink-0 hover:text-foam">{l}</a>)}
         </div>
       </nav>
+
+      <GuideNews />
 
       <section id="places" className="mx-auto max-w-7xl px-4 py-16 scroll-mt-40">
         <h2 className="display text-6xl md:text-7xl">Places</h2>
@@ -68,7 +73,7 @@ export default function Guide() {
             {people.map((p) => (
               <article key={p.slug}>
                 <div className="relative aspect-square rounded-md overflow-hidden bg-ink-2">
-                  <video src={`/media/video/${p.video}.mp4`} poster={`/media/video/${p.video}.jpg`} autoPlay muted loop playsInline aria-hidden className="h-full w-full object-cover" />
+                  <PortraitClip clip={p.video} name={p.name} />
                 </div>
                 <h3 className="mt-3 text-xl font-extrabold">{p.name}</h3>
                 <p className="text-haze text-[15px]">{p.line}</p>
@@ -79,15 +84,18 @@ export default function Guide() {
       </section>
 
       <section id="garage" className="mx-auto max-w-7xl px-4 py-16 scroll-mt-40">
-        <h2 className="display text-6xl md:text-7xl">Cars, weapons and extras</h2>
-        <p className="text-haze mt-3 max-w-2xl">From the Ultimate Edition and the Vintage Vice City Pack. Prices, stats and spawn spots get added after launch.</p>
-        <div className="mt-10 grid gap-x-6 gap-y-10 sm:grid-cols-2 lg:grid-cols-3">
-          {garage.map((g) => (
+        <h2 className="display text-6xl md:text-7xl">Cars and weapons</h2>
+        <p className="text-haze mt-3 max-w-2xl">Everything seen so far. Tap one for the details. Stats and where to find them get added after launch.</p>
+        <div className="mt-8"><Arsenal /></div>
+
+        <h3 className="display text-4xl mt-16">Edition extras</h3>
+        <div className="mt-6 grid gap-x-6 gap-y-10 sm:grid-cols-2 lg:grid-cols-3">
+          {garage.filter((g) => !["Vehicle", "Boat"].includes(g.kind) && !g.name.includes("revolvers")).map((g) => (
             <article key={g.img}>
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img src={`/media/${g.img}.webp`} alt={g.name} loading="lazy" className="aspect-video w-full object-cover rounded-md" />
               <div className="mt-3 flex items-baseline justify-between gap-4">
-                <h3 className="text-lg font-extrabold">{g.name}</h3>
+                <h4 className="text-lg font-extrabold">{g.name}</h4>
                 <span className="text-sm text-haze shrink-0">{g.kind}</span>
               </div>
               <p className="text-sm text-gulf font-semibold">{g.from}</p>

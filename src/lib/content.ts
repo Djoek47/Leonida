@@ -53,8 +53,8 @@ export const guides = [
 ] as const;
 
 export const shop = [
-  { title: "Grand Theft Auto VI — Standard", where: "PlayStation Store", href: "https://store.playstation.com/" },
-  { title: "Grand Theft Auto VI — Ultimate Edition", where: "Xbox Store", href: "https://www.xbox.com/" },
+  { title: "Grand Theft Auto VI — Standard ($79.99)", where: "PlayStation Store", href: "https://store.playstation.com/" },
+  { title: "Grand Theft Auto VI — Ultimate Edition ($99.99)", where: "Xbox Store", href: "https://www.xbox.com/" },
   { title: "Official GTA VI merch", where: "Rockstar Store", href: "https://store.rockstargames.com/" },
   { title: "Capture card for clipping", where: "Amazon", href: "https://www.amazon.com/" },
 ] as const;

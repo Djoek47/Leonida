@@ -1,21 +1,24 @@
 @import "tailwindcss";
 
+@font-face { font-family: "Doto"; src: url("../fonts/doto-900.woff2") format("woff2"); font-weight: 900; font-display: swap; }
+
 /* Live From Leonida — the state's own road signs and local news.
-   Day: Miami golden hour on sun-bleached sand. Interstate green, sign gold, safety orange. */
+   Day: "The World Is Yours" — a Miami sunset burning down into gold.
+   Clean white top bar, interstate-green road signs, gold everywhere else. */
 :root {
-  --dusk: #fdf4e2;      /* page: sun-bleached sand */
-  --ink: #fffdf7;       /* raised surface: warm white */
-  --ink-2: #f7e8c9;     /* recessed: light sand */
-  --line: #e7d3a6;      /* warm tan rule */
-  --flamingo: #f4571c;  /* sunset orange: primary action */
-  --mango: #ffc12b;     /* sign gold */
-  --gulf: #00704a;      /* interstate green */
-  --foam: #1c1710;      /* text: warm asphalt */
-  --haze: #6e6250;      /* muted text: driftwood */
-  --asphalt: #241d14;   /* footer: warm dark */
-  --video-dim: 0.78;
-  /* low sun sitting just off the top of the page */
-  --sun-wash: radial-gradient(1100px 560px at 50% -8%, rgba(255,184,38,.40), rgba(255,214,120,.15) 46%, transparent 72%);
+  --dusk: #f3d48a;      /* page: sunset gold */
+  --ink: #fff5d6;       /* raised surface: champagne */
+  --ink-2: #ecc76a;     /* recessed: deep gold */
+  --line: #c99a3a;      /* gilt rule */
+  --flamingo: #b3121c;  /* Montana red: primary action */
+  --mango: #f0c24b;     /* sign gold */
+  --gulf: #00704a;      /* interstate green: road signs */
+  --foam: #140d03;      /* text: black lacquer */
+  --haze: #5c4313;      /* muted text: old bronze */
+  --asphalt: #0b0703;   /* footer */
+  --video-dim: 0.8;
+  /* orange sky at the top of the page, settling into gold */
+  --sun-wash: linear-gradient(180deg, #ff9a3c 0%, #ffbe55 18%, #f3d48a 42%, #f3d48a 100%);
 }
 
 /* Night: Vice City after dark — violet sky, neon signs. */
@@ -90,7 +93,7 @@ body {
 .btn { display: inline-flex; align-items: center; justify-content: center; gap: .5rem; font-weight: 800; padding: .8rem 1.4rem; border-radius: 8px; transition: transform .15s, background .15s; }
 .btn:active { transform: translateY(1px); }
 .btn-hot { background: var(--flamingo); color: #fff; }
-.btn-hot:hover { background: #e94a10; }
+.btn-hot:hover { filter: brightness(1.1); }
 .btn-ghost { border: 2px solid currentColor; }
 .btn-ghost:hover { background: var(--foam); color: var(--dusk); border-color: var(--foam); }
 .sign .btn-ghost:hover { background: #fff; color: var(--gulf); border-color: #fff; }
@@ -124,4 +127,27 @@ html { transition: background-color .4s; }
   .display.text-6xl, .display.text-7xl, .display.text-8xl { font-size: clamp(2.3rem, 11vw, 3.6rem); }
   .shield { min-width: 2.6rem; height: 2.6rem; font-size: 1.2rem; }
   body { padding-bottom: 4.5rem; } /* room for the radio button */
+}
+
+/* ── The World Is Yours: gilt edges, day mode only ── */
+:root:not([data-theme="night"]) header { background: #fffdf6; border-bottom: 2px solid #c99a3a; }
+:root:not([data-theme="night"]) footer { border-top: 3px solid #c99a3a; }
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="day"]) header { background: var(--ink); border-bottom: 1px solid var(--line); }
+  :root:not([data-theme="day"]) footer { border-top: 0; }
+}
+
+/* ── Countdown ticker: amber LED message board, like a roadside sign ── */
+.led-board {
+  background: #0a0806; border-top: 2px solid #1f1a14; border-bottom: 2px solid #1f1a14;
+  box-shadow: inset 0 2px 6px rgba(0,0,0,.8);
+  font-family: "Doto", ui-monospace, monospace; font-weight: 900; font-size: 15px; letter-spacing: .06em;
+  position: relative;
+}
+.led-text, .led-tag { color: #ffa21a; text-shadow: 0 0 4px rgba(255,140,0,.85), 0 0 10px rgba(255,120,0,.45); }
+.led-tag { background: #000; border-right: 2px solid #2a2219; }
+/* faint pixel grid over the whole board so it reads as LEDs */
+.led-board::after {
+  content: ""; position: absolute; inset: 0; pointer-events: none;
+  background: radial-gradient(circle, transparent 55%, rgba(0,0,0,.55) 60%) 0 0 / 3px 3px;
 }

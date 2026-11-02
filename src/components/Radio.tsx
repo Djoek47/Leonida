@@ -14,6 +14,12 @@ const stations = [
   { name: "The Chamber", genre: "Metal", hosts: "DJ Kerry and DJ Tom" },
 ];
 
+const score = [
+  { title: "Pusher", artist: "Justice feat. Gesaffelstein · new Oct 29", href: "http://justice.lnk.to/pusher" },
+  { title: "Flower in a Hurricane", artist: "Justice feat. Tame Impala, SZA, King Gizzard", href: "https://justice.lnk.to/flowerinahurricane" },
+  { title: "Pre-save the Original Score", artist: "30 tracks · out December 11", href: "https://justice.lnk.to/gtaoriginalscoredigital" },
+];
+
 const singles = [
   { title: "That's It", artist: "Yung Lean feat. Future & Metro Boomin", href: "https://gtavi-thealbum.lnk.to/thatsit" },
   { title: "RHYNO", artist: "Travis Scott", href: "https://gtavi-thealbum.lnk.to/rhyno" },
@@ -28,7 +34,7 @@ const singles = [
 
 export function Radio() {
   const [open, setOpen] = useState(false);
-  const [tab, setTab] = useState<"stations" | "album">("stations");
+  const [tab, setTab] = useState<"stations" | "album" | "score">("stations");
   return (
     <div className="fixed z-50 right-[max(1rem,env(safe-area-inset-right))] bottom-[max(1rem,env(safe-area-inset-bottom))] flex flex-col items-end gap-3">
       {open && (
@@ -38,10 +44,10 @@ export function Radio() {
             <p className="text-sm text-white/85 mt-1">Official GTA VI stations and The Album</p>
           </div>
           <div role="tablist" className="flex border-b border-line shrink-0">
-            {(["stations", "album"] as const).map((t) => (
+            {(["stations", "album", "score"] as const).map((t) => (
               <button key={t} role="tab" aria-selected={tab === t} onClick={() => setTab(t)}
                 className={`flex-1 py-2.5 text-sm font-bold border-b-2 -mb-px ${tab === t ? "border-flamingo" : "border-transparent text-haze"}`}>
-                {t === "stations" ? "Stations" : "The Album"}
+                {t === "stations" ? "Stations" : t === "album" ? "The Album" : "Score"}
               </button>
             ))}
           </div>
@@ -57,7 +63,7 @@ export function Radio() {
                   <span className="text-sm font-bold text-flamingo shrink-0">Preview</span>
                 </a>
               </li>
-            )) : singles.map((s) => (
+            )) : (tab === "album" ? singles : score).map((s) => (
               <li key={s.title}>
                 <a href={s.href} target="_blank" rel="noreferrer" className="px-5 py-3 flex items-center gap-3 hover:bg-ink-2">
                   <svg viewBox="0 0 24 24" className="size-8 shrink-0 text-flamingo" fill="currentColor" aria-hidden><circle cx="12" cy="12" r="11" /><path d="M10 8l6 4-6 4z" fill="#fff" /></svg>
@@ -70,7 +76,7 @@ export function Radio() {
             ))}
           </ul>
           <p className="px-5 py-3 text-xs text-haze border-t border-line shrink-0">
-            {tab === "stations" ? "Station previews play on Rockstar's music page." : "Opens the song on Spotify, Apple Music, YouTube and more."}
+            {tab === "stations" ? "Station previews play on Rockstar's music page." : tab === "album" ? "The Album: 34 tracks, out November 19. Opens on Spotify, Apple Music and more." : "Original Score by Justice. Opens on Spotify, Apple Music and more."}
           </p>
         </div>
       )}

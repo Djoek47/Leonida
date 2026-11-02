@@ -15,16 +15,19 @@ export function Ticker() {
   const items = [
     t || "Counting down to launch",
     "Weekly prize pool grows with every member, split 50 / 30 / 20",
+    "Preload opens November 12 on PS5 and Xbox Series X|S",
+    "New: Justice ft. Gesaffelstein, \"Pusher\" — the full score drops December 11",
+    "South Park just aired fresh GTA VI gameplay. Yes, the dog poop one",
     "Clip submissions open on launch day",
     "Versus sign-ups are open: one task, two consoles, live on Twitch",
     "Traffic on I-95 into Vice City: heavy. Police activity reported on Ocean Drive",
   ];
   return (
-    <div className="ticker bg-mango text-[#1c1710] text-xs font-bold h-7 flex items-center" aria-label="News ticker">
-      <span className="shrink-0 h-full flex items-center px-3 bg-[#1c1710] text-[#ffc12b] z-10">Live From Leonida</span>
+    <div className="ticker led-board h-8 flex items-center" aria-label="News ticker">
+      <span className="led-tag shrink-0 h-full flex items-center px-3 z-10">LIVE FROM LEONIDA</span>
       <div className="ticker overflow-hidden flex-1">
         <div className="ticker-track">
-          {items.map((i, k) => <span key={k}>{i}</span>)}
+          {items.map((i, k) => <span key={k} className="led-text">{i.toUpperCase()}</span>)}
         </div>
       </div>
     </div>

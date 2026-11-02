@@ -27,7 +27,13 @@ export function HeroReel() {
   const b = useRef<HTMLVideoElement>(null);
 
   const slot = i % 2;                       // two stacked players, cross-faded
-  const next = useCallback(() => setI((n) => (n + 1) % REEL.length), []);
+  // One pass through the reel on arrival, then rest on the cover art.
+  // The play button (or a click on the picture) runs it again.
+  const next = useCallback(() => setI((n) => {
+    if (n === REEL.length - 1) { setPaused(true); return 0; }
+    return n + 1;
+  }), []);
+  const replay = () => { if (paused) { lastIndex.current = -1; setI(0); setPaused(false); } else setPaused(true); };
 
   // The index this slot was last rewound for, so unpausing resumes rather than restarts.
   const lastIndex = useRef(-1);
@@ -66,7 +72,7 @@ export function HeroReel() {
 
   return (
     <div className="relative bg-asphalt">
-      <div className="relative w-full aspect-video max-h-[72vh] overflow-hidden">
+      <div className="relative w-full aspect-video max-h-[72vh] overflow-hidden cursor-pointer" onClick={() => paused && replay()}>
         {[0, 1].map((k) => (
           <video
             key={k}
@@ -78,14 +84,14 @@ export function HeroReel() {
             // Nothing loops: a clip that repeats is the reel stuttering, not a feature.
             loop={false}
             src={srcFor(k)}
-            poster={k === 0 ? "/media/art/official_cover_art_landscape.webp" : undefined}
+            poster={k === slot && i === 0 ? "/media/art/official_cover_art_landscape.webp" : srcFor(k).replace(".mp4", "-face.jpg")}
             className={`absolute inset-0 h-full w-full object-cover transition-opacity duration-700 ${k === slot ? "opacity-100" : "opacity-0"}`}
           />
         ))}
       </div>
       <div className="absolute right-3 top-3 md:right-6 md:top-6 flex items-center gap-2">
         <span className="hidden sm:inline-block rounded-md bg-black/60 px-2.5 py-1 text-xs font-bold text-white">{REEL[i].label}</span>
-        <button onClick={() => setPaused((p) => !p)} className="size-9 rounded-full bg-black/60 text-white grid place-items-center"
+        <button onClick={replay} className="size-9 rounded-full bg-black/60 text-white grid place-items-center"
           aria-label={paused ? "Play videos" : "Pause videos"}>
           {paused
             ? <svg viewBox="0 0 24 24" className="size-4" fill="currentColor" aria-hidden><path d="M8 5v14l11-7z" /></svg>
