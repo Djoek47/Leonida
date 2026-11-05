@@ -4,6 +4,7 @@ import Link from "@/components/A";
 import { LeonidaMap } from "@/components/LeonidaMap";
 import { GuideNews } from "@/components/GuideNews";
 import { Arsenal } from "@/components/Arsenal";
+import { Gallery } from "@/components/Gallery";
 
 export const metadata = { title: "Leonida guide — Live From Leonida" };
 
@@ -21,7 +22,7 @@ export default function Guide() {
 
       <nav className="sticky top-[5.75rem] z-30 bg-ink border-b border-line">
         <div className="mx-auto max-w-7xl px-4 flex gap-6 overflow-x-auto py-3 text-sm font-bold text-haze">
-          {[["#how-it-plays", "How it plays"], ["#map", "Map"], ["#places", "Places"], ["#people", "People"], ["#garage", "Cars and weapons"], ["#guides", "Guides"]].map(([h, l]) => <a key={h} href={h} className="shrink-0 hover:text-foam">{l}</a>)}
+          {[["#how-it-plays", "How it plays"], ["#map", "Map"], ["#places", "Places"], ["#people", "People"], ["#garage", "Cars and weapons"], ["#screenshots", "Screenshots"], ["#guides", "Guides"]].map(([h, l]) => <a key={h} href={h} className="shrink-0 hover:text-foam">{l}</a>)}
         </div>
       </nav>
 
@@ -102,6 +103,12 @@ export default function Guide() {
             </article>
           ))}
         </div>
+      </section>
+
+      <section id="screenshots" className="mx-auto max-w-7xl px-4 py-16 scroll-mt-40">
+        <h2 className="display text-6xl md:text-7xl">Screenshots</h2>
+        <p className="text-haze mt-3 max-w-2xl">Every official image Rockstar has released, in one place — characters, places, both edition packs and the artwork.</p>
+        <div className="mt-8"><Gallery /></div>
       </section>
 
       <section id="guides" className="mx-auto max-w-7xl px-4 py-8 scroll-mt-40">
