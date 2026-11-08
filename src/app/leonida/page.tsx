@@ -5,6 +5,7 @@ import { LeonidaMap } from "@/components/LeonidaMap";
 import { GuideNews } from "@/components/GuideNews";
 import { Arsenal } from "@/components/Arsenal";
 import { Gallery } from "@/components/Gallery";
+import { GuideNav } from "@/components/GuideNav";
 
 export const metadata = { title: "Leonida guide — Live From Leonida" };
 
@@ -20,11 +21,7 @@ export default function Guide() {
         </div>
       </section>
 
-      <nav className="sticky top-[5.75rem] z-30 bg-ink border-b border-line">
-        <div className="mx-auto max-w-7xl px-4 flex gap-6 overflow-x-auto py-3 text-sm font-bold text-haze">
-          {[["#how-it-plays", "How it plays"], ["#map", "Map"], ["#places", "Places"], ["#people", "People"], ["#garage", "Cars and weapons"], ["#screenshots", "Screenshots"], ["#guides", "Guides"]].map(([h, l]) => <a key={h} href={h} className="shrink-0 hover:text-foam">{l}</a>)}
-        </div>
-      </nav>
+      <GuideNav />
 
       <GuideNews />
 

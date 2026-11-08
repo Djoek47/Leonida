@@ -20,7 +20,7 @@ def m_live(fg, dot=R):
             f'<rect x="330" y="600" width="110" height="22" rx="11" fill="{fg}" opacity=".55"/>'
             f'<rect x="560" y="600" width="110" height="22" rx="11" fill="{fg}" opacity=".55"/>')
 
-def m_scene(sky1, sky2, sand, sea, fg, plate, ptxt):
+def m_scene(sky1, sky2, sand, sea, fg, plate, ptxt, dot=True):
     rays = "".join(f'<path d="M500,500 L{500+420*math.cos(a/57.3):.0f},{500-420*math.sin(a/57.3):.0f} '
                    f'L{500+420*math.cos((a+8)/57.3):.0f},{500-420*math.sin((a+8)/57.3):.0f}z" fill="{Y}" opacity=".45"/>'
                    for a in range(14, 170, 16))
@@ -30,13 +30,19 @@ def m_scene(sky1, sky2, sand, sea, fg, plate, ptxt):
                       f'stroke-width="15" fill="none" stroke-linecap="round"/>' for a in (22, 68, 112, 158))
             + '</g>')
     return (f'<rect x="170" y="170" width="660" height="660" fill="{sky1}"/>{rays}'
+            f'<circle cx="500" cy="500" r="116" fill="{sky2}" opacity=".28"/>'
+            f'<circle cx="500" cy="500" r="98" fill="{sky2}" opacity=".45"/>'
             f'<circle cx="500" cy="500" r="84" fill="{sky2}"/>'
             f'<rect x="170" y="560" width="660" height="270" fill="{sea}"/>'
             f'<path d="M170,560 q170,-34 330,0 q170,34 330,0 l0,46 q-170,34 -330,0 q-160,-32 -330,0z" fill="{sand}"/>'
             + palm +
             f'<rect x="300" y="610" width="400" height="118" rx="16" fill="{fg}" stroke="{W}" stroke-width="11"/>'
-            f'<circle cx="368" cy="669" r="21" fill="{R}"/>'
-            f'<text x="560" y="708" font-weight="900" font-size="86" fill="{ptxt}" text-anchor="middle" letter-spacing="4">LIVE</text>')
+            + (f'<circle cx="368" cy="669" r="21" fill="{R}"/>' if dot else '')
+            # With no dot the word sits dead centre on the plate. The +1 offsets the
+            # trailing letter-space that text-anchor counts but you can't see, and the
+            # baseline is lifted so the glyphs' optical centre matches the plate's.
+            + f'<text x="{561 if dot else 501}" y="699" font-weight="900" font-size="86" fill="{ptxt}" '
+              f'text-anchor="middle" letter-spacing="4">LIVE</text>')
 
 def m_gator(fg, water, plate, ptxt):
     return (f'<rect x="170" y="170" width="660" height="660" fill="{water}"/>'
@@ -113,8 +119,8 @@ def seal(name, ring, inner, arc, orn, motif, ring_edge=None, rope=False, top="LE
             f'<circle cx="500" cy="500" r="330" fill="none" stroke="{edge}" stroke-width="10"/>'
             f'<text font-weight="900" font-size="{tfs}" fill="{arc}" letter-spacing="{tls}" text-anchor="middle">'
             f'<textPath href="#t" startOffset="50%"><tspan dy="{tdy}">{top}</tspan></textPath></text>'
-            f'<text font-weight="900" font-size="58" fill="{arc}" letter-spacing="8" text-anchor="middle">'
-            f'<textPath href="#b" startOffset="50%"><tspan dy="88">{bot}</tspan></textPath></text>'
+            f'<text font-weight="900" font-size="78" fill="{arc}" letter-spacing="6" text-anchor="middle">'
+            f'<textPath href="#b" startOffset="50%"><tspan dy="96">{bot}</tspan></textPath></text>'
             + orn)
     open(f"seals/{name}.svg", "w").write(
         f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 1000" width="1000" height="1000">'
@@ -128,7 +134,7 @@ def add(n, label, **kw):
 add("S01", "Classic seal, sign centre", ring=Y, inner=G, arc=DRED, orn=orn_dots(DRED), motif=m_sign(W, Y, K))
 add("S02", "Classic seal, big LIVE",    ring=Y, inner=G, arc=DRED, orn=orn_stars(DRED), motif=m_live(W))
 add("S03", "Classic seal, sunset scene",ring=Y, inner=CREAM, arc=DRED, orn=orn_dots(DRED),
-    motif=m_scene("#ff8a3c", "#fff1e8", "#f2d9a0", TEAL, G, Y, W))
+    motif=m_scene("#ff8a3c", R, "#f2d9a0", TEAL, G, Y, W, dot=False))   # the sun is the record light, so the plate needs no dot
 add("S04", "Classic seal, gator",       ring=Y, inner=TEAL, arc=DRED, orn=orn_stars(DRED),
     motif=m_gator(G, TEAL, Y, W))
 

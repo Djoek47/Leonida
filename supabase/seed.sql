@@ -13,3 +13,15 @@ where c.title = 'Test round: Vice City getaways';
 
 -- Give yourself a paid tier for testing:
 -- update public.profiles set tier = 'kingpin', subscription_status = 'active' where id = (select id from auth.users where email = 'YOUR@EMAIL');
+
+
+-- ───────── A week of Daily Drops to start with ─────────
+insert into public.daily_drops (day, theme, blurb, closes_at) values
+  (current_date,     'Five-star escapes',   'Lose them in under a minute.',              current_date + 1),
+  (current_date + 1, 'Best custom build',   'Show what you did at Rideout or Willie''s.', current_date + 2),
+  (current_date + 2, 'Worst possible crash','The one you did not walk away from.',        current_date + 3),
+  (current_date + 3, 'Golden hour',         'Leonida at its prettiest.',                  current_date + 4),
+  (current_date + 4, 'NPC of the week',     'A stranger doing something unrepeatable.',   current_date + 5),
+  (current_date + 5, 'Heist gone wrong',    'The plan held until it did not.',            current_date + 6),
+  (current_date + 6, 'Airborne',            'Anything that should not have left the ground.', current_date + 7)
+on conflict (day) do nothing;

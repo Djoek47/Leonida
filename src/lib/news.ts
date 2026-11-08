@@ -12,9 +12,46 @@ export type NewsItem = {
   links: { label: string; href: string }[];
 };
 
-export const NEWS_UPDATED = "2026-11-02";
+export const NEWS_UPDATED = "2026-11-07";
 
 export const NEWS: NewsItem[] = ([
+  {
+    date: "2026-11-05",
+    title: "Rockstar drops 39 new launch screenshots",
+    body: "A launch gallery two weeks out: Jason and Lucia armed and in different outfits, dance clubs and dockside bars, police raids, scuba diving, an alligator, and a dog in what looks like its own combat gear. Mostly cinematic rather than mechanics, but the character detail is the headline.",
+    source: "Rockstar",
+    links: [
+      { label: "The launch gallery", href: "https://www.rockstargames.com/VI/launch-gallery" },
+      { label: "PC Gamer's run-through", href: "https://www.pcgamer.com/games/grand-theft-auto/rockstar-drops-a-pile-of-new-gta-6-launch-screenshots-featuring-dancers-combat-dogs-and-so-many-pores/" },
+    ],
+  },
+  {
+    date: "2026-11-18",
+    title: "Reviews land the day before launch",
+    body: "The review embargo reportedly lifts on November 18, a day ahead of release, though some outlets are expected to hold until launch day. Preload opens November 12.",
+    source: "Press preview",
+    links: [
+      { label: "Dot Esports on the embargo", href: "https://dotesports.com/gta/news/gta-6-review-embargo-date" },
+    ],
+  },
+  {
+    date: "2026-09-29",
+    title: "Game Informer's 14-page cover story, with 12 exclusive screenshots",
+    body: "Jason and Lucia on original commissioned cover art, 12 screenshots nobody had seen, developer interviews, and a longer look at Leonida and its side activities.",
+    source: "Press preview",
+    links: [
+      { label: "What was in it", href: "https://www.gtalab.gg/en/news/gta-6-game-informer-cover-story-new-details-screenshots" },
+    ],
+  },
+  {
+    date: "2026-06-24",
+    title: "Car and character customisation, in 60 screenshots",
+    body: "Rockstar's Ultimate Edition reveal came with roughly 60 images covering vehicle mod shops, the Classic Car Collection, weapon engraving, tattoos and hairstyles, Personal Garages and fencing stolen goods. The detail is under How it plays.",
+    source: "Rockstar",
+    links: [
+      { label: "GamesRadar's breakdown", href: "https://www.gamesradar.com/games/grand-theft-auto/gta-6-new-gameplay-details-activities-customization-confirmed-63-screenshots/" },
+    ],
+  },
   {
     date: "2026-10-29",
     title: "Justice drop \"Pusher\" with Gesaffelstein; the full score lands Dec 11",
@@ -113,6 +150,36 @@ export const HOW_IT_PLAYS: { topic: string; points: string[] }[] = [
       "Not a morality meter — states run Professional, Aggressive, Violent, Psycho.",
       "Push past Psycho and there's no coming back that playthrough.",
       "Jason and Lucia are tracked separately.",
+    ],
+  },
+  {
+    topic: "Customising cars",
+    points: [
+      "Two named mod shops so far, Rideout Customs and One-Eyed Willie's — both Ultimate Edition only at launch.",
+      "Rideout leans donk and street: lifted sedans, oversized rims, loud paint, interior trim, suspension.",
+      "One-Eyed Willie's leans off-road, with hand-painted one-off liveries.",
+      "Rockstar's own words are \"a wide selection of artistic and performance-based vehicle mods\" — detailed interiors, rims and donk stylings.",
+      "Some cars carry unique cab spoilers, rear aerials and special liveries.",
+      "Personal Garages across Leonida store cars, hold a weapons locker and a stash box for hot goods.",
+      "Rockstar hasn't detailed the base-game customisation system, so what Standard Edition gets is still open.",
+    ],
+  },
+  {
+    topic: "Restoring and fencing",
+    points: [
+      "Classic Car Collection: find abandoned project cars in the world, restore them, and run commissions for Wyman, a collector and fixer.",
+      "Fences buy most stolen goods at a discount; a Stash Box at a garage or safehouse keeps them off you.",
+      "Carrying hot goods around draws police attention.",
+      "Ultimate Edition players can raid the PTT Youngin$ store in Southside Vice City for contraband.",
+    ],
+  },
+  {
+    topic: "Looking the part",
+    points: [
+      "Outfits, apparel, accessories and tattoos on arms, legs and back.",
+      "Hairstyles for both characters, Jason's facial hair, Lucia's makeup and nails.",
+      "Some weapons take custom grips, engravings and scopes; Ammu-Nation is the hub for that.",
+      "The November launch gallery shows the pair in several different outfits, though Rockstar hasn't called that full character customisation.",
     ],
   },
   {

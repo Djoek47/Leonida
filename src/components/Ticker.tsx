@@ -16,6 +16,8 @@ export function Ticker() {
     t || "Counting down to launch",
     "Weekly prize pool grows with every member, split 50 / 30 / 20",
     "Preload opens November 12 on PS5 and Xbox Series X|S",
+    "39 new launch screenshots just dropped — see them in the guide",
+    "Reviews land November 18, one day before launch",
     "New: Justice ft. Gesaffelstein, \"Pusher\" — the full score drops December 11",
     "South Park just aired fresh GTA VI gameplay. Yes, the dog poop one",
     "Clip submissions open on launch day",
