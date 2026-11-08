@@ -35,6 +35,7 @@ export function TagPicker({ value, onChange }: { value: string[]; onChange: (t: 
       <div className="mt-3 flex gap-1.5 overflow-x-auto pb-1 max-w-full">
         {TAG_GROUPS.map((g) => (
           <button key={g.group} type="button" onClick={() => setOpen(g.group)} aria-pressed={open === g.group}
+            aria-label={`Show ${g.group} tags`}
             className={`shrink-0 rounded-full px-3 py-1 text-sm font-bold ${open === g.group ? "bg-foam text-dusk" : "bg-ink-2 text-haze"}`}>
             {g.group}
           </button>
