@@ -1,7 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
 import Link from "@/components/A";
-import { TIERS, annualSaving, DOWNLOAD, POOL_LADDER, type Tier } from "@/lib/tiers";
+import { TIERS, annualSaving, DOWNLOAD, BRACKETS, bracketFor, type Tier } from "@/lib/tiers";
 import { useUser } from "@/lib/useUser";
 import { money, poolNow, type Pool } from "@/lib/api";
 import { DemoNote } from "@/components/DemoNote";
@@ -41,8 +41,8 @@ export default function Pricing() {
           <p className="inline-flex items-center gap-2 rounded-full bg-mango text-[#1c1710] px-3 py-1 text-sm font-black">Memberships</p>
           <h1 className="display mt-5 text-[clamp(2.6rem,8vw,6rem)] leading-[0.95]">Back the channel.<br />Get a louder vote.</h1>
           <p className="mt-5 max-w-2xl text-lg text-white/85">
-            You never have to pay to enter or to win. Members get more clips a day, more votes that
-            count for more, clip downloads, and no ads — and their subscriptions are what grow the prize pool.
+            You never have to pay to enter or to win. Members get more votes, more clips a day,
+            clip downloads and no ads — and their subscriptions are what grow the prize pool.
           </p>
 
           <div className="mt-8 inline-flex rounded-full border-2 border-white/25 p-1 text-sm font-bold">
@@ -60,14 +60,18 @@ export default function Pricing() {
 
       <section className="mx-auto max-w-7xl px-4 py-12 grid gap-5 md:grid-cols-2 xl:grid-cols-4 items-start">
         {TIERS.map((t) => {
-          const current = (profile?.tier ?? "street") === t.id && (t.id === "street" ? !paying : paying);
+          const current = (profile?.tier ?? "free") === t.id && (t.id === "free" ? !paying : paying);
           const cents = annual ? t.annualCents : t.monthlyCents;
-          const best = t.id === "kingpin";
+          const best = t.id === "hustler";
           return (
             <div key={t.id} className={`rounded-xl border-2 p-6 h-full flex flex-col ${best ? "border-gulf bg-ink" : "border-line bg-ink"}`}>
               {best && <p className="-mt-9 mb-3 self-start rounded-full bg-gulf px-3 py-1 text-xs font-black text-white">Most take this one</p>}
               <h2 className="display text-4xl">{t.label}</h2>
               <p className="mt-1 text-sm text-haze min-h-10">{t.pitch}</p>
+              <p className="mt-3 inline-flex items-baseline gap-2 rounded-lg bg-ink-2 px-3 py-2">
+                <span className="display text-4xl text-gulf">{t.votes}</span>
+                <span className="font-bold">{t.votes === 1 ? "vote" : "votes"}</span>
+              </p>
               <p className="mt-4">
                 <span className="display text-5xl">{t.monthlyCents ? price(cents) : "Free"}</span>
                 {t.monthlyCents > 0 && <span className="text-haze font-semibold"> /{annual ? "year" : "month"}</span>}
@@ -88,7 +92,7 @@ export default function Pricing() {
                 ))}
               </ul>
 
-              {t.id === "street" ? (
+              {t.id === "free" ? (
                 <Link href={user ? "/submit" : "/login"} className="btn btn-ghost mt-6 w-full justify-center">
                   {current ? "Your plan" : "Start free"}
                 </Link>
@@ -103,30 +107,39 @@ export default function Pricing() {
         })}
       </section>
 
-      <section className="mx-auto max-w-7xl px-4 pb-16 grid gap-10 lg:grid-cols-2">
+      <section className="mx-auto max-w-7xl px-4 pb-16 grid gap-10 lg:grid-cols-2 [&>*]:min-w-0">
         <div>
           <h2 className="display text-5xl">Where the prize money comes from</h2>
           <p className="mt-3 text-haze">
-            The weekly pool grows with the number of paying members. We cover it until the community can.
-            Whatever the pool is when a round opens is locked in, so it can&apos;t shrink under you.
+            The weekly pool grows with the number of paying members. Whatever it is when a round
+            opens is locked in, so it can&apos;t shrink under you.
           </p>
-          <table className="mt-6 w-full text-left text-sm">
-            <thead><tr className="border-b-2 border-line">
-              <th className="py-2 font-black">Paying members</th>
-              <th className="py-2 font-black">Weekly pool</th>
-              <th className="py-2 font-black">Who pays</th>
-            </tr></thead>
-            <tbody>
-              {POOL_LADDER.map(([a, b, c]) => (
-                <tr key={a} className="border-b border-line">
-                  <td className="py-2.5 font-semibold">{a}</td>
-                  <td className="py-2.5 display text-2xl text-gulf">{b}</td>
-                  <td className="py-2.5 text-haze">{c}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-          <p className="mt-4 text-sm text-haze">Clip of the Month runs at four times the weekly pool.</p>
+          <div className="mt-6 overflow-x-auto">
+            <table className="w-full min-w-[22rem] text-left text-sm">
+              <thead><tr className="border-b-2 border-line">
+                <th scope="col" className="py-2 font-black">Paying members</th>
+                <th scope="col" className="py-2 font-black">Weekly pool</th>
+                <th scope="col" className="py-2 font-black">Gold</th>
+              </tr></thead>
+              <tbody>
+                {BRACKETS.map((b) => {
+                  const here = b.label === bracketFor(pool?.paying_users ?? 0).label;
+                  return (
+                    <tr key={b.label} className={`border-b border-line ${here ? "bg-mango/25" : ""}`}>
+                      <th scope="row" className="py-2.5 font-semibold">{b.label}</th>
+                      <td className="py-2.5 display text-2xl text-gulf">{price(b.pool * 100)}</td>
+                      <td className="py-2.5 font-bold">{price(b.gold * 100)}</td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+          <p className="mt-4 text-sm">
+            <Link href="/earn" className="text-gulf font-bold underline underline-offset-4">
+              See all three ways to earn →
+            </Link>
+          </p>
         </div>
 
         <div className="grid gap-5 content-start">
@@ -141,12 +154,8 @@ export default function Pricing() {
             <h3 className="display text-3xl">Downloads pay the creator</h3>
             <p className="mt-2 text-haze">
               Members get free download credits every month. Once those run out a download is{" "}
-              {price(DOWNLOAD.priceCents)}, and <strong className="text-foam">{price(DOWNLOAD.creatorCents)} of that goes
-              straight to whoever made the clip</strong> — the remaining {price(DOWNLOAD.platformCents)} covers hosting and fees.
-            </p>
-            <p className="mt-2 text-haze">
-              Credit downloads pay the creator exactly the same {price(DOWNLOAD.creatorCents)}. Creator
-              earnings are tracked as they happen and paid out once a month.
+              {price(DOWNLOAD.priceCents)}, and that goes toward the creator who made the clip.
+              Credit downloads pay the creator too.
             </p>
             <p className="mt-3 text-sm text-haze">Every download carries the uploader&apos;s name on the video.</p>
           </div>
@@ -154,8 +163,8 @@ export default function Pricing() {
           <div className="rounded-xl border border-line bg-ink p-6">
             <h3 className="display text-3xl">Cancel whenever</h3>
             <p className="mt-2 text-haze">
-              Your plan runs to the end of the period you paid for, then stops. Unused download credits
-              don&apos;t roll over. Free accounts keep competing and keep winning.
+              Your plan runs to the end of the period you paid for, then stops. Unused download
+              credits don&apos;t roll over. Free accounts keep competing and keep winning.
             </p>
           </div>
         </div>

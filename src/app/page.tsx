@@ -1,7 +1,6 @@
 import Link from "@/components/A";
 import { HeroReel } from "@/components/HeroReel";
 import { regions } from "@/lib/content";
-import { PlatformIcon } from "@/components/Icons";
 
 const steps = [
   { t: "Send your clip", d: "Upload it with your gamertag." },
@@ -51,19 +50,18 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Versus teaser */}
+      {/* How to earn */}
       <section className="mx-auto max-w-7xl px-4 pb-16">
-        <Link href="/versus" className="group relative grid grid-cols-2 rounded-xl overflow-hidden aspect-[16/9] md:aspect-[16/6]">
+        <Link href="/earn" className="group relative block rounded-xl overflow-hidden">
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src="/media/people/jason_duval_3.webp" alt="Jason Duval" className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-105" />
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src="/media/people/lucia_caminos_2.webp" alt="Lucia Caminos" className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-105" />
-          <span className="absolute left-3 top-3 lower-third text-xs"><span className="tag !bg-[#0070D1] gap-1.5"><PlatformIcon name="ps5" className="size-3.5" />PS5</span><span className="txt">Player one</span></span>
-          <span className="absolute right-3 top-3 lower-third text-xs"><span className="tag !bg-[#107C10] gap-1.5"><PlatformIcon name="xbox" className="size-3.5" />Xbox</span><span className="txt">Player two</span></span>
-          <span className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 grid place-items-center size-20 md:size-32 rotate-45 rounded-xl bg-mango shadow-[inset_0_0_0_4px_var(--mango),inset_0_0_0_8px_#1c1710]"><span className="-rotate-45 display text-3xl md:text-6xl text-[#1c1710]">VS</span></span>
-          <span className="absolute inset-x-0 bottom-0 p-4 md:p-6 bg-gradient-to-t from-black/75 to-transparent text-white">
-            <span className="block display text-3xl md:text-5xl">Versus</span>
-            <span className="block text-white/85">Same task, two consoles, live on Twitch.</span>
+          <img src="/media/art/official_cover_art_landscape.webp" alt="" className="h-full w-full object-cover aspect-[16/9] md:aspect-[16/6] transition-transform duration-700 group-hover:scale-105" />
+          <span className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/35 to-transparent" />
+          <span className="absolute inset-x-0 bottom-0 p-5 md:p-8 text-white">
+            <span className="block display text-4xl md:text-6xl">Three ways to get paid</span>
+            <span className="block mt-1 text-white/85 max-w-xl">
+              Win the week. Earn on every download. Take the month or the year.
+            </span>
+            <span className="btn btn-hot mt-4">How to earn</span>
           </span>
         </Link>
       </section>

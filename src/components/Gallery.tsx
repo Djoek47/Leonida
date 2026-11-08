@@ -26,6 +26,7 @@ export function Gallery() {
       if (e.key === "ArrowRight") step(1);
       if (e.key === "ArrowLeft") step(-1);
     };
+    document.querySelector('[aria-current="true"]')?.scrollIntoView({ block: "nearest", inline: "center" });
     addEventListener("keydown", k);
     document.body.style.overflow = "hidden";
     return () => { removeEventListener("keydown", k); document.body.style.overflow = ""; };
@@ -52,13 +53,16 @@ export function Gallery() {
         </div>
       )}
 
-      <ul className="mt-6 grid gap-2 grid-cols-2 sm:grid-cols-3 lg:grid-cols-4">
+      <ul className="mosaic mt-6">
         {shown.map((s, i) => (
-          <li key={s.src}>
-            <button onClick={() => setAt(i)} className="group block w-full overflow-hidden rounded-md bg-ink-2 aspect-video">
+          <li key={s.src} className={i % 6 === 0 ? "wide" : i % 11 === 5 ? "tall" : ""}>
+            <button onClick={() => setAt(i)} className="group relative block h-full w-full overflow-hidden rounded-md bg-ink-2">
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img src={s.src} alt={s.title} loading="lazy"
-                className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105" />
+                className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-[1.06]" />
+              <span className="pointer-events-none absolute inset-x-0 bottom-0 translate-y-2 bg-gradient-to-t from-black/80 to-transparent px-3 pb-2 pt-8 text-left text-[13px] font-bold text-white opacity-0 transition duration-300 group-hover:translate-y-0 group-hover:opacity-100 group-focus-visible:translate-y-0 group-focus-visible:opacity-100">
+                {s.title}
+              </span>
             </button>
           </li>
         ))}
@@ -87,6 +91,17 @@ export function Gallery() {
               </>
             )}
           </div>
+          <ul className="flex gap-1.5 overflow-x-auto px-3 pb-3" onClick={(e) => e.stopPropagation()}>
+            {shown.map((t, i) => (
+              <li key={t.src} className="shrink-0">
+                <button onClick={() => setAt(i)} aria-label={t.title} aria-current={i === at}
+                  className={`block h-12 w-20 overflow-hidden rounded ${i === at ? "ring-2 ring-mango" : "opacity-50 hover:opacity-90"}`}>
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img src={t.src} alt="" loading="lazy" className="h-full w-full object-cover" />
+                </button>
+              </li>
+            ))}
+          </ul>
         </div>
       )}
     </div>

@@ -12,6 +12,7 @@ export type Clip = {
   source_url: string | null; edited_url: string | null; youtube_timestamp: number | null;
   status: string; votes: number | null; created_at: string; thumb?: string;
   duration_seconds?: number | null; for_contest?: boolean;
+  trending_until?: string | null; tags?: string[];
 };
 export type Winning = { id: string; contest_id: string; clip_id: string; place: number; amount_cents: number; status: string };
 

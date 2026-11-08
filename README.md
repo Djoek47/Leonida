@@ -1,6 +1,5 @@
 # Live From Leonida
 
-Weekly GTA VI clip contest (send → staff review → compilation video → public vote → top 3 paid 50/30/20) plus **Versus**: live console-vs-console challenges on Twitch, and a Leonida guide built from Rockstar's official press kit.
 
 Stack: Next.js 15 (App Router) · Tailwind 4 · Supabase (auth, Postgres, storage) · Vercel.
 
@@ -21,13 +20,10 @@ Without env vars the site runs in **preview mode** with sample data and a demo a
 ## Pages
 | Route | What it does |
 |---|---|
-| `/` | Hero, prize split, how it works, Versus, guide, affiliate shop |
 | `/clips` | Current round, compilation embed, vote (1 per account, movable) |
 | `/submit` | Upload file / paste link with gamertag; claim a clip that's yours |
 | `/dashboard` | My clips, votes, winnings, redeem, gamertag proof, payout method |
-| `/versus` | Formats, match flow, apply to play |
 | `/leonida` | Places, people, Ultimate Edition / Vintage pack items, guides |
-| `/admin` | Review queue (keyboard A/R/J/K), weekly round, payouts, claims, Versus |
 | `/rules` | Draft contest rules (needs legal review) |
 
 ## Content updates

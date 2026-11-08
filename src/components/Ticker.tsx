@@ -19,13 +19,13 @@ export function Ticker() {
     "New: Justice ft. Gesaffelstein, \"Pusher\" — the full score drops December 11",
     "South Park just aired fresh GTA VI gameplay. Yes, the dog poop one",
     "Clip submissions open on launch day",
-    "Versus sign-ups are open: one task, two consoles, live on Twitch",
+    "Every download pays the creator who made the clip",
     "Traffic on I-95 into Vice City: heavy. Police activity reported on Ocean Drive",
   ];
   return (
     <div className="ticker led-board h-8 flex items-center" aria-label="News ticker">
       <span className="led-tag shrink-0 h-full flex items-center px-3 z-10">LIVE FROM LEONIDA</span>
-      <div className="ticker overflow-hidden flex-1">
+      <div className="ticker overflow-hidden flex-1 min-w-0">
         <div className="ticker-track">
           {items.map((i, k) => <span key={k} className="led-text">{i.toUpperCase()}</span>)}
         </div>

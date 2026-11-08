@@ -16,9 +16,10 @@ export type Profile = {
 /** What the member sees about their own account (public.my_account). */
 export type Account = {
   tier: TierId; credits_remaining: number; credits_per_month: number;
-  vote_weight: number; extra_votes: number; daily_submissions: number;
-  submitted_today: number; pending_cents: number; lifetime_downloads: number;
-  current_period_end: string | null;
+  votes: number; daily_submissions: number; submitted_today: number;
+  pending_cents: number; lifetime_downloads: number; current_period_end: string | null;
+  streak_days: number; best_streak: number; freezes_left: number; streak_freezes: number;
+  stars: number; badges: number;
 };
 
 const DEMO_USER = { id: "demo", email: "demo@livefromleonida.com" } as unknown as User;
@@ -32,15 +33,17 @@ export const DEMO_PROFILE: Profile = {
 };
 
 const DEMO_ACCOUNT: Account = {
-  tier: "kingpin", credits_remaining: 5, credits_per_month: 8,
-  vote_weight: 5, extra_votes: 3, daily_submissions: 25,
-  submitted_today: 1, pending_cents: 1890, lifetime_downloads: 27,
+  tier: "kingpin", credits_remaining: 14, credits_per_month: 20,
+  votes: 6, daily_submissions: 100, submitted_today: 1,
+  pending_cents: 1890, lifetime_downloads: 27,
   current_period_end: DEMO_PROFILE.current_period_end,
+  streak_days: 9, best_streak: 21, freezes_left: 2, streak_freezes: 3,
+  stars: 2, badges: 5,
 };
 
 /** True when this account's subscription is good right now. */
 export function isPaying(p: Pick<Profile, "tier" | "subscription_status"> | null | undefined) {
-  return Boolean(p && p.tier !== "street" && ["active", "trialing"].includes(p.subscription_status));
+  return Boolean(p && p.tier !== "free" && ["active", "trialing"].includes(p.subscription_status));
 }
 
 /** Current user, profile and account. Without Supabase env vars a sample member is returned. */

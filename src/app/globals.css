@@ -130,10 +130,10 @@ html { transition: background-color .4s; }
 }
 
 /* ── The World Is Yours: gilt edges, day mode only ── */
-:root:not([data-theme="night"]) header { background: #fffdf6; border-bottom: 2px solid #c99a3a; }
+
 :root:not([data-theme="night"]) footer { border-top: 3px solid #c99a3a; }
 @media (prefers-color-scheme: dark) {
-  :root:not([data-theme="day"]) header { background: var(--ink); border-bottom: 1px solid var(--line); }
+
   :root:not([data-theme="day"]) footer { border-top: 0; }
 }
 
@@ -150,4 +150,74 @@ html { transition: background-color .4s; }
 .led-board::after {
   content: ""; position: absolute; inset: 0; pointer-events: none;
   background: radial-gradient(circle, transparent 55%, rgba(0,0,0,.55) 60%) 0 0 / 3px 3px;
+}
+
+/* ── The top bar follows the sky: white and gold by day, champagne late on,
+      rose and gold at sunset, purple once night mode takes over. ── */
+@property --sky-a { syntax: "<color>"; inherits: true; initial-value: #ffffff; }
+@property --sky-b { syntax: "<color>"; inherits: true; initial-value: #fffaec; }
+@property --sky-c { syntax: "<color>"; inherits: true; initial-value: #e9c877; }
+@property --sky-ink { syntax: "<color>"; inherits: true; initial-value: #140d03; }
+:root.sky-ready { transition: --sky-a 8s linear, --sky-b 8s linear, --sky-c 8s linear; }
+
+/* The colour itself never moves, so the hour always reads true. */
+.sky-bar {
+  position: relative; isolation: isolate;
+  color: var(--sky-ink);
+  border-bottom: 2px solid #c99a3a;
+  background: linear-gradient(100deg, var(--sky-a) 0%, var(--sky-b) 44%, var(--sky-c) 100%);
+}
+/* A slow band of light travelling across it — the only thing that animates. */
+.sky-bar::before {
+  content: ""; position: absolute; inset: 0; z-index: -1; pointer-events: none;
+  background: linear-gradient(100deg, transparent 25%, rgba(255,255,255,.2) 45%, rgba(255,226,150,.22) 55%, transparent 75%);
+  background-size: 250% 100%;
+  animation: sky-drift 48s linear infinite;
+}
+/* Only visible in the minutes when the sky crosses dark to light. */
+.sky-bar::after {
+  content: ""; position: absolute; inset: 0; z-index: -1; pointer-events: none;
+  background: var(--sky-scrim, transparent);
+  transition: background 8s linear;
+}
+/* Full-strength ink: muted grey can't hold 4.5:1 across a moving gradient. */
+.sky-bar .text-haze { color: var(--sky-ink); }
+.sky-bar .sign-sm { box-shadow: inset 0 0 0 2px var(--gulf), inset 0 0 0 3.5px #fff, 0 2px 10px -4px rgba(0,0,0,.45); }
+@keyframes sky-drift { from { background-position: 150% 0; } to { background-position: -150% 0; } }
+@media (prefers-reduced-motion: reduce) { .sky-bar::before { animation: none; opacity: .35; } }
+
+/* Night mode keeps its own sky, whatever the clock says. */
+:root[data-theme="night"] .sky-bar {
+  background: linear-gradient(100deg, #1a0b30, #2e1854 44%, #44296f);
+  color: #fff1e8; border-bottom-color: #44296f;
+}
+:root[data-theme="night"] .sky-bar::before {
+  background: linear-gradient(100deg, transparent 20%, rgba(255,61,139,.22) 45%, rgba(138,43,226,.3) 55%, transparent 80%);
+  background-size: 250% 100%;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="day"]) .sky-bar {
+    background: linear-gradient(100deg, #1a0b30, #2e1854 44%, #44296f);
+    color: #fff1e8; border-bottom-color: #44296f;
+  }
+  :root:not([data-theme="day"]) .sky-bar::before {
+    background: linear-gradient(100deg, transparent 20%, rgba(255,61,139,.22) 45%, rgba(138,43,226,.3) 55%, transparent 80%);
+    background-size: 250% 100%;
+  }
+}
+
+/* ── Picture wall: a mosaic rather than a uniform grid ── */
+.mosaic {
+  display: grid; gap: .5rem;
+  grid-template-columns: repeat(2, 1fr);
+  grid-auto-rows: 7rem; grid-auto-flow: dense;
+}
+.mosaic > li { grid-column: span 1; grid-row: span 1; }
+.mosaic > li.wide { grid-column: span 2; grid-row: span 2; }
+@media (min-width: 640px) {
+  .mosaic { grid-template-columns: repeat(3, 1fr); grid-auto-rows: 8rem; }
+  .mosaic > li.tall { grid-row: span 2; }
+}
+@media (min-width: 1024px) {
+  .mosaic { grid-template-columns: repeat(4, 1fr); grid-auto-rows: 9rem; }
 }

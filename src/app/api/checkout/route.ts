@@ -4,7 +4,7 @@ import { admin, configured, env, notConfigured, stripe, userFromRequest } from "
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-type Body = { tier: "hustler" | "kingpin" | "cartel"; period: "monthly" | "annual" };
+type Body = { tier: "street" | "hustler" | "kingpin"; period: "monthly" | "annual" };
 
 export async function POST(req: NextRequest) {
   if (!configured) return notConfigured();
@@ -13,7 +13,7 @@ export async function POST(req: NextRequest) {
   if (!me) return Response.json({ error: "Sign in first." }, { status: 401 });
 
   const { tier, period } = (await req.json()) as Body;
-  if (!["hustler", "kingpin", "cartel"].includes(tier)) {
+  if (!["street", "hustler", "kingpin"].includes(tier)) {
     return Response.json({ error: "Unknown plan." }, { status: 400 });
   }
 

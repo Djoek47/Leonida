@@ -5,6 +5,7 @@ import "./globals.css";
 import { Ticker } from "@/components/Ticker";
 import { NavAuth } from "@/components/NavAuth";
 import { ThemeToggle, themeScript } from "@/components/ThemeToggle";
+import { SkyBar } from "@/components/SkyBar";
 import { Radio } from "@/components/Radio";
 import { PlatformIcon } from "@/components/Icons";
 import { shop, socials } from "@/lib/content";
@@ -13,13 +14,14 @@ const archivo = localFont({ src: "../fonts/overpass-latin-wght-normal.woff2", va
 
 export const metadata: Metadata = {
   title: "Live From Leonida — get paid for your GTA VI clips",
-  description: "Send your GTA VI clips, let Leonida vote, and win cash every week. Plus Versus: live console-vs-console challenges on Twitch.",
+  description: "Send your GTA VI clips, let Leonida vote, and win cash every week. Every download pays the creator who made the clip.",
 };
 
 const nav = [
   { href: "/clips", label: "This week's clips" },
   { href: "/submit", label: "Send a clip" },
-  { href: "/versus", label: "Versus" },
+  { href: "/earn", label: "How to earn" },
+  { href: "/edge", label: "The edge" },
   { href: "/leonida", label: "Leonida guide" },
   { href: "/pricing", label: "Go Pro" },
   { href: "/chat", label: "Chat" },
@@ -30,7 +32,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html lang="en" className={archivo.variable} suppressHydrationWarning>
       <head><script dangerouslySetInnerHTML={{ __html: themeScript }} /></head>
       <body className="min-h-screen flex flex-col">
-        <header className="sticky top-0 z-40 bg-ink border-b border-line">
+        <SkyBar />
+        <header className="sky-bar sticky top-0 z-40 border-b border-line">
           <div className="mx-auto max-w-7xl px-4 h-16 flex items-center gap-3 sm:gap-6">
             <Link href="/" className="flex items-center gap-2 sm:gap-3 shrink-0" aria-label="Live From Leonida home">
               {/* eslint-disable-next-line @next/next/no-img-element */}

@@ -4,6 +4,8 @@ import Link from "@/components/A";
 import { sb } from "@/lib/supabase";
 import { useUser } from "@/lib/useUser";
 import { contestClips, currentContest, mmss, platformName, type Clip } from "@/lib/api";
+import { TagPicker } from "@/components/TagPicker";
+import { slugTag } from "@/lib/tags";
 import { DemoNote } from "@/components/DemoNote";
 
 type Tab = "send" | "claim";
@@ -68,6 +70,7 @@ function SendForm({ userId, cap, usedToday }: { userId: string; cap: number; use
   const [err, setErr] = useState("");
   const [forContest, setForContest] = useState(true);
   const [len, setLen] = useState<number | null>(null);
+  const [tags, setTags] = useState<string[]>([]);
   const atCap = usedToday >= cap;
   const tooLong = forContest && len != null && len >= MAX_CONTEST_SECONDS;
 
@@ -90,13 +93,17 @@ function SendForm({ userId, cap, usedToday }: { userId: string; cap: number; use
         const up = await c.storage.from("clips").upload(storage_path, file);
         if (up.error) throw up.error;
       }
-      const { error } = await c.from("clips").insert({
+      const { data: clip, error } = await c.from("clips").insert({
         contest_id: contest.id === "none" ? null : contest.id, owner_id: userId, submitted_by: userId,
         title: f.get("title"), platform: f.get("platform"), gamertag: f.get("gamertag"),
         storage_path, source_url: mode === "link" ? f.get("url") : null,
         for_contest: forContest, duration_seconds: len == null ? null : Math.round(len),
-      });
+      }).select("id").single();
       if (error) throw error;
+      // Tags are a nice-to-have: a failure here must not lose the clip itself.
+      if (tags.length && clip?.id) {
+        await c.from("clip_tags").insert(tags.map((t) => ({ clip_id: clip.id, tag: slugTag(t) })));
+      }
       await c.from("profiles").update({ platform: f.get("platform"), gamertag: f.get("gamertag") }).eq("id", userId);
       setState("sent");
     } catch (x) {
@@ -117,10 +124,10 @@ function SendForm({ userId, cap, usedToday }: { userId: string; cap: number; use
   );
 
   return (
-    <form onSubmit={submit} className="mt-8 grid gap-5">
+    <form onSubmit={submit} className="mt-8 grid gap-5 [&>*]:min-w-0">
       <label className="grid gap-1.5"><span className="font-bold">What happens in the clip?</span>
         <input name="title" required maxLength={90} className="field" placeholder="Airboat chase through Grassrivers at night" /></label>
-      <div className="grid sm:grid-cols-2 gap-5">
+      <div className="grid sm:grid-cols-2 gap-5 [&>*]:min-w-0">
         <label className="grid gap-1.5"><span className="font-bold">Console</span>
           <select name="platform" className="field" defaultValue="ps5">
             {Object.entries(platformName).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
@@ -151,6 +158,7 @@ function SendForm({ userId, cap, usedToday }: { userId: string; cap: number; use
           </p>
         )}
       </div>
+      <TagPicker value={tags} onChange={setTags} />
       <label className="flex gap-3 items-start text-sm">
         <input type="checkbox" checked={forContest} onChange={(e) => setForContest(e.target.checked)} className="mt-1 accent-[var(--flamingo)]" />
         <span>Enter this in Clip of the Week and Clip of the Month.
@@ -207,7 +215,7 @@ function ClaimForm({ userId }: { userId: string }) {
         {shown.length === 0 && <li className="px-4 py-6 text-haze">No clips match. Try the gamertag shown in the video.</li>}
       </ul>
       {pick && (
-        <form onSubmit={claim} className="mt-6 grid gap-4">
+        <form onSubmit={claim} className="mt-6 grid gap-4 [&>*]:min-w-0">
           <label className="grid gap-1.5"><span className="font-bold">How can we tell it&apos;s yours?</span>
             <textarea name="evidence" required rows={3} className="field" placeholder="Link to the original capture, the date you recorded it, or anything only you would have." /></label>
           {err && <p role="alert" className="text-flamingo font-semibold">{err}</p>}

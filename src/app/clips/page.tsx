@@ -9,6 +9,7 @@ import { useUser } from "@/lib/useUser";
 import { sb } from "@/lib/supabase";
 import { DOWNLOAD } from "@/lib/tiers";
 import { DemoNote } from "@/components/DemoNote";
+import { DailyDrop, type Drop } from "@/components/Gamification";
 import { PlatformIcon } from "@/components/Icons";
 
 function left(iso: string) {
@@ -28,6 +29,9 @@ export default function ClipsPage() {
   const [credits, setCredits] = useState(0);
   const [msg, setMsg] = useState<string | null>(null);
   const [ask, setAsk] = useState<Clip | null>(null);
+  const [drop, setDrop] = useState<Drop | null>(null);
+  const [watchers, setWatchers] = useState<Record<string, number>>({});
+  const [kingpins, setKingpins] = useState<Record<string, number>>({});
 
   useEffect(() => {
     currentContest().then(async (c) => {
@@ -36,10 +40,33 @@ export default function ClipsPage() {
       setVoted(await myVotes(c.id));
     });
     poolNow().then(setPool);
+
+    const c = sb();
+    if (!c) {
+      setDrop({ id: "demo", theme: "Five-star escapes", blurb: "Lose them in under a minute.",
+        closes_at: new Date(new Date().setHours(23, 59, 0, 0)).toISOString() });
+      setWatchers({}); setKingpins({});
+      return;
+    }
+    c.from("daily_drops").select("id,theme,blurb,closes_at").eq("day", new Date().toISOString().slice(0, 10))
+      .maybeSingle().then(({ data }) => data && setDrop(data as Drop));
+
+    // Live activity: refreshed on a timer, nothing persistent.
+    const counts = async () => {
+      const [w, k] = await Promise.all([
+        c.from("watching_now").select("clip_id,watchers"),
+        c.from("kingpin_signal").select("clip_id,kingpin_votes"),
+      ]);
+      setWatchers(Object.fromEntries((w.data ?? []).map((r: { clip_id: string; watchers: number }) => [r.clip_id, r.watchers])));
+      setKingpins(Object.fromEntries((k.data ?? []).map((r: { clip_id: string; kingpin_votes: number }) => [r.clip_id, r.kingpin_votes])));
+    };
+    counts();
+    const id = setInterval(counts, 30_000);
+    return () => clearInterval(id);
   }, []);
   useEffect(() => { setCredits(account?.credits_remaining ?? 0); }, [account]);
 
-  const maxVotes = 1 + (paying ? tier.extraVotes : 0);
+  const maxVotes = tier.votes;
   const votesLeft = maxVotes - voted.length;
 
   async function vote(c: Clip) {
@@ -57,7 +84,7 @@ export default function ClipsPage() {
     if (err) {
       setVoted(prev);
       setMsg(err.includes("OUT_OF_VOTES") ? `You've used all ${maxVotes} of your votes this round.` : err);
-    } else setMsg(paying ? `Vote cast. It counts for ${tier.voteWeight}.` : "Vote counted.");
+    } else setMsg("Vote counted.");
   }
 
   const download = useCallback(async (c: Clip) => {
@@ -115,18 +142,20 @@ export default function ClipsPage() {
       <div className="mt-8 flex flex-wrap items-center gap-x-6 gap-y-3 rounded-lg border-2 border-line bg-ink px-4 py-3 text-sm font-semibold">
         {paying ? (
           <>
-            <span><span className="display text-2xl text-gulf">{votesLeft}</span> of {maxVotes} votes left, each worth {tier.voteWeight}</span>
+            <span><span className="display text-2xl text-gulf">{votesLeft}</span> of {maxVotes} votes left</span>
             <span className="text-haze hidden sm:inline">·</span>
             <span><span className="display text-2xl text-gulf">{credits}</span> download credit{credits === 1 ? "" : "s"} this month</span>
           </>
         ) : (
           <>
             <span>You get one vote. Totals and the ranking are hidden on free accounts.</span>
-            <Link href="/pricing" className="btn btn-hot !py-1.5 !px-3 text-sm">Get 4 heavier votes</Link>
+            <Link href="/pricing" className="btn btn-hot !py-1.5 !px-3 text-sm">Get more votes</Link>
           </>
         )}
         {pool && <span className="sm:ml-auto text-haze">Pool grows with members: {money(pool.weekly_cents)} this week</span>}
       </div>
+
+      {drop && <div className="mt-8"><DailyDrop drop={drop} /></div>}
 
       {msg && <p role="status" className="mt-5 inline-block bg-ink-2 px-4 py-2 rounded font-semibold">{msg} {!user && <Link className="text-gulf underline" href="/login">Sign in</Link>}</p>}
 
@@ -150,13 +179,26 @@ export default function ClipsPage() {
                   {paying && <span className={`absolute left-0 top-3 display text-3xl px-3 py-1 ${top ? "bg-mango text-foam" : "bg-white text-foam"}`}>{i + 1}</span>}
                   {!paying && <span className="absolute left-0 top-3 bg-white/90 text-foam px-2.5 py-1 text-[11px] font-black tracking-wide">{c.gamertag.toUpperCase()}</span>}
                   {at && <a href={at} target="_blank" rel="noreferrer" className="absolute right-3 bottom-3 btn !py-1.5 !px-3 text-sm bg-white text-foam">Watch</a>}
+                  {c.trending_until && new Date(c.trending_until) > new Date() && (
+                    <span className="absolute right-3 top-3 rounded-full bg-flamingo px-2.5 py-1 text-[11px] font-black text-white">TRENDING</span>
+                  )}
+                  {watchers[c.id] > 0 && (
+                    <span className="absolute left-3 bottom-3 flex items-center gap-1.5 rounded-full bg-black/70 px-2.5 py-1 text-[11px] font-bold text-white">
+                      <span className="rec" aria-hidden />{watchers[c.id]} watching now
+                    </span>
+                  )}
                 </div>
                 <div className="p-4">
                   <p className="font-bold leading-snug">{c.title}</p>
                   <p className="text-sm text-haze mt-1 flex items-center gap-1.5"><PlatformIcon name={c.platform} className="size-4" />{c.gamertag} on {platformName[c.platform]}</p>
+                  {kingpins[c.id] >= 2 && (
+                    <p className="mt-2 text-xs font-black uppercase tracking-wide text-mango">
+                      Kingpins are voting heavily on this one
+                    </p>
+                  )}
                   <div className="mt-4 flex items-center justify-between gap-2">
                     {paying ? (
-                      <span><span key={c.votes ?? 0} className="display text-3xl bump">{(c.votes ?? 0).toLocaleString()}</span> <span className="text-sm text-haze">points</span></span>
+                      <span><span key={c.votes ?? 0} className="display text-3xl bump">{(c.votes ?? 0).toLocaleString()}</span> <span className="text-sm text-haze">votes</span></span>
                     ) : (
                       <Link href="/pricing" className="text-sm font-bold text-gulf underline-offset-4 hover:underline">Totals hidden</Link>
                     )}
@@ -178,7 +220,7 @@ export default function ClipsPage() {
 
       <p className="mt-10 text-sm text-haze">
         {paying
-          ? `Your plan gives you ${maxVotes} votes a round, each counting ${tier.voteWeight}, spread across different clips. Tap a vote again to take it back.`
+          ? `Your plan gives you ${maxVotes} votes, spread across different clips. Tap a vote again to take it back.`
           : "One vote per free account per round. You can move it until voting closes."}{" "}
         You can&apos;t vote for your own clip. Free accounts can win every prize.
       </p>

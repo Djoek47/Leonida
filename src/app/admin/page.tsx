@@ -3,10 +3,10 @@ import { useCallback, useEffect, useState } from "react";
 import { sb } from "@/lib/supabase";
 import { useUser } from "@/lib/useUser";
 import { DEMO_CLIPS, DEMO_CONTEST, exactMoney, money, platformName, poolNow, type Clip, type Contest, type Pool } from "@/lib/api";
-import { POOL_LADDER } from "@/lib/tiers";
+import { BRACKETS } from "@/lib/tiers";
 import { DemoNote } from "@/components/DemoNote";
 
-type Tab = "review" | "contest" | "payouts" | "creators" | "claims" | "versus" | "staff";
+type Tab = "review" | "contest" | "payouts" | "creators" | "claims" | "drops" | "staff";
 type Row = Record<string, unknown> & { id: string };
 
 export default function Admin() {
@@ -14,7 +14,7 @@ export default function Admin() {
   const [tab, setTab] = useState<Tab>("review");
   if (loading) return null;
   if (!profile?.is_admin) return <div className="mx-auto max-w-xl px-4 py-24"><h1 className="display text-6xl">Staff only</h1><p className="text-haze mt-3">Ask an admin to set <code>is_admin</code> on your profile.</p></div>;
-  const tabs: [Tab, string][] = [["review", "Review queue"], ["contest", "Weekly round"], ["payouts", "Prize payouts"], ["creators", "Creator payouts"], ["claims", "Claims"], ["versus", "Versus"], ["staff", "Staff and settings"]];
+  const tabs: [Tab, string][] = [["review", "Review queue"], ["contest", "Weekly round"], ["payouts", "Prize payouts"], ["creators", "Creator payouts"], ["claims", "Claims"], ["drops", "Daily Drops"], ["staff", "Staff and settings"]];
   return (
     <div className="mx-auto max-w-7xl px-4 py-10">
       <DemoNote />
@@ -30,7 +30,7 @@ export default function Admin() {
         {tab === "claims" && <Table table="claims" filter={["status", ["open"]]} cols={["clip_id", "claimant_id", "evidence"]} actions={[["approved", "Approve"], ["rejected", "Reject"]]} />}
         {tab === "staff" && <Staff isOwner={profile.role === "owner"} />}
         {tab === "creators" && <CreatorPayouts />}
-        {tab === "versus" && <Table table="versus_applications" filter={["status", ["applied"]]} cols={["gamertag", "platform", "can_stream", "note"]} actions={[["selected", "Select"], ["declined", "Decline"]]} />}
+        {tab === "drops" && <Drops />}
       </div>
     </div>
   );
@@ -167,7 +167,7 @@ function Table({ table, filter, cols, actions, refField }: { table: string; filt
   );
 }
 
-const ROLES = [["member", "Member"], ["reviewer", "Reviewer: clips and claims"], ["moderator", "Moderator: + payouts and Versus"], ["owner", "Owner: everything, manages staff"]] as const;
+const ROLES = [["member", "Member"], ["reviewer", "Reviewer: clips and claims"], ["moderator", "Moderator: + payouts and drops"], ["owner", "Owner: everything, manages staff"]] as const;
 type Person = { id: string; display_name: string; gamertag: string | null; role: string; tier: string };
 function Staff({ isOwner }: { isOwner: boolean }) {
   const [people, setPeople] = useState<Person[]>([]);
@@ -179,7 +179,7 @@ function Staff({ isOwner }: { isOwner: boolean }) {
       { id: "demo", display_name: "ViceCityVandal", gamertag: "ViceCityVandal", role: "owner", tier: "kingpin" },
       { id: "a", display_name: "KeysKingpin", gamertag: "KeysKingpin", role: "reviewer", tier: "hustler" },
       { id: "b", display_name: "SwampSaint", gamertag: "SwampSaint", role: "member", tier: "street" },
-      { id: "c", display_name: "NeonDrifter", gamertag: "NeonDrifter", role: "moderator", tier: "cartel" },
+      { id: "c", display_name: "NeonDrifter", gamertag: "NeonDrifter", role: "moderator", tier: "kingpin" },
     ]); return; }
     s.from("profiles").select("id,display_name,gamertag,role,tier").order("role").limit(200).then(({ data }) => setPeople((data as Person[]) ?? []));
   }, []);
@@ -233,7 +233,12 @@ function PoolPanel() {
       </div>
       <h3 className="text-sm font-extrabold mt-6">How it scales</h3>
       <ul className="mt-2 text-sm text-haze grid gap-1">
-        {POOL_LADDER.map(([a, b, c]) => <li key={a}><b className="text-foam">{a}</b> → {b} · {c}</li>)}
+        {BRACKETS.map((b) => (
+          <li key={b.label}>
+            <b className="text-foam">{b.label} members</b> → ${b.pool.toLocaleString()} ·
+            {" "}gold ${b.gold.toLocaleString()}, silver ${b.silver.toLocaleString()}, bronze ${b.bronze.toLocaleString()}
+          </li>
+        ))}
       </ul>
     </>
   );
@@ -317,6 +322,76 @@ function CreatorPayouts() {
             ))}
           </ul>
         )}
+      </section>
+    </div>
+  );
+}
+
+/** Set today's theme and crown a winner. The winner gets a week in Trending. */
+function Drops() {
+  const [rows, setRows] = useState<{ id: string; day: string; theme: string; blurb: string | null; winner_clip_id: string | null }[]>([]);
+  const [note, setNote] = useState("");
+  const load = useCallback(async () => {
+    const s = sb();
+    if (!s) { setRows([{ id: "d1", day: new Date().toISOString().slice(0, 10), theme: "Five-star escapes", blurb: "Lose them in under a minute.", winner_clip_id: null }]); return; }
+    const { data } = await s.from("daily_drops").select("*").order("day", { ascending: false }).limit(30);
+    setRows(data ?? []);
+  }, []);
+  useEffect(() => { load(); }, [load]);
+
+  async function create(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault();
+    const f = new FormData(e.currentTarget), s = sb();
+    if (!s) { setNote("Demo mode: nothing was written."); return; }
+    const { error } = await s.from("daily_drops").insert({
+      day: f.get("day"), theme: f.get("theme"), blurb: f.get("blurb"),
+      closes_at: `${f.get("day")}T23:59:00Z`,
+    });
+    setNote(error ? error.message : "Drop scheduled."); if (!error) load();
+  }
+  async function crown(id: string, clip: string) {
+    const s = sb();
+    if (!s) { setNote("Demo mode: nothing was written."); return; }
+    const { error } = await s.rpc("pick_drop_winner", { p_drop: id, p_clip: clip });
+    setNote(error ? error.message : "Winner set. They're in Trending for a week."); if (!error) load();
+  }
+
+  return (
+    <div className="grid gap-8">
+      <section className="rounded-lg border-2 border-line bg-ink p-5">
+        <h2 className="text-xl font-extrabold">Schedule a drop</h2>
+        <p className="text-sm text-haze mt-1">One a day. Open to everyone; the winner is featured in Trending for a full week.</p>
+        <form onSubmit={create} className="mt-4 grid gap-3 sm:grid-cols-[10rem_1fr_1fr_auto] items-end">
+          <label className="grid gap-1 text-sm font-bold">Day
+            <input name="day" type="date" required defaultValue={new Date().toISOString().slice(0, 10)} className="field font-normal" /></label>
+          <label className="grid gap-1 text-sm font-bold">Theme
+            <input name="theme" required placeholder="Five-star escapes" className="field font-normal" /></label>
+          <label className="grid gap-1 text-sm font-bold">One line
+            <input name="blurb" placeholder="Lose them in under a minute." className="field font-normal" /></label>
+          <button className="btn btn-hot">Schedule</button>
+        </form>
+        {note && <p role="status" className="mt-3 font-semibold text-gulf">{note}</p>}
+      </section>
+
+      <section>
+        <h2 className="text-xl font-extrabold">Scheduled</h2>
+        <ul className="mt-3 divide-y divide-line border-y border-line">
+          {rows.map((r) => (
+            <li key={r.id} className="py-3 flex flex-wrap items-center gap-3">
+              <span className="flex-1 min-w-0">
+                <span className="font-bold">{r.theme}</span>
+                <span className="block text-sm text-haze truncate">{r.day}{r.blurb ? ` · ${r.blurb}` : ""}</span>
+              </span>
+              {r.winner_clip_id
+                ? <span className="rounded-full bg-gulf px-3 py-1 text-xs font-black text-white">Winner picked</span>
+                : <form onSubmit={(e) => { e.preventDefault(); crown(r.id, new FormData(e.currentTarget).get("clip") as string); }}
+                    className="flex gap-2">
+                    <input name="clip" required placeholder="Winning clip id" className="field !w-56 text-sm" />
+                    <button className="btn btn-ghost !py-1.5 !px-3 text-sm">Crown</button>
+                  </form>}
+            </li>
+          ))}
+        </ul>
       </section>
     </div>
   );

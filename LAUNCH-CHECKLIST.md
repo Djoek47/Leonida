@@ -39,12 +39,16 @@ PlayStation has no public sign-in for third-party sites, so PSN stays on the pro
 - [ ] Close the round → winnings appear on the winner's dashboard → Redeem → Staff → Payouts → Mark paid
 - [ ] Claim a clip from a second account → approve in Staff → Claims
 - [ ] Subscribe with Stripe test card 4242… → tier and credits land on the profile
+- [ ] Vote counts per tier: Free 1, Street 2, Hustler 4, Kingpin 6
+- [ ] Voting only opens inside the deadline window before a round closes
+- [ ] Upload two days running → streak goes up; skip two days → it resets
+- [ ] Pick a Daily Drop winner in admin → they appear in Trending for a week
+- [ ] Add three tags to a clip → a fourth is refused
 - [ ] Download with a credit → balance drops, creator earns $0.70
 - [ ] Download with no credits → $0.99 checkout → webhook writes the row
 - [ ] Send 3 clips on a free account → third is refused
 - [ ] Send a 3-minute contest clip → refused before upload
 - [ ] Chat: post in the Lobby, confirm a free account can't open Members
-- [ ] Versus application → Staff → Versus
 - [ ] Phone check on the live URL (iPhone + Android), day and night mode
 
 ## 5. Video pipeline (next build, after the loop works)
@@ -63,7 +67,6 @@ it's the honest pitch and it's also the strongest one.
 
 Targets, roughly in order of how well they convert:
 - People who already upload GTA clips to TikTok and YouTube Shorts. They want downloads.
-- Twitch streamers who need clip material and would use Versus as content.
 - GTA Online veterans with money and hours — the people who'd have joined the old club.
 
 Push the yearly plan: it's 20–22% cheaper for them and it funds a quarter of a year of

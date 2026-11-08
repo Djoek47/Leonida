@@ -11,7 +11,7 @@
 
 ## 2. Supabase (10 min)
 1. supabase.com, New project, name `leonida-live`, region `Canada (Central)` or `US East`.
-2. SQL Editor: run `supabase/schema.sql` first, then `supabase/schema-v2.sql`. Order matters — v2 builds on v1.
+2. SQL Editor: run `supabase/schema.sql`, then `supabase/schema-v2.sql`, then `supabase/schema-v3.sql`. Order matters — each builds on the last. All three are safe to re-run.
 3. Authentication, Providers: turn on Email, Discord, Twitch, Google (each needs a client ID/secret from that platform's developer portal; callback URL is shown on the provider screen).
 4. Authentication, URL Configuration: Site URL `https://livefromleonida.com` (or the Vercel URL); add `http://localhost:3000/**` and `https://*.vercel.app/**` to Redirect URLs.
 5. Project Settings, API: copy the Project URL and the `anon` public key.

@@ -4,7 +4,9 @@ import Link from "@/components/A";
 import { sb } from "@/lib/supabase";
 import { useUser } from "@/lib/useUser";
 import { DEMO_CLIPS, exactMoney, money, platformName, type Clip, type Winning } from "@/lib/api";
-import { tierById } from "@/lib/tiers";
+import { tierById, MAX_STARS } from "@/lib/tiers";
+import { StreakCard, ClipperProgress, BadgeWall, StarTracker, StreakBoard, StarRank,
+  type Badge, type StreakRow } from "@/components/Gamification";
 import { DemoNote } from "@/components/DemoNote";
 
 const statusText: Record<string, string> = {
@@ -25,6 +27,8 @@ export default function Dashboard() {
   const [clips, setClips] = useState<Clip[]>([]);
   const [wins, setWins] = useState<Winning[]>([]);
   const [payouts, setPayouts] = useState<Payout[]>([]);
+  const [badges, setBadges] = useState<Badge[]>([]);
+  const [board, setBoard] = useState<StreakRow[]>([]);
   const [note, setNote] = useState("");
 
   useEffect(() => {
@@ -35,12 +39,36 @@ export default function Dashboard() {
       setWins([{ id: "w", contest_id: "w0", clip_id: "x", place: 2, amount_cents: 3000, status: "unclaimed" }]);
       setPayouts([{ id: "p1", period_start: "2026-09-01", period_end: "2026-09-30", amount_cents: 2310,
         download_count: 33, status: "sent", method: "paypal", sent_at: "2026-10-03" }]);
+      setBadges([
+        { id: "clipper_1", label: "First Clip", blurb: "You sent one in.", earned: true },
+        { id: "clipper_10", label: "Regular", blurb: "Ten clips deep.", earned: true },
+        { id: "clipper_25", label: "Local", blurb: "Twenty-five clips.", earned: true },
+        { id: "clipper_50", label: "Fixture", blurb: "Fifty clips.", earned: false },
+        { id: "clipper_100", label: "Leonida Made", blurb: "One hundred clips.", earned: false },
+        { id: "week_gold", label: "Clip of the Week", blurb: "First place, one week.", earned: true },
+        { id: "drop_winner", label: "Daily Drop", blurb: "Won a Daily Drop.", earned: true },
+        { id: "month_gold", label: "Clip of the Month", blurb: "First place, one month.", earned: false },
+      ]);
+      setBoard([
+        { id: "a", display_name: "KeysKingpin", tier: "hustler", streak_days: 34, hot_creator: true },
+        { id: "demo", display_name: "ViceCityVandal", tier: "kingpin", streak_days: 9, hot_creator: true },
+        { id: "b", display_name: "SwampSaint", tier: "free", streak_days: 6, hot_creator: false },
+      ]);
       return;
     }
     c.from("clip_scores").select("*").eq("owner_id", user.id).order("created_at", { ascending: false }).then(({ data }) => setClips((data as Clip[]) ?? []));
     c.from("winnings").select("*").eq("owner_id", user.id).then(({ data }) => setWins((data as Winning[]) ?? []));
     c.from("payouts").select("*").eq("creator_id", user.id).order("period_end", { ascending: false })
       .then(({ data }) => setPayouts((data as Payout[]) ?? []));
+    Promise.all([
+      c.from("badges").select("id,label,blurb,sort").order("sort"),
+      c.from("earned_badges").select("badge").eq("player_id", user.id),
+    ]).then(([all, mine]) => {
+      const got = new Set((mine.data ?? []).map((b: { badge: string }) => b.badge));
+      setBadges(((all.data ?? []) as { id: string; label: string; blurb: string }[])
+        .map((b) => ({ ...b, earned: got.has(b.id) })));
+    });
+    c.from("streak_board").select("*").limit(10).then(({ data }) => setBoard((data as StreakRow[]) ?? []));
   }, [user]);
 
   if (loading) return null;
@@ -71,11 +99,12 @@ export default function Dashboard() {
       <h1 className="display text-[clamp(2.2rem,10vw,6rem)] break-words">{profile.display_name}</h1>
       <p className="mt-2 flex flex-wrap items-center gap-3 text-sm font-semibold">
         <span className={`rounded-full px-3 py-1 ${paying ? "bg-gulf text-white" : "bg-ink-2"}`}>{plan.label}</span>
+        {paying && <StarRank stars={account?.stars ?? 0} />}
         {paying
           ? <><span className="text-haze">{account?.credits_remaining ?? 0} of {plan.creditsPerMonth} download credits left
               {account?.current_period_end ? `, renews ${new Date(account.current_period_end).toLocaleDateString()}` : ""}</span>
              <Link href="/pricing" className="text-gulf underline underline-offset-4">Change plan</Link></>
-          : <Link href="/pricing" className="text-gulf underline underline-offset-4">Go Pro for heavier votes and downloads</Link>}
+          : <Link href="/pricing" className="text-gulf underline underline-offset-4">Go Pro for more votes and downloads</Link>}
       </p>
 
       <dl className="mt-8 grid grid-cols-2 lg:grid-cols-4 border-y border-line lg:divide-x divide-line">
@@ -97,6 +126,30 @@ export default function Dashboard() {
                 <div><p className="display text-4xl sunset-text">{money(w.amount_cents)}</p><p className="text-sm text-haze">{["1st", "2nd", "3rd"][w.place - 1]} place. {statusText[w.status]}</p></div>
                 {w.status === "unclaimed" && <button onClick={() => redeem(w)} className="btn btn-hot">Redeem</button>}
               </li>))}</ul>
+          )}
+
+          {account && (
+            <>
+              <h2 className="text-2xl font-extrabold mt-12">Streak and badges</h2>
+              <div className="mt-4 grid gap-5 md:grid-cols-2 xl:grid-cols-3">
+                <StreakCard account={account} />
+                <ClipperProgress fallback={{ clips: clips.length, next_at: 50, next_label: "Fixture" }} />
+                {paying
+                  ? <StarTracker stars={account.stars} months={account.stars * 4} />
+                  : (
+                    <div className="rounded-xl border-2 border-dashed border-line bg-ink p-5">
+                      <p className="text-sm font-bold text-haze">Wanted level</p>
+                      <StarRank stars={0} className="mt-2 [&_svg]:size-7" />
+                      <p className="mt-2 text-sm">Stars fill while you hold a plan — one every four months, all {MAX_STARS} at two years.</p>
+                      <Link href="/pricing" className="btn btn-hot mt-4 !py-2">See the plans</Link>
+                    </div>
+                  )}
+              </div>
+              <div className="mt-8 grid gap-8 lg:grid-cols-[1.6fr_1fr] items-start">
+                <BadgeWall badges={badges} />
+                {board.length > 0 && <StreakBoard rows={board} />}
+              </div>
+            </>
           )}
 
           <h2 className="text-2xl font-extrabold mt-12">Download earnings</h2>

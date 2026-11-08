@@ -13,15 +13,15 @@ type Message = { id: number; channel_id: string; author_id: string; body: string
 const FALLBACK: Channel[] = [
   { id: "lobby", label: "The Lobby", description: "Everyone. Say hello.", members_only: false, min_rank: 0, position: 1 },
   { id: "clips", label: "Clip talk", description: "This week's round, picks and arguments.", members_only: false, min_rank: 0, position: 2 },
-  { id: "versus", label: "Versus", description: "Match calls and trash talk.", members_only: false, min_rank: 0, position: 3 },
-  { id: "members", label: "Members", description: "Hustler and up.", members_only: true, min_rank: 1, position: 4 },
-  { id: "kingpins", label: "Back room", description: "Kingpin and Cartel.", members_only: true, min_rank: 2, position: 5 },
+  { id: "trending", label: "Trending", description: "Daily Drop winners and what's climbing.", members_only: false, min_rank: 0, position: 3 },
+  { id: "members", label: "Members", description: "Street and up.", members_only: true, min_rank: 1, position: 4 },
+  { id: "kingpins", label: "Back room", description: "Hustler and Kingpin.", members_only: true, min_rank: 2, position: 5 },
 ];
 
 const DEMO: Message[] = [
   { id: 1, channel_id: "lobby", author_id: "a", body: "that bridge jump into the Keys is the clip of the year already", created_at: new Date(Date.now() - 42e5).toISOString(), author: { display_name: "KeysKingpin", tier: "hustler" } },
-  { id: 2, channel_id: "lobby", author_id: "b", body: "nah the airboat one. he never touches the brake once", created_at: new Date(Date.now() - 39e5).toISOString(), author: { display_name: "SwampSaint", tier: "street" } },
-  { id: 3, channel_id: "lobby", author_id: "c", body: "both of you are wrong and I have 8 points to prove it", created_at: new Date(Date.now() - 20e5).toISOString(), author: { display_name: "NeonDrifter", tier: "cartel" } },
+  { id: 2, channel_id: "lobby", author_id: "b", body: "nah the airboat one. he never touches the brake once", created_at: new Date(Date.now() - 39e5).toISOString(), author: { display_name: "SwampSaint", tier: "free" } },
+  { id: 3, channel_id: "lobby", author_id: "c", body: "both of you are wrong and all six of my votes say so", created_at: new Date(Date.now() - 20e5).toISOString(), author: { display_name: "NeonDrifter", tier: "kingpin" } },
 ];
 
 /** Rendered only after mount: the server has no idea what timezone the reader is in,
@@ -127,7 +127,7 @@ export default function Chat() {
             <div className="flex-1 grid place-items-center p-8 text-center">
               <div>
                 <p className="display text-4xl">{needed?.label} and up</p>
-                <p className="text-haze mt-2 max-w-sm">This room is for paying members. The Lobby, Clip talk and Versus are open to everyone.</p>
+                <p className="text-haze mt-2 max-w-sm">This room is for paying members. The Lobby, Clip talk and Trending are open to everyone.</p>
                 <Link href="/pricing" className="btn btn-hot mt-5">See the plans</Link>
               </div>
             </div>

@@ -12,4 +12,4 @@ from public.contests c,
 where c.title = 'Test round: Vice City getaways';
 
 -- Give yourself a paid tier for testing:
--- update public.profiles set tier = 'cartel', subscription_status = 'active' where id = (select id from auth.users where email = 'YOUR@EMAIL');
+-- update public.profiles set tier = 'kingpin', subscription_status = 'active' where id = (select id from auth.users where email = 'YOUR@EMAIL');
