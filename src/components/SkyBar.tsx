@@ -2,8 +2,9 @@
 import { useEffect } from "react";
 
 /** The top bar follows the Leonida sky. Through the day it runs white and gold,
- *  softens to champagne late afternoon, burns rose-and-gold at sunset, then
- *  hands over to the purple of night mode. */
+ *  softens to champagne mid-afternoon, burns rose-and-gold towards 5pm, then
+ *  hands over to the purple of night mode at 6pm (see ThemeToggle.NIGHT_START).
+ *  The stops past 18h only show if a reader forces day mode after dark. */
 type Stop = { h: number; a: string; b: string; c: string };
 
 const SKY: Stop[] = [
@@ -12,11 +13,11 @@ const SKY: Stop[] = [
   { h: 6.75, a: "#ffe3c4", b: "#ffc988", c: "#f6b55c" }, // sunrise
   { h: 9,    a: "#ffffff", b: "#fff6df", c: "#f0c469" }, // morning: white and gold
   { h: 13,   a: "#ffffff", b: "#fffaec", c: "#e9c877" }, // midday
-  { h: 16,   a: "#fdf0d6", b: "#f3dcae", c: "#dfb75e" }, // champagne
-  { h: 18,   a: "#fbdcb4", b: "#f0ae78", c: "#d98f3a" }, // golden hour
-  { h: 19.5, a: "#f0a9a2", b: "#d86a7e", c: "#c98a3c" }, // rose with gold
-  { h: 21,   a: "#8a5578", b: "#553066", c: "#96663f" }, // dusk
-  { h: 22.5, a: "#2a1246", b: "#1a0b30", c: "#4a2b6b" }, // night
+  { h: 15,   a: "#fdf0d6", b: "#f3dcae", c: "#dfb75e" }, // champagne
+  { h: 16.5, a: "#fbdcb4", b: "#f0ae78", c: "#d98f3a" }, // golden hour
+  { h: 17.4, a: "#f0a9a2", b: "#d86a7e", c: "#c98a3c" }, // rose with gold
+  { h: 18,   a: "#8a5578", b: "#553066", c: "#96663f" }, // dusk — night mode takes over here
+  { h: 20,   a: "#2a1246", b: "#1a0b30", c: "#4a2b6b" }, // night
   { h: 24,   a: "#1a0b30", b: "#2a1246", c: "#4a2b6b" },
 ];
 

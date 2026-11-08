@@ -1,5 +1,6 @@
 "use client";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { modeAt } from "./ThemeToggle";
 
 /*
   Live From Leonida map: our own styling, place curation and layers, adapted from GTADB community data
@@ -29,7 +30,7 @@ const LAYERS: Layer[] = [
 ];
 
 /* Theme recolouring: tiles are drawn through a per-theme pixel pass, cached per tile. */
-function isNight() { const t = document.documentElement.dataset.theme; return t === "night" || (!t && matchMedia("(prefers-color-scheme: dark)").matches); }
+function isNight() { const t = document.documentElement.dataset.theme; return t ? t === "night" : modeAt(new Date()) === "night"; }
 function recolor(img: HTMLImageElement, night: boolean) {
   const c = document.createElement("canvas"); c.width = img.naturalWidth; c.height = img.naturalHeight;
   const g = c.getContext("2d")!; g.drawImage(img, 0, 0);
