@@ -2,7 +2,7 @@
  *  Every item names where it came from: Rockstar itself, or press who played the game.
  *  Update this file each working session. Newest first. */
 
-export type Source = "Rockstar" | "Press preview" | "TV" | "Retail";
+export type Source = "Rockstar" | "Press preview" | "TV";
 
 export type NewsItem = {
   date: string;            // YYYY-MM-DD
@@ -28,7 +28,7 @@ export const NEWS: NewsItem[] = ([
   {
     date: "2026-11-18",
     title: "Reviews land the day before launch",
-    body: "The review embargo reportedly lifts on November 18, a day ahead of release, though some outlets are expected to hold until launch day. Preload opens November 12.",
+    body: "The review embargo reportedly lifts on November 18, a day ahead of release, though some outlets are expected to hold until launch day.",
     source: "Press preview",
     links: [
       { label: "Dot Esports on the embargo", href: "https://dotesports.com/gta/news/gta-6-review-embargo-date" },
@@ -80,15 +80,6 @@ export const NEWS: NewsItem[] = ([
     source: "Rockstar",
     links: [
       { label: "Watch on Rockstar", href: "https://www.rockstargames.com/VI/launch-trailer" },
-    ],
-  },
-  {
-    date: "2026-11-01",
-    title: "$79.99 standard, $99.99 Ultimate, preload from November 12",
-    body: "Store listings put the standard edition at $79.99 US and the Ultimate Edition at $99.99. Pre-orders include the Vintage Vice City Pack. Preloading opens at local midnight on November 12 on both consoles. PS5 and Xbox Series X|S only — no PC date yet.",
-    source: "Retail",
-    links: [
-      { label: "Confirmed vs rumour scorecard", href: "https://tech-insider.org/gta-6-confirmed-vs-rumor-scorecard-17-days-out-2026" },
     ],
   },
   {

@@ -62,20 +62,16 @@ function Strap({ i, delay, cols, rows }: { i: number; delay: number; cols: numbe
       className="vault-strap"
       style={{
         // @ts-expect-error custom properties
-        "--x": `${(col - (cols - 1) / 2) * 78 + (j - 0.5) * 3}px`,
-        "--y": `${(row - (rows - 1) / 2) * 42 + (k - 0.5) * 3}px`,
-        "--z": `${layer * 20.5}px`,
-        "--spin": `${(j - 0.5) * 3.4}deg`,
-        "--dim": 0.14 - layer * 0.045,
+        "--x": `${(col - (cols - 1) / 2) * 79 + (j - 0.5) * 3.4}px`,
+        "--y": `${(row - (rows - 1) / 2) * 36 + (k - 0.5) * 3.4}px`,
+        "--z": `${layer * 11.6}px`,
+        "--spin": `${(j - 0.5) * 5}deg`,
+        "--dim": 0.17 - layer * 0.026,
         animationDelay: `${delay}ms`,
       }}
     >
       <span className="vs-top"><i /><i /></span>
-      <span className="vs-face">
-        <b className="vs-oval" />
-        <b className="vs-corner" />
-        <i className="vs-band" />
-      </span>
+      <span className="vs-face"><i className="vs-band" /></span>
       <span className="vs-edge" />
     </div>
   );
@@ -134,7 +130,7 @@ function VaultBody({ payers, pool, compact, previewing, onHold }:
   const layers = Math.ceil(straps / (COLS * DEPTH));
   // One strap adrift in a big empty stage looks like a mistake. Zoom in while
   // the stack is short and pull back as the tower rises.
-  const zoom = [1.8, 1.8, 1.6, 1.45, 1.3, 1.18, 1.05][Math.min(6, layers)] ?? 1;
+  const zoom = [2, 2, 1.8, 1.6, 1.45, 1.3, 1.2][Math.min(6, layers)] ?? 1;
 
   return (
     <div className={`vault ${compact ? "vault-sm" : ""}`}
@@ -143,7 +139,7 @@ function VaultBody({ payers, pool, compact, previewing, onHold }:
       <div className="vault-frame"><div className="vault-stage" aria-hidden style={{ "--zoom": zoom } as React.CSSProperties}>
         <div className="vault-floor"
           style={{ "--fw": `${cols * 84 + 76}px`, "--fh": `${rows * 48 + 76}px` } as React.CSSProperties} />
-        {list.map((i) => <Strap key={i} i={i} cols={cols} rows={rows} delay={i >= fresh ? (i - fresh) * 55 : 0} />)}
+        {list.map((i) => <Strap key={i} i={i} cols={cols} rows={rows} delay={i >= fresh ? (i - fresh) * 70 : 0} />)}
       </div></div>
 
       <p className="sr-only">

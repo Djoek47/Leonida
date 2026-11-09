@@ -1,5 +1,6 @@
 import Link from "@/components/A";
-import { HOW_IT_PLAYS } from "@/lib/news";
+import { TopicCards } from "@/components/TopicCards";
+
 
 /** The places you change how a car, a gun or a character looks. Official Rockstar shots. */
 const SHOPS = [
@@ -40,15 +41,8 @@ export function GuideNews() {
         </ul>
       </section>
 
-      <div className="mt-10 grid gap-6 md:grid-cols-2">
-        {HOW_IT_PLAYS.map((g) => (
-          <section key={g.topic} className="rounded-xl border border-line bg-ink p-5">
-            <h3 className="text-xl font-extrabold">{g.topic}</h3>
-            <ul className="mt-3 grid gap-2 text-[15px]">
-              {g.points.map((p) => <li key={p} className="flex gap-2.5"><span aria-hidden className="mt-2 size-1.5 shrink-0 rounded-full bg-flamingo" /><span>{p}</span></li>)}
-            </ul>
-          </section>
-        ))}
+      <div className="mt-10">
+        <TopicCards />
       </div>
       <p className="mt-10 text-sm text-haze">Got a source we missed? Drop it in <Link href="/chat" className="underline">Chat</Link>.</p>
     </section>

@@ -1,6 +1,7 @@
 import { garage, guides, people, regions } from "@/lib/content";
 import { PortraitClip } from "@/components/PortraitClip";
 import Link from "@/components/A";
+import { PlaceReel } from "@/components/PlaceReel";
 import { LeonidaMap } from "@/components/LeonidaMap";
 import { GuideNews } from "@/components/GuideNews";
 import { Arsenal } from "@/components/Arsenal";
@@ -30,16 +31,11 @@ export default function Guide() {
         <div className="mt-10 grid gap-16">
           {regions.map((r, i) => (
             <article id={r.slug} key={r.slug} className={`grid gap-6 md:grid-cols-[1.6fr_1fr] items-center scroll-mt-40 ${i % 2 ? "md:[&>*:first-child]:order-2" : ""}`}>
-              <div className="grid grid-cols-3 gap-2">
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src={`/media/places/${r.slug}_1.webp`} alt={`${r.name}, official screenshot`} className="col-span-3 aspect-[16/8] w-full object-cover rounded-md" loading="lazy" />
-                {[2, 3, 4].map((n) => (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img key={n} src={`/media/places/${r.slug}_${n}.webp`} alt="" className="aspect-video w-full object-cover rounded" loading="lazy" />
-                ))}
-              </div>
+              <PlaceReel slug={r.slug} name={r.name} shots={r.shots} />
               <div>
-                <h3 className="sign inline-block !py-3 !px-5 display text-4xl md:text-5xl">{r.name}</h3>
+                <h3 className="place-sign display text-4xl md:text-5xl" style={{ "--tone": r.tone } as React.CSSProperties}>
+                  {r.name}
+                </h3>
                 <p className="mt-3 text-haze">{r.blurb}</p>
               </div>
             </article>

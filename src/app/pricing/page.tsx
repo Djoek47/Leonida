@@ -7,6 +7,7 @@ import { sb } from "@/lib/supabase";
 import { money, poolNow, type Pool } from "@/lib/api";
 import { DemoNote } from "@/components/DemoNote";
 import { TestPaymentsNote } from "@/components/TestPayments";
+import { TierMedal } from "@/components/TierMedal";
 import { Vault } from "@/components/Vault";
 
 const price = (cents: number) => `$${(cents / 100).toLocaleString("en-US", { maximumFractionDigits: cents % 100 ? 2 : 0 })}`;
@@ -80,37 +81,35 @@ export default function Pricing() {
 
       {err && <p role="alert" className="mx-auto max-w-7xl px-4 pt-6 text-flamingo font-semibold">{err}</p>}
 
-      <section className="mx-auto max-w-7xl px-4 py-12 grid gap-5 md:grid-cols-2 xl:grid-cols-4 items-start">
+      <section className="mx-auto max-w-7xl px-4 py-12 grid gap-5 md:grid-cols-2 xl:grid-cols-4 items-stretch [&>*]:min-w-0">
         {TIERS.map((t) => {
           const current = (profile?.tier ?? "free") === t.id && (t.id === "free" ? !paying : paying);
           const cents = annual ? t.annualCents : t.monthlyCents;
           const best = t.id === "hustler";
           return (
-            <div key={t.id} className={`rounded-xl border-2 p-6 h-full flex flex-col ${best ? "border-gulf bg-ink" : "border-line bg-ink"}`}>
-              {best && <p className="-mt-9 mb-3 self-start rounded-full bg-gulf px-3 py-1 text-xs font-black text-white">Most take this one</p>}
-              <h2 className="display text-4xl">{t.label}</h2>
-              <p className="mt-1 text-sm text-haze min-h-10">{t.pitch}</p>
-              <p className="mt-3 inline-flex items-baseline gap-2 rounded-lg bg-ink-2 px-3 py-2">
-                <span className="display text-4xl text-gulf">{t.votes}</span>
-                <span className="font-bold">{t.votes === 1 ? "vote" : "votes"}</span>
-              </p>
-              <p className="mt-4">
-                <span className="display text-5xl">{t.monthlyCents ? price(cents) : "Free"}</span>
-                {t.monthlyCents > 0 && <span className="text-haze font-semibold"> /{annual ? "year" : "month"}</span>}
-              </p>
-              {t.monthlyCents > 0 && annual && (
-                <p className="text-sm font-bold text-gulf">{annualSaving(t)}% off the monthly price</p>
-              )}
-              {t.monthlyCents > 0 && !annual && (
-                <p className="text-sm text-haze">{price(t.annualCents)} a year saves {annualSaving(t)}%</p>
-              )}
+            <div key={t.id} className={`plan plan-${t.id} ${best ? "plan-best" : ""}`}>
+              {best && <p className="plan-flag">Most take this one</p>}
 
-              <ul className="mt-5 grid gap-2 text-[15px] flex-1">
+              <TierMedal tier={t.id} className="plan-medal" />
+
+              <h2 className="display text-4xl text-center">{t.label}</h2>
+              <p className="plan-pitch">{t.pitch}</p>
+
+              <p className="plan-price">
+                <span className="display">{t.monthlyCents ? price(cents) : "Free"}</span>
+                {t.monthlyCents > 0 && <span className="plan-per">/{annual ? "year" : "month"}</span>}
+              </p>
+              <p className="plan-sub">
+                {t.monthlyCents === 0 ? "No card needed"
+                  : annual ? `${annualSaving(t)}% off the monthly price`
+                  : `${price(t.annualCents)} a year saves ${annualSaving(t)}%`}
+              </p>
+
+              <p className="plan-votes"><strong>{t.votes}</strong> {t.votes === 1 ? "vote" : "votes"}</p>
+
+              <ul className="plan-perks">
                 {t.perks.map((p) => (
-                  <li key={p} className="flex gap-2.5">
-                    <span aria-hidden className="mt-1.5 size-2 shrink-0 rounded-full bg-gulf" />
-                    <span>{p}</span>
-                  </li>
+                  <li key={p}><span aria-hidden /><span>{p}</span></li>
                 ))}
               </ul>
 

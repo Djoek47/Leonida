@@ -3,13 +3,19 @@
 
 export const LAUNCH = "2026-11-19T00:00:00-05:00"; // PS5 & Xbox Series X|S
 
+/** Each place's sign colour, sampled from that place's own screenshots.
+ *  Not picked by eye: the hue is the one that place carries far more of than
+ *  the others do, weighted by saturation so a big flat sky can't drown out
+ *  what actually makes somewhere look like itself — which is why Vice City
+ *  comes out neon and the Keys come out water. Darkened until white type
+ *  clears 4.6:1 on it. Regenerate with scripts/place-colours.mjs. */
 export const regions = [
-  { slug: "vice_city", name: "Vice City", shots: 12, blurb: "Neon, money and beachfront excess — the heart of Leonida and the state's biggest stage for a getaway." },
-  { slug: "leonida_keys", name: "Leonida Keys", shots: 6, blurb: "A chain of islands strung along one highway: boats, bridges and very few ways out." },
-  { slug: "grassrivers", name: "Grassrivers", shots: 6, blurb: "Swamp country. Airboats, gators and the kind of quiet that hides things." },
-  { slug: "port_gellhorn", name: "Port Gellhorn", shots: 6, blurb: "A faded resort town on the panhandle, held together by motels and strip malls." },
-  { slug: "ambrosia", name: "Ambrosia", shots: 6, blurb: "Sugar refineries, biker clubs and small-town industry inland." },
-  { slug: "mount_kalaga_national_park", name: "Mount Kalaga", shots: 6, blurb: "Leonida's northern wilderness: trails, hunting grounds and backroads." },
+  { slug: "vice_city", name: "Vice City", tone: "#c7248a", shots: 12, blurb: "Neon, money and beachfront excess — the heart of Leonida and the state's biggest stage for a getaway." },
+  { slug: "leonida_keys", tone: "#047a8a", name: "Leonida Keys", shots: 6, blurb: "A chain of islands strung along one highway: boats, bridges and very few ways out." },
+  { slug: "grassrivers", tone: "#587c1d", name: "Grassrivers", shots: 6, blurb: "Swamp country. Airboats, gators and the kind of quiet that hides things." },
+  { slug: "port_gellhorn", tone: "#e50622", name: "Port Gellhorn", shots: 6, blurb: "A faded resort town on the panhandle, held together by motels and strip malls." },
+  { slug: "ambrosia", tone: "#be3f2d", name: "Ambrosia", shots: 6, blurb: "Sugar refineries, biker clubs and small-town industry inland." },
+  { slug: "mount_kalaga_national_park", tone: "#69741b", name: "Mount Kalaga", shots: 6, blurb: "Leonida's northern wilderness: trails, hunting grounds and backroads." },
 ] as const;
 
 export const people = [
@@ -50,13 +56,6 @@ export const guides = [
   { title: "Heists, step by step", status: "At launch", note: "Approaches, crew picks and payouts." },
   { title: "Full map of Leonida", status: "Waiting on Rockstar", note: "Rockstar hasn't published an official map. We'll add it the day they do." },
   { title: "What we know so far", status: "Live", note: "Characters, regions and editions from Rockstar's official releases." },
-] as const;
-
-export const shop = [
-  { title: "Grand Theft Auto VI — Standard ($79.99)", where: "PlayStation Store", href: "https://store.playstation.com/" },
-  { title: "Grand Theft Auto VI — Ultimate Edition ($99.99)", where: "Xbox Store", href: "https://www.xbox.com/" },
-  { title: "Official GTA VI merch", where: "Rockstar Store", href: "https://store.rockstargames.com/" },
-  { title: "Capture card for clipping", where: "Amazon", href: "https://www.amazon.com/" },
 ] as const;
 
 /** Official Live From Leonida accounts. Handle: livefromleonida everywhere. Update the URLs once each account exists. */
