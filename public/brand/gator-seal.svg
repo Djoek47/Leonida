@@ -1,0 +1,52 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+  <!-- In Clips We Trust: a Grassrivers gator, jaws shut on a fisherman's leg
+       while he stands there with the rod gone. Engraved in one ink; the note shows through. -->
+  <defs>
+    <!-- Top legend stands on its arc; the bottom one hangs from its arc, so
+         its baseline sits at the OUTER edge of the band. -->
+    <path id="top" d="M13 50a37 37 0 0 1 74 0"/>
+    <path id="bot" d="M6.5 50a43.5 43.5 0 0 0 87 0"/>
+  </defs>
+  <circle cx="50" cy="50" r="47.5" fill="none" stroke="#eaf4ea" stroke-width="2"/>
+  <circle cx="50" cy="50" r="31" fill="none" stroke="#eaf4ea" stroke-width="1.2"/>
+  <text font-family="Georgia,serif" font-size="8.6" font-weight="700" letter-spacing="1" fill="#eaf4ea">
+    <textPath href="#top" startOffset="50%" text-anchor="middle">IN CLIPS WE TRUST</textPath>
+  </text>
+  <text font-family="Georgia,serif" font-size="7.4" font-weight="700" letter-spacing="2.6" fill="#eaf4ea">
+    <textPath href="#bot" startOffset="50%" text-anchor="middle">★ LEONIDA ★</textPath>
+  </text>
+
+  <g transform="translate(51 55) scale(.8) translate(-50 -48)">
+  <g transform="translate(6 -2)">
+  <g fill="#eaf4ea">
+    <!-- the fisherman: planted on the bank, one leg in the gator, rod gone flying -->
+    <circle cx="64.6" cy="30.2" r="3.4"/>
+    <path d="M62.6 22.2l7.6-.8.3 2.2-1.7.2.2 2-5 .6-.3-2-1.2.1z" transform="rotate(-18 66 24)"/>
+    <path d="M61.2 35.2c.4-1.6 2-2.4 3.6-2l1.4.4c1.6.4 2.4 2 2 3.6l-2.6 9.8-6.6-1.8z"/>
+  </g>
+  <g fill="none" stroke="#eaf4ea" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M60.4 44.4l-5.6 7.8-3.4 5.2" stroke-width="3.4"/>
+    <path d="M64 45.6l2.6 8.4 1 7.6" stroke-width="3.4"/>
+    <path d="M65 61.6h4.4" stroke-width="2.6"/>
+    <path d="M62.6 36.4l-5.4-3.6-1.6-5.4" stroke-width="2.4"/>
+    <path d="M66.8 37.4l5.4-3.2 2.4-5.6" stroke-width="2.4"/>
+    <path d="M73.6 26.6l6.2-9.4" stroke-width="1.4"/>
+    <path d="M79.8 17.2c2.6 2.2 3.2 6.6 1.4 10.4" stroke-width=".8"/>
+    <!-- the bank he's standing on -->
+    <path d="M60 63.6c6-.8 13-.8 19 .4" stroke-width="1.6"/>
+  </g>
+  </g>
+  <!-- the gator: the original long flat head, jaws clamped on his shin -->
+  <g transform="translate(14 23) scale(.6)">
+  <g fill="#eaf4ea">
+    <path d="M22 64c14 2.4 38 1.6 58-3.4 1.6-.4 2.4 1.6 1 2.4-18 8-44 9.6-60 6.4-2.6-.6-2.4-5.8 1-5.4z"/>
+    <path d="M21 61c-2.4-6.6 1-12 7.4-13.6 1.2-3.4 5.8-3.8 7.4-.6 13-1.6 29-6.6 45-14.8 2.8-1.4 5 2 2.6 3.8-15 11.2-34 18.6-50 23.2-4 1.1-8.4 2.2-12.4 2z"/>
+    <path d="M40 55.6l1.6 3.4 2-3.9zM48 53.4l1.6 3.4 2-3.9zM67 47l1.4 3.2 2-3.6zM74 43.6l1.2 3 1.8-3.4z"/>
+    <path d="M44 64.6l1.8-3.2 1.6 3.2zM53 64.2l1.8-3.2 1.6 3.2zM71 62l1.6-3 1.4 3z"/>
+    <path d="M24 47l2-3 2 3zM29 45.4l2-3 2 3z"/>
+    <path d="M6 72.6c3.6-1.8 7.4-1.8 11 0s7.4 1.8 11 0 7.4-1.8 11 0 7.4 1.8 11 0 7.4-1.8 11 0 7.4 1.8 9 0" fill="none" stroke="#eaf4ea" stroke-width="2.6"/>
+  </g>
+  <circle cx="32.6" cy="49" r="2.4" fill="#2f7049"/>
+  </g>
+  </g>
+</svg>

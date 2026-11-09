@@ -119,9 +119,28 @@ function ContestAdmin() {
   }
   async function close() {
     const s = sb(); if (s && c) { const { error } = await s.rpc("close_contest", { p_contest: c.id }); if (error) { setMsg(error.message); return; } }
-    setMsg("Round closed. Top three winnings created; they appear on winners' dashboards.");
+    setMsg("Round closed. Top three placed, winners emailed. Check them, then pay prizes into wallets.");
   }
-  const d = (iso?: string) => iso ? iso.slice(0, 16) : "";
+  // datetime-local wants local wall time; slicing the UTC string shifted every save by the UTC offset.
+  const d = (iso?: string) => {
+    if (!iso) return "";
+    const t = new Date(iso); return new Date(t.getTime() - t.getTimezoneOffset() * 6e4).toISOString().slice(0, 16);
+  };
+  async function openVoting() {
+    const s = sb(); if (!s || !c) return;
+    const now = new Date().toISOString();
+    const closes = new Date(Math.max(new Date(c.voting_closes).getTime(), Date.now() + 36e5)).toISOString();
+    const r = await s.from("contests").update({ status: "voting", voting_opens: now, submissions_close: closes, voting_closes: closes,
+      deadline_hours: Math.ceil((new Date(closes).getTime() - Date.now()) / 36e5) + 1 }).eq("id", c.id).select().single();
+    if (r.error) { setMsg(r.error.message); return; }
+    setC(r.data as Contest); setMsg("Voting is open now, until the close time. Clips can still come in.");
+  }
+  async function payWinners() {
+    const s = sb(); if (!s || !c) return;
+    const { data, error } = await s.rpc("pay_winnings_to_wallet", { p_contest: c.id });
+    if (error) { setMsg(error.message); return; }
+    setMsg(`${data ?? 0} prize${data === 1 ? "" : "s"} moved into winners' wallets. Each winner gets an email.`);
+  }
   return (
     <form onSubmit={save} className="grid gap-4 max-w-2xl" key={c?.id}>
       <label className="grid gap-1 text-sm font-bold">Title<input name="title" defaultValue={c?.title} required className="field font-normal" /></label>
@@ -133,11 +152,13 @@ function ContestAdmin() {
         <label className="grid gap-1 text-sm font-bold">Voting closes<input name="vclose" type="datetime-local" defaultValue={d(c?.voting_closes)} required className="field font-normal" /></label>
         <label className="grid gap-1 text-sm font-bold">Compilation YouTube URL<input name="youtube" defaultValue={c?.youtube_url ?? ""} className="field font-normal" /></label>
       </div>
-      <p className="text-sm text-haze">Split: 50% / 30% / 20% of {money(c?.pool_cents ?? 10000)}.</p>
+      <p className="text-sm text-haze">Prizes follow the bracket for paying members (Gold 60 / Silver 25 / Bronze 15 of the week pool; month ×4, year ×20). Voting runs in the last {(c as { deadline_hours?: number } | null)?.deadline_hours ?? 48} hours before the close.</p>
       <div className="flex flex-wrap gap-3">
         <button name="mode" value="update" className="btn btn-hot">Save this round</button>
         <button name="mode" value="new" className="btn btn-ghost">Save as a new round</button>
+        <button type="button" onClick={openVoting} className="btn btn-ghost">Open voting now</button>
         <button type="button" onClick={close} className="btn btn-ghost">Close round and pick winners</button>
+        <button type="button" onClick={payWinners} className="btn btn-ghost">Pay prizes into wallets</button>
       </div>
       {msg && <p role="status" className="font-semibold text-gulf">{msg}</p>}
     </form>

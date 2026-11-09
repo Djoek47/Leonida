@@ -31,7 +31,29 @@ export async function POST(req: NextRequest) {
   const cents = period === "annual" ? row.annual_cents : row.monthly_cents;
 
   // Reuse the Stripe customer so a member's history stays on one record.
-  const { data: profile } = await db.from("profiles").select("stripe_customer_id").eq("id", me.id).single();
+  const { data: profile } = await db.from("profiles")
+    .select("stripe_customer_id, stripe_subscription_id, subscription_status, tier, billing_period").eq("id", me.id).single();
+
+  // Already subscribed: switch the existing subscription instead of opening a
+  // second one. Stripe prorates; the webhook moves the tier and sends the email.
+  if (profile?.stripe_subscription_id && ["active", "trialing", "past_due"].includes(profile.subscription_status ?? "")) {
+    if (profile.tier === tier && (profile.billing_period ?? "monthly") === period) {
+      return Response.json({ error: "You're already on this plan." }, { status: 400 });
+    }
+    const sub = await stripe().subscriptions.retrieve(profile.stripe_subscription_id);
+    const price = await stripe().prices.create({
+      currency: "usd", unit_amount: cents,
+      recurring: { interval: period === "annual" ? "year" : "month" },
+      product_data: { name: `Live From Leonida — ${row.label}` },
+    });
+    await stripe().subscriptions.update(sub.id, {
+      items: [{ id: sub.items.data[0].id, price: price.id }],
+      proration_behavior: "always_invoice",
+      cancel_at_period_end: false,
+      metadata: { player_id: me.id, tier, period },
+    });
+    return Response.json({ changed: true, url: `${env.siteUrl}/dashboard?welcome=${tier}` });
+  }
   let customer = profile?.stripe_customer_id as string | undefined;
   if (!customer) {
     const c = await stripe().customers.create({ email: me.email, metadata: { player_id: me.id } });

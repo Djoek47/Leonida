@@ -126,6 +126,19 @@ export async function POST(req: NextRequest) {
       await db.from("profiles").update({ subscription_status: "active" })
         .eq("id", playerId).in("subscription_status", ["past_due", "none"]);
 
+      // Renewals and mid-cycle upgrades get a receipt. The first invoice of a
+      // subscription doesn't: the welcome email (sent when the tier flips) is it.
+      const reason = (inv as unknown as { billing_reason?: string }).billing_reason;
+      if ((inv.amount_paid ?? 0) > 0 && reason !== "subscription_create") {
+        const { data: pr } = await db.from("profiles").select("tier, current_period_end").eq("id", playerId).single();
+        await db.rpc("enqueue_email", {
+          p_user: playerId,
+          p_kind: reason === "subscription_cycle" ? "renewal_receipt" : "payment_receipt",
+          p_data: { tier: pr?.tier, amount: inv.amount_paid, invoice: inv.number, renews: pr?.current_period_end, what: `${pr?.tier ?? "Membership"} plan` },
+          p_dedupe: `invoice:${inv.id}`,
+        });
+      }
+
       await db.from("money_events").insert({
         kind: "invoice_paid", player_id: playerId,
         amount_cents: inv.amount_paid ?? 0, note: inv.number ?? undefined,
@@ -136,7 +149,10 @@ export async function POST(req: NextRequest) {
     case "invoice.payment_failed": {
       const inv = event.data.object as Stripe.Invoice;
       const playerId = await playerByCustomer(inv.customer);
-      if (playerId) await db.from("profiles").update({ subscription_status: "past_due" }).eq("id", playerId);
+      if (playerId) {
+        const { data: pr } = await db.from("profiles").update({ subscription_status: "past_due" }).eq("id", playerId).select("tier").single();
+        await db.rpc("enqueue_email", { p_user: playerId, p_kind: "payment_failed", p_data: { tier: pr?.tier }, p_dedupe: `failed:${inv.id}` });
+      }
       break;
     }
   }

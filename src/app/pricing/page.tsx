@@ -37,7 +37,7 @@ export default function Pricing() {
       const r = await fetch("/api/checkout", { method: "POST", headers, body });
       const j = await r.json();
 
-      if (j.url) { location.href = j.url; return; }
+      if (j.url) { location.href = j.url; return; }   // Stripe checkout, or the dashboard after a plan switch
 
       // Test mode: no card, applied straight away, same end state as a real
       // subscription so everything downstream can be exercised.

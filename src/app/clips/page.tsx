@@ -7,7 +7,7 @@ import {
 } from "@/lib/api";
 import { useUser } from "@/lib/useUser";
 import { sb } from "@/lib/supabase";
-import { DOWNLOAD } from "@/lib/tiers";
+import { DOWNLOAD, PERIOD_MULTIPLE, bracketFor } from "@/lib/tiers";
 import { DemoNote } from "@/components/DemoNote";
 import { ClipVideo } from "@/components/ClipVideo";
 import { TAG_LABEL, FLAGGED_SLUGS } from "@/lib/tags";
@@ -31,6 +31,7 @@ export default function ClipsPage() {
   const [credits, setCredits] = useState(0);
   const [msg, setMsg] = useState<string | null>(null);
   const [ask, setAsk] = useState<Clip | null>(null);
+  const [confirm, setConfirm] = useState<{ clip: Clip; state: "ask" | "busy" | "done" } | null>(null);
   const [tag, setTag] = useState<string | null>(null);
   const [drop, setDrop] = useState<Drop | null>(null);
   const [watchers, setWatchers] = useState<Record<string, number>>({});
@@ -72,45 +73,113 @@ export default function ClipsPage() {
   const maxVotes = tier.votes;
   const votesLeft = maxVotes - voted.length;
 
+  /** Nudge a clip's tally on screen so the vote is visible straight away;
+   *  the server copy replaces it on the next refresh. */
+  const bump = (id: string, by: number) =>
+    setClips((all) => all.map((x) => (x.id === id ? { ...x, votes: Math.max(0, (x.votes ?? 0) + by) } : x)));
+  const refresh = useCallback(async () => { if (contest) setClips(await contestClips(contest.id)); }, [contest]);
+
+  function voteMessage(err: string) {
+    if (err.includes("OUT_OF_VOTES")) return `You've used all ${maxVotes} of your votes this round. Take one back to move it.`;
+    if (err.includes("VOTING_CLOSED")) return "Voting for this round has closed.";
+    if (err.includes("own clip")) return "You can't vote for your own clip.";
+    return err;
+  }
+
+  /** Tapping Vote opens the confirmation; tapping a vote you already cast takes it back. */
   async function vote(c: Clip) {
     if (!user) { setMsg("Sign in to vote. It's free and takes ten seconds."); return; }
+    if (c.owner_id && c.owner_id === user.id) { setMsg("You can't vote for your own clip."); return; }
     if (voted.includes(c.id)) {
-      setVoted((v) => v.filter((x) => x !== c.id));
+      setVoted((v) => v.filter((x) => x !== c.id)); bump(c.id, -1);
       const err = await clearVote(c.id);
-      if (err) setMsg(err); else setMsg("Vote taken back.");
+      if (err) { setVoted((v) => [...v, c.id]); bump(c.id, 1); setMsg(voteMessage(err)); }
+      else { setMsg(`Vote taken back. ${votesLeft + 1} of ${maxVotes} left.`); refresh(); }
       return;
     }
-    if (votesLeft <= 0 && paying) { setMsg(`You've used all ${maxVotes} of your votes this round. Take one back to move it.`); return; }
+    if (votesLeft <= 0 && maxVotes > 1) { setMsg(voteMessage("OUT_OF_VOTES")); return; }
+    setMsg(null);
+    setConfirm({ clip: c, state: "ask" });
+  }
+
+  async function confirmVote() {
+    if (!confirm) return;
+    const c = confirm.clip;
+    setConfirm({ clip: c, state: "busy" });
     const prev = voted;
-    setVoted(paying ? [...voted, c.id] : [c.id]);
+    const moving = maxVotes === 1 ? prev : [];
+    setVoted(maxVotes === 1 ? [c.id] : [...prev, c.id]);
+    moving.forEach((id) => bump(id, -1)); bump(c.id, 1);
     const err = await castVote(c.id);
     if (err) {
-      setVoted(prev);
-      setMsg(err.includes("OUT_OF_VOTES") ? `You've used all ${maxVotes} of your votes this round.` : err);
-    } else setMsg("Vote counted.");
+      setVoted(prev); moving.forEach((id) => bump(id, 1)); bump(c.id, -1);
+      setConfirm(null); setMsg(voteMessage(err));
+      return;
+    }
+    setConfirm({ clip: c, state: "done" });
+    refresh();
+    setTimeout(() => setConfirm((x) => (x?.clip.id === c.id && x.state === "done" ? null : x)), 3200);
   }
+
+  /** Ask the server for the file. It only hands one over once the clip is
+   *  paid for: by a credit, by card, or in test mode. */
+  const fetchFile = useCallback(async (clipId: string) => {
+    const token = (await sb()?.auth.getSession())?.data.session?.access_token;
+    const r = await fetch("/api/download", {
+      method: "POST",
+      headers: { "content-type": "application/json", ...(token ? { authorization: `Bearer ${token}` } : {}) },
+      body: JSON.stringify({ clipId }),
+    });
+    return (await r.json().catch(() => ({}))) as { file?: string; checkout?: string; error?: string; external?: boolean };
+  }, []);
+
+  const deliver = (j: { file?: string; external?: boolean }) => {
+    if (!j.file) return false;
+    if (j.external) window.open(j.file, "_blank", "noopener"); else location.href = j.file;
+    return true;
+  };
 
   const download = useCallback(async (c: Clip) => {
     if (!user) { setMsg("Sign in to download."); return; }
     if (!paying) { setAsk(c); return; }
     if (demo) { setMsg("Demo mode: a real download would spend a credit here."); return; }
+    setMsg("Getting the file ready…");
     if (credits > 0) {
-      const { error } = await downloadWithCredit(c.id);
-      if (error === "NO_CREDITS") { setCredits(0); setMsg("That was your last credit. The next download is 99¢."); return; }
+      const { row, error } = await downloadWithCredit(c.id);
+      if (error === "NO_CREDITS") { setCredits(0); setMsg(`That was your last credit. The next download is ${exactMoney(DOWNLOAD.priceCents)}.`); return; }
       if (error) { setMsg(error); return; }
-      setCredits((n) => Math.max(0, n - 1));
-      setMsg(`Downloading. ${exactMoney(DOWNLOAD.creatorCents)} goes to ${c.gamertag}.`);
+      // A clip you already own comes back without spending anything.
+      const fresh = row && Date.now() - new Date((row as { created_at?: string }).created_at ?? 0).getTime() < 60_000;
+      if (fresh) setCredits((n) => Math.max(0, n - 1));
+      const j = await fetchFile(c.id);
+      if (!deliver(j)) { setMsg(j.error ?? "Could not start the download."); return; }
+      setMsg(fresh && c.owner_id !== user.id ? `Downloading. ${exactMoney(DOWNLOAD.creatorCents)} went to ${c.gamertag}.` : "Downloading.");
       return;
     }
-    const token = (await sb()?.auth.getSession())?.data.session?.access_token;
-    const r = await fetch("/api/download", {
-      method: "POST",
-      headers: { "content-type": "application/json", ...(token ? { authorization: `Bearer ${token}` } : {}) },
-      body: JSON.stringify({ clipId: c.id }),
-    });
-    const j = await r.json();
-    if (j.url) location.href = j.url; else setMsg(j.error ?? "Could not start the download.");
-  }, [user, paying, credits, demo]);
+    const j = await fetchFile(c.id);
+    if (j.checkout) { location.href = j.checkout; return; }
+    if (!deliver(j)) { setMsg(j.error ?? "Could not start the download."); return; }
+    setMsg(c.owner_id !== user.id ? `Downloading. ${exactMoney(DOWNLOAD.creatorCents)} went to ${c.gamertag}.` : "Downloading.");
+  }, [user, paying, credits, demo, fetchFile]);
+
+  // Back from Stripe: the webhook records the sale a moment later, so wait for it, then hand over the file.
+  useEffect(() => {
+    if (!user) return;
+    const id = new URLSearchParams(location.search).get("downloaded");
+    if (!id) return;
+    history.replaceState(null, "", "/clips");
+    let tries = 0, stop = false;
+    setMsg("Payment received. Getting your file…");
+    const go = async () => {
+      if (stop) return;
+      const j = await fetchFile(id);
+      if (deliver(j)) { setMsg("Downloading. Thanks for paying the player."); return; }
+      if (j.checkout && ++tries < 8) { setTimeout(go, 1500); return; }
+      setMsg("Payment received. The file isn't ready yet: tap ↓ on the clip again in a moment, it won't charge twice.");
+    };
+    go();
+    return () => { stop = true; };
+  }, [user, fetchFile]);
 
   if (!contest) return <div className="mx-auto max-w-7xl px-4 py-24 text-haze">Loading this week&apos;s round…</div>;
 
@@ -124,19 +193,28 @@ export default function ClipsPage() {
       for (const t of c.tags ?? []) n[t] = (n[t] ?? 0) + 1;
       return n;
     }, {})).sort((a, b) => b[1] - a[1]).slice(0, 14);
-  const open = contest.status === "voting" && new Date(contest.voting_closes) > new Date();
+  // Same window the database enforces in voting_open(): status 'voting', and
+  // between the later of voting_opens and (closes - deadline_hours) and the close.
+  const closesAt = new Date(contest.voting_closes).getTime();
+  const opensAt = Math.max(new Date(contest.voting_opens).getTime(), closesAt - (contest.deadline_hours ?? 48) * 36e5);
+  const open = contest.status === "voting" && Date.now() >= opensAt && Date.now() <= closesAt;
+  // The prizes close_contest() will actually pay: the bracket for the paying
+  // count locked when the round opened (or today's count), times the period.
+  const b = bracketFor(contest.payers_at_open ?? pool?.paying_users ?? 0);
+  const mult = PERIOD_MULTIPLE[(contest.period ?? "week") as keyof typeof PERIOD_MULTIPLE] ?? 1;
+  const prizes = [b.gold, b.silver, b.bronze].map((d) => Math.round(d * mult * 100));
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-12">
       <DemoNote />
       <div className="flex flex-wrap items-end justify-between gap-6">
         <div className="min-w-0">
-          <div className="lower-third text-sm mb-4"><span className="tag">{open ? <><span className="rec" />Voting</> : "Round"}</span><span className="txt">{left(contest.voting_closes)}</span></div>
+          <div className="lower-third text-sm mb-4"><span className="tag">{open ? <><span className="rec" />Voting</> : "Round"}</span><span className="txt">{contest.status === "voting" && Date.now() < opensAt ? `Voting opens ${new Date(opensAt).toLocaleString(undefined, { weekday: "short", hour: "numeric", minute: "2-digit" })}` : left(contest.voting_closes)}</span></div>
           <h1 className="display text-6xl md:text-8xl">{contest.title}</h1>
         </div>
         <div className="flex gap-6 text-right">
-          {contest.split.map((s, i) => (
-            <div key={i}><p className="display text-4xl text-gulf">{money(contest.pool_cents * s)}</p><p className="text-sm text-haze">{["1st", "2nd", "3rd"][i]}</p></div>
+          {prizes.map((cents, i) => (
+            <div key={i}><p className="display text-4xl text-gulf">{exactMoney(cents)}</p><p className="text-sm text-haze">{["1st", "2nd", "3rd"][i]}</p></div>
           ))}
         </div>
       </div>
@@ -255,9 +333,10 @@ export default function ClipsPage() {
                     <div className="flex gap-2">
                       <button onClick={() => download(c)} title={paying ? "Download this clip" : "Downloads are for members"}
                         className="btn btn-ghost !py-2 !px-3 text-sm">↓</button>
-                      <button disabled={!open} onClick={() => vote(c)}
+                      <button disabled={!open || Boolean(user && c.owner_id === user.id)} onClick={() => vote(c)}
+                        title={user && c.owner_id === user.id ? "Your own clip" : undefined}
                         className={`btn !py-2 text-sm ${mine ? "bg-gulf text-white" : "btn-hot"} disabled:opacity-60`}>
-                        {mine ? "Voted ✓" : "Vote"}
+                        {user && c.owner_id === user.id ? "Yours" : mine ? "Voted ✓" : "Vote"}
                       </button>
                     </div>
                   </div>
@@ -275,6 +354,63 @@ export default function ClipsPage() {
           : "One vote per free account per round. You can move it until voting closes."}{" "}
         You can&apos;t vote for your own clip. Free accounts can win every prize.
       </p>
+
+      {confirm && (() => {
+        const c = confirm.clip;
+        const closes = new Date(contest.voting_closes);
+        const when = closes.toLocaleString(undefined, { weekday: "long", month: "long", day: "numeric", hour: "numeric", minute: "2-digit" });
+        const moving = maxVotes === 1 && voted.length > 0 && !voted.includes(c.id) ? clips.find((x) => x.id === voted[0]) : null;
+        const after = confirm.state === "done" ? votesLeft : votesLeft - (maxVotes === 1 ? (voted.length ? 0 : 1) : 1);
+        return (
+          <div role="dialog" aria-modal="true" aria-labelledby="vote-t"
+            className="fixed inset-0 z-50 grid place-items-center bg-black/65 p-4"
+            onClick={() => confirm.state !== "busy" && setConfirm(null)}
+            onKeyDown={(e) => e.key === "Escape" && confirm.state !== "busy" && setConfirm(null)}>
+            <div className="vote-card w-full max-w-md overflow-hidden rounded-2xl border-2 border-line bg-ink" onClick={(e) => e.stopPropagation()}>
+              <div className="relative aspect-[16/7] bg-ink-2">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                {c.thumb && <img src={c.thumb} alt="" className="h-full w-full object-cover" />}
+                <span className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/85 to-transparent px-5 pb-3 pt-10 text-white">
+                  <span className="block font-extrabold leading-snug">{c.title}</span>
+                  <span className="text-sm opacity-85">{c.gamertag} on {platformName[c.platform]}</span>
+                </span>
+                {confirm.state === "done" && <span className="vote-stamp" aria-hidden>VOTED</span>}
+              </div>
+              <div className="p-6">
+                {confirm.state === "done" ? (
+                  <>
+                    <h2 id="vote-t" className="display text-4xl">Vote counted.</h2>
+                    <p className="mt-3 text-haze">
+                      {maxVotes === 1
+                        ? "That's your vote for this round."
+                        : <><strong className="text-foam">{after}</strong> of {maxVotes} vote{maxVotes === 1 ? "" : "s"} left this round.</>}{" "}
+                      Voting closes <strong className="text-foam">{when}</strong>.
+                    </p>
+                    <button autoFocus onClick={() => setConfirm(null)} className="btn btn-hot mt-6 w-full">Done</button>
+                  </>
+                ) : (
+                  <>
+                    <h2 id="vote-t" className="display text-4xl">Cast your vote?</h2>
+                    <dl className="vote-facts mt-4">
+                      <div><dt>Votes</dt><dd>{maxVotes === 1
+                        ? (moving ? <>Moves your one vote from <strong>{moving.title}</strong></> : "Uses your one vote for this round")
+                        : <>Uses 1 of your {maxVotes}. <strong>{Math.max(0, after)}</strong> left after this</>}</dd></div>
+                      <div><dt>Deadline</dt><dd><strong>{when}</strong> · {left(contest.voting_closes).replace("Voting closes in ", "")} to go</dd></div>
+                      <div><dt>Change it</dt><dd>Take it back or move it any time before the deadline</dd></div>
+                    </dl>
+                    <div className="mt-6 flex gap-3">
+                      <button autoFocus onClick={confirmVote} disabled={confirm.state === "busy"} className="btn btn-hot flex-1">
+                        {confirm.state === "busy" ? "Counting…" : moving ? "Move my vote" : "Cast my vote"}
+                      </button>
+                      <button onClick={() => setConfirm(null)} disabled={confirm.state === "busy"} className="btn btn-ghost">Cancel</button>
+                    </div>
+                  </>
+                )}
+              </div>
+            </div>
+          </div>
+        );
+      })()}
 
       {/* Download is members-only: explain and offer the upgrade rather than a dead button */}
       {ask && (

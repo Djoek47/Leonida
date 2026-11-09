@@ -4,18 +4,18 @@ import { BRACKETS, bracketFor } from "@/lib/tiers";
 const usd = (n: number) =>
   "$" + n.toLocaleString("en-US", { minimumFractionDigits: n % 1 ? 2 : 0, maximumFractionDigits: 2 });
 
-/** The Vault — the prize ladder as a tank that fills.
+/** The pyramid.
  *
- *  Ten brackets stacked widest-at-the-top, so the silhouette is a pyramid
- *  standing on its point: the money gets heavier the higher you climb. Every
- *  step the site has already reached is poured full of gold; the ones above
- *  are empty steel waiting. The surface of the gold sits on the live bracket,
- *  which is the whole point — you can see the level, and you can see how far
- *  the tank still has to go.
+ *  Ten brackets stacked the way a pyramid stands: a broad base of small pools
+ *  everybody starts on, narrowing course by course to the $3,000 capstone.
+ *  The top of the pyramid is the top prize, which is the whole metaphor.
  *
- *  Width is the square root of the pool's share of the top pool. Linear made
- *  the first six steps identical slivers; sqrt keeps the pyramid honest and
- *  still leaves room to read the numbers.
+ *  Gold is laid from the base upward, one course per bracket the site has
+ *  reached, and the course it's currently laying glints. Everything above is
+ *  bare stone waiting. You can see the level, and how far there is to climb.
+ *
+ *  Courses step in evenly so the silhouette is a true pyramid; the pool
+ *  figures carry the real proportions.
  */
 export function PrizeLadder({ payers }: { payers: number }) {
   const live = bracketFor(payers);
@@ -27,7 +27,7 @@ export function PrizeLadder({ payers }: { payers: number }) {
     <div className="tank" role="img"
          aria-label={`Prize pool ladder. Currently ${live.label} paying members, ${usd(live.pool)} a week.`}>
       <p className="tank-cap">
-        <span className="tank-cap-k">TOP OF THE VAULT</span>
+        <span className="tank-cap-k">THE CAPSTONE</span>
         <span className="tank-cap-v">{usd(top)} a week</span>
       </p>
 
@@ -38,11 +38,12 @@ export function PrizeLadder({ payers }: { payers: number }) {
           const surface = i === liveIdx;
           const next = i === liveIdx + 1;
           const toGo = next && b.upTo !== Infinity ? BRACKETS[i - 1].upTo - payers + 1 : 0;
-          const width = 40 + Math.sqrt(b.pool / top) * 60;
+          const width = 100 - (i / (BRACKETS.length - 1)) * 50;   // base 100%, capstone 50%
+          const apex = i === BRACKETS.length - 1;
 
           return (
             <li key={b.label}
-                className={`tank-step ${filled ? "is-filled" : ""} ${surface ? "is-surface" : ""} ${next ? "is-next" : ""}`}
+                className={`tank-step ${filled ? "is-filled" : ""} ${surface ? "is-surface" : ""} ${next ? "is-next" : ""} ${apex ? "is-apex" : ""}`}
                 style={{ width: `${width}%` }}>
               <span className="tank-members">{b.label}</span>
 
@@ -65,8 +66,7 @@ export function PrizeLadder({ payers }: { payers: number }) {
       </ol>
 
       <p className="tank-foot">
-        Gold / Silver / Bronze on the right. The level rises with the number of paying members —
-        and whatever the pool is when a round opens is locked in, so it can&apos;t shrink under you.
+        Gold rises a course for every bracket the site reaches. A round&apos;s pool locks when it opens.
       </p>
     </div>
   );

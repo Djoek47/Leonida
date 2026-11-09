@@ -1,7 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
 import Link from "@/components/A";
-import { BRACKETS, DOWNLOAD, PERIOD_MULTIPLE, bracketFor } from "@/lib/tiers";
+import { DOWNLOAD, PERIOD_MULTIPLE, bracketFor } from "@/lib/tiers";
 import { poolNow, type Pool } from "@/lib/api";
 import { Vault } from "@/components/Vault";
 import { PrizeLadder } from "@/components/PrizeLadder";

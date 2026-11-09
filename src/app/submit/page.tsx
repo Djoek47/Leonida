@@ -84,6 +84,13 @@ function SendForm({ userId, cap, usedToday }: { userId: string; cap: number; use
       const contest = await currentContest();
       let storage_path: string | null = null;
       const file = f.get("file") as File | null;
+
+      // Ask before uploading. The database enforces the daily cap anyway, but
+      // only once the row goes in — by which point up to 500 MB is already in
+      // storage, and a refused row would leave it there forever.
+      const { data: allowed } = await c.rpc("can_submit");
+      if (allowed === false) throw new Error("DAILY_LIMIT");
+
       if (mode === "file" && file && file.size) {
         if (file.size > 500 * 1024 * 1024) throw new Error("That file is over 500 MB. Trim it or paste a link instead.");
         if (forContest && len != null && len >= MAX_CONTEST_SECONDS) {
@@ -99,12 +106,22 @@ function SendForm({ userId, cap, usedToday }: { userId: string; cap: number; use
         storage_path, source_url: mode === "link" ? f.get("url") : null,
         for_contest: forContest, duration_seconds: len == null ? null : Math.round(len),
       }).select("id").single();
-      if (error) throw error;
+      if (error) {
+        // The row was refused, so nothing will ever point at the file. Take it back.
+        if (storage_path) await c.storage.from("clips").remove([storage_path]);
+        throw error;
+      }
       // Tags are a nice-to-have: a failure here must not lose the clip itself.
       if (tags.length && clip?.id) {
         await c.from("clip_tags").insert(tags.map((t) => ({ clip_id: clip.id, tag: slugTag(t) })));
       }
-      await c.from("profiles").update({ platform: f.get("platform"), gamertag: f.get("gamertag") }).eq("id", userId);
+      // Fill the profile in the first time only. Overwriting it on every
+      // clip would re-tag the account — and a new gamertag drops verification.
+      const { data: me } = await c.from("profiles").select("platform, gamertag").eq("id", userId).single();
+      const fill: Record<string, FormDataEntryValue | null> = {};
+      if (!me?.platform) fill.platform = f.get("platform");
+      if (!me?.gamertag) fill.gamertag = f.get("gamertag");
+      if (Object.keys(fill).length) await c.from("profiles").update(fill).eq("id", userId);
       setState("sent");
     } catch (x) {
       const m = (x as Error).message;

@@ -5,6 +5,7 @@ export type Contest = {
   id: string; title: string; pool_cents: number; split: number[];
   submissions_close: string; voting_opens: string; voting_closes: string;
   youtube_url: string | null; status: string;
+  period?: "week" | "month" | "year" | null; payers_at_open?: number | null; deadline_hours?: number | null;
 };
 export type Clip = {
   id: string; contest_id: string | null; owner_id: string | null; title: string;

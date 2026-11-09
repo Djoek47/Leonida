@@ -131,7 +131,7 @@ export default function Dashboard() {
 
       <div className="mt-12 grid gap-12 lg:grid-cols-[1.4fr_1fr]">
         <section>
-          <Wallet payoutReady={Boolean(profile.payout_method && profile.payout_handle)} />
+          <div id="wallet" className="scroll-mt-28"><Wallet payoutReady={Boolean(profile.payout_method && profile.payout_handle)} /></div>
 
           <h2 className="text-2xl font-extrabold mt-12">Winnings</h2>
           {wins.length === 0 ? <p className="text-haze mt-3">Nothing yet. The top three clips each week split the pool — a win lands here and in your wallet.</p> : (
