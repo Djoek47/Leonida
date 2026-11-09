@@ -13,7 +13,7 @@ type Tab = "send" | "claim";
 export default function SubmitPage() {
   const { user, account, paying, tier, loading } = useUser();
   const [tab, setTab] = useState<Tab>("send");
-  if (loading) return null;
+  if (loading) return <div className="mx-auto max-w-xl px-4 py-24 text-haze font-semibold" role="status">Loading your account…</div>;
   if (!user) return (
     <div className="mx-auto max-w-xl px-4 py-24">
       <h1 className="display text-6xl">Sign in to send a clip</h1>

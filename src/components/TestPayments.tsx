@@ -2,7 +2,8 @@
 import { useState } from "react";
 import { sb } from "@/lib/supabase";
 
-export const MOCK_ON = process.env.NEXT_PUBLIC_MOCK_PAYMENTS === "1";
+/** Test mode only exists where Stripe isn't configured; with Stripe, checkout always runs. */
+export const MOCK_ON = process.env.NEXT_PUBLIC_MOCK_PAYMENTS === "1" && process.env.NEXT_PUBLIC_STRIPE_LIVE !== "1";
 
 /** Says plainly that money isn't real here, and gives back the one control a
  *  test subscription otherwise has no way to reach: cancelling. */

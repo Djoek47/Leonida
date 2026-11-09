@@ -12,7 +12,8 @@ export const env = {
   /** Test mode: subscriptions and downloads are applied directly, with no card
    *  and no Stripe round trip, so the whole member experience can be exercised
    *  before the payment account is live. Refuses to run against live keys. */
-  mock: process.env.MOCK_PAYMENTS === "1" && !process.env.STRIPE_SECRET_KEY?.startsWith("sk_live"),
+  // With a Stripe key present, real (test-card) checkout always wins.
+  mock: process.env.MOCK_PAYMENTS === "1" && !process.env.STRIPE_SECRET_KEY,
 };
 
 export const configured = Boolean(env.stripeKey && env.supabaseUrl && env.serviceKey);

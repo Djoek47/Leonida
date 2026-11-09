@@ -6,7 +6,6 @@ import { useUser } from "@/lib/useUser";
 import { sb } from "@/lib/supabase";
 import { money, poolNow, type Pool } from "@/lib/api";
 import { DemoNote } from "@/components/DemoNote";
-import { TestPaymentsNote } from "@/components/TestPayments";
 import { TierMedal } from "@/components/TierMedal";
 import { Vault } from "@/components/Vault";
 
@@ -60,7 +59,6 @@ export default function Pricing() {
       <section className="bg-asphalt text-white">
         <div className="mx-auto max-w-7xl px-4 py-14 md:py-20">
           <DemoNote />
-          <TestPaymentsNote paying={paying} />
           <p className="inline-flex items-center gap-2 rounded-full bg-mango text-[#1c1710] px-3 py-1 text-sm font-black">Memberships</p>
           <h1 className="display mt-5 text-[clamp(2.6rem,8vw,6rem)] leading-[0.95]">Back the channel.<br />Get a louder vote.</h1>
           <p className="mt-5 max-w-2xl text-lg text-white/85">

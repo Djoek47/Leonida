@@ -46,6 +46,16 @@ export function PlaceReel({ slug, name, shots }: { slug: string; name: string; s
           {Array.from({ length: n }, (_, i) => <i key={i} className={i === at ? "on" : ""} />)}
         </span>
       </button>
+      {n > 1 && (
+        <div className="place-thumbs">
+          {Array.from({ length: Math.min(n, 4) }, (_, i) => (i + at + 1) % n).slice(0, Math.min(3, n - 1)).map((i) => (
+            <button key={i} type="button" onClick={() => setAt(i)} aria-label={`${name}, picture ${i + 1}`}>
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src={`/media/places/${slug}_${i + 1}.webp`} alt="" loading="lazy" decoding="async" />
+            </button>
+          ))}
+        </div>
+      )}
     </div>
   );
 }

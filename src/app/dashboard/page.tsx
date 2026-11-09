@@ -1,8 +1,8 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import Link from "@/components/A";
 import { sb } from "@/lib/supabase";
-import { useUser } from "@/lib/useUser";
+import { useUser, type Profile } from "@/lib/useUser";
 import { DEMO_CLIPS, exactMoney, money, platformName, type Clip, type Winning } from "@/lib/api";
 import { tierById, MAX_STARS } from "@/lib/tiers";
 import { StreakCard, ClipperProgress, BadgeWall, StarTracker, StreakBoard, StarRank,
@@ -10,11 +10,11 @@ import { StreakCard, ClipperProgress, BadgeWall, StarTracker, StreakBoard, StarR
 import { DemoNote } from "@/components/DemoNote";
 import { Wallet } from "@/components/Wallet";
 import { GetStarted } from "@/components/GetStarted";
-import { TestPaymentsNote } from "@/components/TestPayments";
+import { Welcome } from "@/components/Welcome";
 
 const statusText: Record<string, string> = {
   pending: "Waiting for review", approved: "In this week's vote", featured: "Featured", rejected: "Not selected",
-  unclaimed: "Ready to redeem", requested: "Payout requested", verifying: "Checking your gamertag", sent: "Paid", held: "On hold, check your email",
+  unclaimed: "Staff are checking the round", requested: "Staff are checking the round", verifying: "Checking your gamertag", sent: "In your wallet", held: "On hold, check your email",
 };
 const payoutStatus: Record<string, string> = {
   pending: "Queued for the next run", approved: "Approved, going out", sent: "Paid",
@@ -33,6 +33,12 @@ export default function Dashboard() {
   const [badges, setBadges] = useState<Badge[]>([]);
   const [board, setBoard] = useState<StreakRow[]>([]);
   const [note, setNote] = useState("");
+  const reloadProfile = useCallback(async () => {
+    const c = sb(); if (!c || !user) return;
+    const { data } = await c.from("profiles").select("*").eq("id", user.id).maybeSingle();
+    if (data) setProfile(data as Profile);
+  }, [user, setProfile]);
+
 
   useEffect(() => {
     if (!user) return;
@@ -74,7 +80,14 @@ export default function Dashboard() {
     c.from("streak_board").select("*").limit(10).then(({ data }) => setBoard((data as StreakRow[]) ?? []));
   }, [user]);
 
-  if (loading) return null;
+  if (loading) return <div className="mx-auto max-w-xl px-4 py-24 text-haze font-semibold" role="status">Loading your account…</div>;
+  if (user && !profile) return (
+    <div className="mx-auto max-w-xl px-4 py-24">
+      <h1 className="display text-5xl">Your account didn&apos;t load.</h1>
+      <p className="mt-3 text-haze">You&apos;re signed in, but the connection dropped while fetching your profile.</p>
+      <button onClick={() => location.reload()} className="btn btn-hot mt-6">Try again</button>
+    </div>
+  );
   if (!user || !profile) return <div className="mx-auto max-w-xl px-4 py-24"><h1 className="display text-6xl">Sign in to see your clips</h1><Link href="/login" className="btn btn-hot mt-6">Sign in</Link></div>;
 
   const totalVotes = clips.reduce((s, c) => s + (c.votes ?? 0), 0);
@@ -89,17 +102,12 @@ export default function Dashboard() {
     const c = sb(); if (c) await c.from("profiles").update(patch).eq("id", profile!.id);
     setProfile({ ...profile!, ...patch }); setNote("Payout details saved.");
   }
-  async function redeem(w: Winning) {
-    if (!profile!.payout_handle) { setNote("Add where to send your money first."); return; }
-    const c = sb(); if (c) { const { error } = await c.from("winnings").update({ status: "requested", requested_at: new Date().toISOString() }).eq("id", w.id); if (error) { setNote(error.message); return; } }
-    setWins((ws) => ws.map((x) => x.id === w.id ? { ...x, status: "requested" } : x));
-    setNote(profile!.gamertag_verified ? "Payout requested. Most go out within 3 business days." : "Payout requested. Verify your gamertag below so we can send it.");
-  }
+
 
   return (
     <div className="mx-auto max-w-6xl px-4 py-12">
       <DemoNote />
-      <TestPaymentsNote paying={paying} />
+      <Welcome onLanded={reloadProfile} />
       <h1 className="display text-[clamp(2.2rem,10vw,6rem)] break-words">{profile.display_name}</h1>
       <p className="mt-2 flex flex-wrap items-center gap-3 text-sm font-semibold">
         <span className={`rounded-full px-3 py-1 ${paying ? "bg-gulf text-white" : "bg-ink-2"}`}>{plan.label}</span>
@@ -114,7 +122,7 @@ export default function Dashboard() {
       <dl className="mt-8 grid grid-cols-2 lg:grid-cols-4 border-y border-line lg:divide-x divide-line">
         {([["Clips sent", String(clips.length), clips.length === 0 ? "none yet" : `${account?.submitted_today ?? 0} today`],
           ["Vote points", totalVotes.toLocaleString(), paying ? "across your clips" : "members see live counts"],
-          ["Prize money to redeem", money(owed), owed > 0 ? "ready to claim" : "top three each week get paid"],
+          ["Prizes on the way", money(owed), owed > 0 ? "lands in your wallet once checked" : "top three each week get paid"],
           ["Download earnings", exactMoney(pending), `${account?.lifetime_downloads ?? 0} downloads so far`],
         ] as const).map(([k, v, hint]) => (
           <div key={k} className="py-5 px-4">
@@ -138,7 +146,7 @@ export default function Dashboard() {
             <ul className="mt-4 grid gap-3">{wins.map((w) => (
               <li key={w.id} className="flex items-center justify-between rounded-lg bg-ink border border-gulf border-2 p-4">
                 <div><p className="display text-4xl sunset-text">{money(w.amount_cents)}</p><p className="text-sm text-haze">{["1st", "2nd", "3rd"][w.place - 1]} place. {statusText[w.status]}</p></div>
-                {w.status === "unclaimed" && <button onClick={() => redeem(w)} className="btn btn-hot">Redeem</button>}
+                {w.status === "sent" && <Link href="#wallet" className="btn btn-hot">Withdraw</Link>}
               </li>))}</ul>
           )}
 

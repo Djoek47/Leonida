@@ -24,24 +24,8 @@ export default function Guide() {
 
       <GuideNav />
 
-      <GuideNews />
-
-      <section id="places" className="mx-auto max-w-7xl px-4 py-16 scroll-mt-40">
-        <h2 className="display text-6xl md:text-7xl">Places</h2>
-        <div className="mt-10 grid gap-16">
-          {regions.map((r, i) => (
-            <article id={r.slug} key={r.slug} className={`grid gap-6 md:grid-cols-[1.6fr_1fr] items-center scroll-mt-40 ${i % 2 ? "md:[&>*:first-child]:order-2" : ""}`}>
-              <PlaceReel slug={r.slug} name={r.name} shots={r.shots} />
-              <div>
-                <h3 className="place-sign display text-4xl md:text-5xl" style={{ "--tone": r.tone } as React.CSSProperties}>
-                  {r.name}
-                </h3>
-                <p className="mt-3 text-haze">{r.blurb}</p>
-              </div>
-            </article>
-          ))}
-        </div>
-        <div id="map" className="mt-16 scroll-mt-40">
+      <section className="mx-auto max-w-7xl px-4 pt-14 pb-4">
+        <div id="map" className="scroll-mt-40">
           <h2 className="display text-5xl md:text-6xl mb-6">Map of Leonida</h2>
           <LeonidaMap />
           <p className="mt-3 text-xs text-haze">Base map adapted from the GTADB community map. <Link href="/credits" className="underline">Credits</Link></p>
@@ -59,6 +43,25 @@ export default function Guide() {
           </ul>
         </div>
       </section>
+
+      <section id="places" className="py-6 scroll-mt-40">
+        <div className="mx-auto max-w-7xl px-4"><h2 className="display text-6xl md:text-7xl">Places</h2></div>
+        <div className="mt-8">
+          {regions.map((r, i) => (
+            <article id={r.slug} key={r.slug} className="place-band scroll-mt-40" style={{ "--tone": r.tone } as React.CSSProperties}>
+              <div className={`mx-auto max-w-7xl px-4 py-12 grid gap-6 md:grid-cols-[1.6fr_1fr] items-center ${i % 2 ? "md:[&>*:first-child]:order-2" : ""}`}>
+                <PlaceReel slug={r.slug} name={r.name} shots={r.shots} />
+                <div>
+                  <h3 className="place-sign display text-4xl md:text-5xl">{r.name}</h3>
+                  <p className="mt-3 place-blurb">{r.blurb}</p>
+                </div>
+              </div>
+            </article>
+          ))}
+        </div>
+      </section>
+
+      <GuideNews />
 
       <section id="people" className="bg-ink border-y border-line py-16 scroll-mt-40">
         <div className="mx-auto max-w-7xl px-4">

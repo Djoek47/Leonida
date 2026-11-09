@@ -75,3 +75,20 @@ begin
 end $$;
 drop trigger if exists clips_guard_insert on public.clips;
 create trigger clips_guard_insert before insert on public.clips for each row execute function public.guard_clip_insert();
+
+-- ── v15: prizes go to the wallet whatever their open status; the old member "request payout" path is gone ──
+create or replace function public.pay_winnings_to_wallet(p_contest uuid) returns integer
+language plpgsql security definer set search_path = public as $$
+declare r record; n integer := 0;
+begin
+  if not public.is_admin() then raise exception 'Admins only'; end if;
+  for r in select * from public.winnings
+            where contest_id = p_contest and owner_id is not null and status in ('unclaimed','requested','verifying') loop
+    insert into public.wallet_entries (player_id, amount_cents, kind, note, ref, created_by)
+    values (r.owner_id, r.amount_cents, 'prize', format('Place %s', r.place), r.id::text, auth.uid());
+    update public.winnings set status = 'sent', sent_at = now() where id = r.id;
+    n := n + 1;
+  end loop;
+  return n;
+end $$;
+drop policy if exists "winnings request" on public.winnings;

@@ -56,21 +56,40 @@ export function useUser() {
   useEffect(() => {
     const c = sb();
     if (!c) { setUser(DEMO_USER); setProfile(DEMO_PROFILE); setAccount(DEMO_ACCOUNT); setLoading(false); return; }
+    let alive = true;
+    let seq = 0;
     const load = async (u: User | null) => {
-      setUser(u);
-      if (u) {
-        const [{ data: p }, { data: a }] = await Promise.all([
-          c.from("profiles").select("*").eq("id", u.id).single(),
-          c.from("my_account").select("*").maybeSingle(),
-        ]);
-        setProfile(p as Profile);
-        setAccount((a as Account) ?? null);
-      } else { setProfile(null); setAccount(null); }
-      setLoading(false);
+      const mine = ++seq;
+      try {
+        if (u) {
+          const [{ data: p }, { data: a }] = await Promise.all([
+            c.from("profiles").select("*").eq("id", u.id).maybeSingle(),
+            c.from("my_account").select("*").maybeSingle(),
+          ]);
+          if (!alive || mine !== seq) return;
+          setUser(u);
+          setProfile((p as Profile) ?? null);
+          setAccount((a as Account) ?? null);
+        } else if (alive && mine === seq) { setUser(null); setProfile(null); setAccount(null); }
+      } catch (e) {
+        console.error("account load failed", e);
+        if (alive && mine === seq) setUser(u);
+      } finally {
+        if (alive && mine === seq) setLoading(false);
+      }
     };
-    c.auth.getUser().then(({ data }) => load(data.user));
-    const { data: sub } = c.auth.onAuthStateChange((_e, s) => load(s?.user ?? null));
-    return () => sub.subscription.unsubscribe();
+    // getSession reads the stored session without a network round trip.
+    c.auth.getSession().then(({ data }) => load(data.session?.user ?? null));
+    // Supabase holds a lock while this callback runs; querying the database
+    // inside it deadlocks and the account never finishes loading. So hand the
+    // work to the next tick instead of awaiting it here.
+    const { data: sub } = c.auth.onAuthStateChange((event, s) => {
+      if (event === "INITIAL_SESSION") return;            // getSession above covers it
+      setTimeout(() => load(s?.user ?? null), 0);
+    });
+    // Never leave the page on a spinner: if the network stalls, show what we have.
+    const stop = setTimeout(() => alive && setLoading(false), 8000);
+    return () => { alive = false; clearTimeout(stop); sub.subscription.unsubscribe(); };
   }, []);
 
   const paying = isPaying(profile);

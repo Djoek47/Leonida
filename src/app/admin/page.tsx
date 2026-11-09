@@ -12,7 +12,7 @@ type Row = Record<string, unknown> & { id: string };
 export default function Admin() {
   const { profile, loading } = useUser();
   const [tab, setTab] = useState<Tab>("review");
-  if (loading) return null;
+  if (loading) return <div className="mx-auto max-w-xl px-4 py-24 text-haze font-semibold" role="status">Loading your account…</div>;
   if (!profile?.is_admin) return <div className="mx-auto max-w-xl px-4 py-24"><h1 className="display text-6xl">Staff only</h1><p className="text-haze mt-3">Ask an admin to set <code>is_admin</code> on your profile.</p></div>;
   const tabs: [Tab, string][] = [["review", "Review queue"], ["contest", "Weekly round"], ["payouts", "Prize payouts"], ["creators", "Creator payouts"], ["wallets", "Member money"], ["claims", "Claims"], ["drops", "Daily Drops"], ["staff", "Staff and settings"]];
   return (
