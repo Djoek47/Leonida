@@ -1281,3 +1281,47 @@ aside .trophy-shelf li { width: 4.1rem; }
 .tint .dash-kicker { color: color-mix(in srgb, var(--tint) 70%, #000); }
 .send-cap { margin-top: .6rem; font-weight: 700; color: var(--haze); } .send-cap b { font-family: "Doto", monospace; font-size: 1.4rem; color: var(--foam); }
 @media (max-width: 520px) { .send-hero { grid-template-columns: 1fr; } }
+
+/* ───── Vote and download lozenges ───── */
+.tokens { margin-top: 2rem; display: flex; flex-wrap: wrap; align-items: center; gap: .9rem 2rem; padding: .9rem 1.2rem; border-radius: 10px;
+  background: linear-gradient(180deg, #2b2f34, #1d2024); color: #f1f1ee; border: 3px solid #0d0f11;
+  box-shadow: inset 0 2px 0 rgba(255,255,255,.08), 0 14px 28px -18px rgba(0,0,0,.7); }
+.token-row { display: flex; align-items: center; gap: .7rem; }
+.token-k { font-size: .66rem; font-weight: 900; letter-spacing: .2em; text-transform: uppercase; color: #aab1b8; }
+.token-set { display: flex; flex-wrap: wrap; gap: 5px; max-width: 26rem; }
+.token-n { font-family: "Doto", monospace; font-size: 1.5rem; color: #ffd23d; text-shadow: 0 0 10px rgba(255,210,61,.5); }
+.token-n small { font-size: .9rem; color: #aab1b8; text-shadow: none; }
+.loz { width: 16px; height: 16px; transform: rotate(45deg); border-radius: 3px; display: block; transition: transform .35s cubic-bezier(.2,1.5,.4,1), opacity .35s;
+  background: linear-gradient(135deg, #fff 0%, var(--loz) 45%, color-mix(in srgb, var(--loz) 55%, #000) 100%);
+  box-shadow: 0 0 10px color-mix(in srgb, var(--loz) 60%, transparent), inset 0 0 0 1px rgba(255,255,255,.4); }
+.loz.vote { --loz: #ff4f9a; } .loz.dl { --loz: #3fd08a; width: 11px; height: 11px; }
+.loz.spent { background: none; box-shadow: inset 0 0 0 1.5px rgba(255,255,255,.22); transform: rotate(45deg) scale(.7); opacity: .6; animation: loz-pop .45s ease; }
+@keyframes loz-pop { 0% { transform: rotate(45deg) scale(1.5); opacity: 1; box-shadow: 0 0 18px #fff; } 100% { transform: rotate(45deg) scale(.7); } }
+.token-up { font-weight: 800; color: #ffd23d; text-decoration: underline; text-underline-offset: 3px; }
+.token-pool { margin-left: auto; font-size: .8rem; color: #aab1b8; } .token-pool b { font-family: "Doto", monospace; color: #7ee2a8; font-size: 1.1rem; }
+
+/* ───── Clip cards ───── */
+.clip-card { border-radius: 10px; overflow: hidden; background: linear-gradient(170deg, var(--ink-2), var(--ink)); border: 3px solid color-mix(in srgb, var(--line) 70%, #000);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.08), 0 18px 32px -22px rgba(0,0,0,.7); transition: transform .2s, box-shadow .2s; }
+.clip-card:hover { transform: translateY(-3px); box-shadow: 0 24px 40px -22px rgba(0,0,0,.75); }
+.clip-card.is-top { border-color: var(--medal, #f2c12e); box-shadow: 0 0 0 2px color-mix(in srgb, var(--medal, #f2c12e) 40%, transparent), 0 24px 40px -22px rgba(0,0,0,.75); }
+.clip-card.top-1 { --medal: #f2c12e; } .clip-card.top-2 { --medal: #c9d2db; } .clip-card.top-3 { --medal: #c98a52; }
+.clip-card.is-mine { outline: 2px dashed #ff4f9a; outline-offset: 3px; }
+
+/* ───── GTA panels: settings and the send form ─────
+   A heavy frame, bolts in the corners, and a striped plate across the top. */
+.set-card, .send-form { position: relative; border-radius: 8px !important; border: 3px solid color-mix(in srgb, var(--line) 60%, #000) !important;
+  background:
+    radial-gradient(circle at 10px 10px, rgba(0,0,0,.35) 2.5px, rgba(255,255,255,.35) 3.5px, transparent 4px),
+    radial-gradient(circle at calc(100% - 10px) 10px, rgba(0,0,0,.35) 2.5px, rgba(255,255,255,.35) 3.5px, transparent 4px),
+    radial-gradient(circle at 10px calc(100% - 10px), rgba(0,0,0,.35) 2.5px, rgba(255,255,255,.35) 3.5px, transparent 4px),
+    radial-gradient(circle at calc(100% - 10px) calc(100% - 10px), rgba(0,0,0,.35) 2.5px, rgba(255,255,255,.35) 3.5px, transparent 4px),
+    linear-gradient(170deg, var(--ink-2), var(--ink)) !important;
+  box-shadow: inset 0 2px 0 rgba(255,255,255,.1), inset 0 -3px 0 rgba(0,0,0,.18), 0 18px 32px -22px rgba(0,0,0,.7) !important; }
+.set-card { padding-top: 0 !important; overflow: hidden; }
+.set-card > h2:first-child { margin: 0 -1.5rem 1.1rem; padding: .7rem 1.5rem; font-size: 1.05rem !important; letter-spacing: .14em !important; text-transform: uppercase; color: #fff !important;
+  background: repeating-linear-gradient(135deg, rgba(255,255,255,.07) 0 8px, transparent 8px 16px), linear-gradient(120deg, var(--gulf), color-mix(in srgb, var(--gulf) 60%, #000));
+  border-bottom: 3px solid color-mix(in srgb, var(--gulf) 50%, #000); }
+.set-danger > h2:first-child { background: repeating-linear-gradient(135deg, rgba(0,0,0,.15) 0 10px, transparent 10px 20px), #c41f2d; }
+.dash-hustler .set-card > h2:first-child, .dash-free .set-card > h2:first-child, .dash-street .set-card > h2:first-child { color: #fff !important; }
+.send-form { padding: 1.5rem; margin-top: 2rem; }

@@ -205,7 +205,7 @@ export default function ClipsPage() {
   const prizes = [b.gold, b.silver, b.bronze].map((d) => Math.round(d * mult * 100));
 
   return (
-    <div className={`tint tint-${paying ? tier.id : "free"}`}>
+    <div className={`dash dash-${paying ? tier.id : "free"}`}>
     <div className="mx-auto max-w-7xl px-4 py-12">
       <DemoNote />
       <div className="flex flex-wrap items-end justify-between gap-6">
@@ -228,21 +228,28 @@ export default function ClipsPage() {
         <p className="mt-8 text-haze">The compilation video goes up when voting opens. Each clip below links to its moment in it.</p>
       )}
 
-      {/* What this account can do in this round */}
-      <div className="mt-8 flex flex-wrap items-center gap-x-6 gap-y-3 rounded-lg border-2 border-line bg-ink px-4 py-3 text-sm font-semibold">
+      {/* What this account can do in this round: one lozenge per vote and per
+          download. Spending one knocks it out of the row. */}
+      <div className="tokens">
+        <div className="token-row" aria-label={`${votesLeft} of ${maxVotes} votes left`}>
+          <span className="token-k">Votes</span>
+          <span className="token-set">
+            {Array.from({ length: maxVotes }, (_, i) => <i key={i} className={`loz vote ${i < votesLeft ? "" : "spent"}`} />)}
+          </span>
+          <b className="token-n">{votesLeft}<small>/{maxVotes}</small></b>
+        </div>
         {paying ? (
-          <>
-            <span><span className="display text-2xl text-gulf">{votesLeft}</span> of {maxVotes} votes left</span>
-            <span className="text-haze hidden sm:inline">·</span>
-            <span><span className="display text-2xl text-gulf">{credits}</span> download credit{credits === 1 ? "" : "s"} this month</span>
-          </>
+          <div className="token-row" aria-label={`${credits} download credits left`}>
+            <span className="token-k">Downloads</span>
+            <span className="token-set">
+              {Array.from({ length: Math.max(credits, account?.credits_per_month ?? credits) }, (_, i) => <i key={i} className={`loz dl ${i < credits ? "" : "spent"}`} />)}
+            </span>
+            <b className="token-n">{credits}</b>
+          </div>
         ) : (
-          <>
-            <span>You get one vote. Totals and the ranking are hidden on free accounts.</span>
-            <Link href="/pricing" className="btn btn-hot !py-1.5 !px-3 text-sm">Get more votes</Link>
-          </>
+          <Link href="/pricing" className="token-up">More votes and free downloads with a plan →</Link>
         )}
-        {pool && <span className="sm:ml-auto text-haze">Pool grows with members: {money(pool.weekly_cents)} this week</span>}
+        {pool && <span className="token-pool">Pool this week <b>{money(pool.weekly_cents)}</b></span>}
       </div>
 
       {drop && <div className="mt-8"><DailyDrop drop={drop} /></div>}
@@ -286,7 +293,7 @@ export default function ClipsPage() {
             const mine = voted.includes(c.id);
             const top = paying && i < 3;
             return (
-              <li key={c.id} className={`rounded-lg overflow-hidden bg-ink border ${top ? "border-gulf border-2" : "border-line"}`}>
+              <li key={c.id} className={`clip-card ${top ? `is-top top-${i + 1}` : ""} ${mine ? "is-mine" : ""}`}>
                 <div className="relative aspect-video bg-ink-2">
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   {c.thumb && <img src={c.thumb} alt="" className="h-full w-full object-cover" />}

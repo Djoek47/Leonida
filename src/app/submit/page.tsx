@@ -23,7 +23,7 @@ export default function SubmitPage() {
     </div>
   );
   return (
-    <div className={`tint tint-${paying ? tier.id : "free"}`}>
+    <div className={`dash dash-${paying ? tier.id : "free"}`}>
     <div className="mx-auto max-w-3xl px-4 py-12">
       <DemoNote />
       <header className="send-hero">
@@ -40,16 +40,6 @@ export default function SubmitPage() {
             className={`px-4 py-2 rounded font-bold text-sm ${tab === k ? "bg-foam text-dusk" : "text-haze"}`}>{l}</button>
         ))}
       </div>
-      {tab === "send" && (
-        <p className="mt-6 flex flex-wrap items-center gap-x-4 gap-y-2 rounded-lg border-2 border-line bg-ink px-4 py-3 text-sm font-semibold">
-          <span>
-            <span className="display text-2xl text-gulf">{Math.max(0, tier.dailySubmissions - (account?.submitted_today ?? 0))}</span>
-            {" "}of {tier.dailySubmissions} clips left today
-          </span>
-          {!paying && <><span className="text-haze">·</span>
-            <Link href="/pricing" className="text-gulf underline underline-offset-4">Members send up to 100 a day</Link></>}
-        </p>
-      )}
       {tab === "send"
         ? <SendForm gamertag={profile?.gamertag ?? null} platform={profile?.platform ?? null} userId={user.id} cap={tier.dailySubmissions} usedToday={account?.submitted_today ?? 0} />
         : <ClaimForm userId={user.id} />}
@@ -151,7 +141,7 @@ function SendForm({ userId, cap, usedToday, gamertag, platform }: { userId: stri
   );
 
   return (
-    <form onSubmit={submit} className="mt-8 grid gap-5 [&>*]:min-w-0">
+    <form onSubmit={submit} className="send-form mt-8 grid gap-5 [&>*]:min-w-0">
       <label className="grid gap-1.5"><span className="font-bold">What happens in the clip?</span>
         <input name="title" required maxLength={90} className="field" placeholder="Airboat chase through Grassrivers at night" /></label>
       {gamertag ? (
