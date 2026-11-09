@@ -227,3 +227,52 @@ export function StarTracker({ stars, months }: { stars: number; months: number }
     </div>
   );
 }
+
+/** Streak, Clipper progress and the six stars as one strip of gauges,
+ *  instead of three boxes of text. Details live in each gauge's tooltip. */
+export function StatusStrip({ account, paying, fallbackClips }: { account: Account; paying: boolean; fallbackClips: number }) {
+  const [p, setP] = useState<Progress>({ clips: fallbackClips, next_at: 1, next_label: "First Clip" });
+  useEffect(() => {
+    const c = sb(); if (!c) return;
+    c.from("my_badge_progress").select("*").maybeSingle().then(({ data }) => data && setP(data as Progress));
+  }, []);
+  const pct = p.next_at ? Math.min(1, p.clips / p.next_at) : 1;
+  const r = 26, len = 2 * Math.PI * r;
+  const hot = account.streak_days >= 7;
+  const today = account.submitted_today > 0;
+  return (
+    <section className="status-strip" aria-label="Your progress">
+      <div className={`gauge ${hot ? "is-hot" : ""}`} title={`Best run: ${account.best_streak} days. Miss two days and it resets.${account.streak_freezes ? ` ${account.freezes_left} freeze${account.freezes_left === 1 ? "" : "s"} left.` : ""}`}>
+        <svg viewBox="0 0 40 48" className="flame" aria-hidden>
+          <path d="M20 2c3 9 14 14 14 28a14 14 0 0 1-28 0c0-7 4-11 7-14 0 5 2 8 5 9-2-8 0-16 2-23z" />
+          <path d="M20 26c2 4 6 6 6 11a6 6 0 0 1-12 0c0-3 2-5 3-6 0 2 1 3 2 3-1-3 0-6 1-8z" className="core" />
+        </svg>
+        <div>
+          <p className="gauge-v">{account.streak_days}<small> day streak</small></p>
+          <p className={`gauge-s ${today ? "ok" : "warn"}`}>{today ? "Today counted" : "Send one today"}</p>
+        </div>
+      </div>
+
+      <div className="gauge" title={p.next_at ? `${p.next_at - p.clips} more clips for ${p.next_label}. Only uploads count.` : "Every Clipper badge earned."}>
+        <svg viewBox="0 0 64 64" className="ring" aria-hidden>
+          <circle cx="32" cy="32" r={r} className="ring-bg" />
+          <circle cx="32" cy="32" r={r} className="ring-fg" strokeDasharray={len} strokeDashoffset={len * (1 - pct)} transform="rotate(-90 32 32)" />
+          <text x="32" y="37" textAnchor="middle">{p.clips}</text>
+        </svg>
+        <div>
+          <p className="gauge-v">{p.next_label ?? "Maxed"}<small> next badge</small></p>
+          <p className="gauge-s">{p.next_at ? `${p.next_at - p.clips} clips to go` : "All earned"}</p>
+        </div>
+      </div>
+
+      <div className="gauge" title="One star every four months on a plan, all six at two years.">
+        <StarRank stars={account.stars} className="[&_svg]:size-5" />
+        <div>
+          <p className="gauge-v">{account.stars}<small> / {MAX_STARS} wanted</small></p>
+          {paying ? <p className="gauge-s">{account.stars < MAX_STARS ? `A star every ${STAR_MONTHS} months` : "Most wanted"}</p>
+            : <Link href="/pricing" className="gauge-s link">Stars come with a plan</Link>}
+        </div>
+      </div>
+    </section>
+  );
+}

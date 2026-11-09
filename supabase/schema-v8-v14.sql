@@ -102,3 +102,4 @@ drop policy if exists "winnings request" on public.winnings;
 --    check requests (verify_requested_at), withdraw_for() for server cash-outs, Stripe
 --    cash-outs mail payout_sent instead of withdrawal_requested. See migrations
 --    v17_starter_bonus_and_stripe_payouts, v18_gamertag_check_request, v19_withdraw_for_server.
+-- v20: my_clip_sales() — per-clip downloads and earnings for the dashboard sales board (excludes self-downloads).

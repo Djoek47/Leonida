@@ -167,7 +167,7 @@ export function eventEmail(kind: string, d: D, name: string): Email | null {
           ["Left in your wallet", money(d.balance)],
         ], L),
         small("Staff send withdrawals by hand, usually within a few days. You'll get another email when it's sent. Wrong payout details? Fix them in settings.", L),
-        button("See your wallet", `${SITE}/dashboard#wallet`, L),
+        button("See your wallet", `${SITE}/wallet`, L),
       ], [`${name}, you asked to withdraw ${money(d.amount)} to ${s(d.method)} ${s(d.handle)}.`, `Left in wallet: ${money(d.balance)}`]);
 
     case "wallet_credit":
@@ -175,7 +175,7 @@ export function eventEmail(kind: string, d: D, name: string): Email | null {
         heading(`${money(d.amount)} added.`, L),
         para(`${hi(name)} staff added <strong>${money(d.amount)}</strong> to your wallet${d.note ? `: ${esc(d.note)}` : "."}`, L),
         rows([["Wallet balance", money(d.balance)]], L),
-        button("See your wallet", `${SITE}/dashboard#wallet`, L),
+        button("See your wallet", `${SITE}/wallet`, L),
       ], [`${name}, ${money(d.amount)} was added to your wallet. Balance: ${money(d.balance)}`]);
 
     /* ── Money ── */
@@ -209,7 +209,7 @@ export function eventEmail(kind: string, d: D, name: string): Email | null {
           ...(d.invoice ? [["Receipt no.", esc(d.invoice)] as [string, string]] : []),
           ...(d.renews ? [["Next renewal", esc(date(d.renews))] as [string, string]] : []),
         ], N),
-        button("Go to your dashboard", `${SITE}/dashboard`, N),
+        button("See receipts", `${SITE}/wallet`, N),
       ], [`${name}, ${tierName(d.tier)} renewed. Paid ${money(d.amount)}.`, d.invoice ? `Receipt ${s(d.invoice)}` : null], "Your receipt for a Live From Leonida membership.");
 
     case "payment_receipt":
@@ -217,7 +217,7 @@ export function eventEmail(kind: string, d: D, name: string): Email | null {
         hero({ img: asset("logo.png"), imgAlt: "", kicker: "Payment received", figure: money(d.amount) }),
         para(`${hi(name)} thanks, your payment went through.`, N),
         rows([["For", esc(s(d.what, "Live From Leonida"))], ["Amount", money(d.amount)], ...(d.invoice ? [["Receipt no.", esc(d.invoice)] as [string, string]] : [])], N),
-        button("Go to your dashboard", `${SITE}/dashboard`, N),
+        button("See receipts", `${SITE}/wallet`, N),
       ], [`${name}, payment received: ${money(d.amount)} for ${s(d.what)}.`], "Your Live From Leonida receipt.");
 
     case "download_receipt":
@@ -239,7 +239,7 @@ export function eventEmail(kind: string, d: D, name: string): Email | null {
         hero({ img: asset("cash.png"), imgAlt: "Cash", kicker: "Your clip just sold", figure: `+${money(d.amount)}`, caption: esc(s(d.title, "Your clip")) }),
         para(`${hi(name)} someone downloaded <strong>${esc(s(d.title, "your clip"))}</strong>. The money is already in your wallet.`, N),
         rows([["Earned", `+${money(d.amount)}`], ["Wallet balance", money(d.balance)]], N),
-        button("See your wallet", `${SITE}/dashboard#wallet`, N),
+        button("See your wallet", `${SITE}/wallet`, N),
         small("Every member download pays the player. Keep sending clips: the good ones sell over and over.", N),
       ], [`${name}, "${s(d.title)}" was downloaded. +${money(d.amount)} in your wallet. Balance: ${money(d.balance)}.`], "You're getting this because one of your clips earned money.");
 
@@ -263,8 +263,8 @@ export function eventEmail(kind: string, d: D, name: string): Email | null {
         hero({ img: asset("cash.png"), imgAlt: "Cash", kicker: "Prize money in", figure: `+${money(d.amount)}` }),
         para(`${hi(name)} your prize${d.place ? ` for ${esc(PLACE[Number(d.place)] ?? "")} place` : ""} is in your wallet. Withdraw it whenever you like.`, N),
         rows([["Prize", `+${money(d.amount)}`], ["Wallet balance", money(d.balance)]], N),
-        button("Withdraw", `${SITE}/dashboard#wallet`, N),
-      ], [`${name}, +${money(d.amount)} prize money is in your wallet. Balance: ${money(d.balance)}.`, `${SITE}/dashboard#wallet`], "You're getting this because you won a prize.");
+        button("Withdraw", `${SITE}/wallet`, N),
+      ], [`${name}, +${money(d.amount)} prize money is in your wallet. Balance: ${money(d.balance)}.`, `${SITE}/wallet`], "You're getting this because you won a prize.");
 
     case "payout_sent":
       return night(`Sent: ${money(d.amount)} is on its way to you`, `Paid to ${s(d.method, "your payout account")}.`, [
@@ -275,7 +275,7 @@ export function eventEmail(kind: string, d: D, name: string): Email | null {
           ["Sent to", esc(`${s(d.method, "payout account")}${d.handle ? ` · ${s(d.handle)}` : ""}`)],
           ...(d.reference ? [["Reference", esc(d.reference)] as [string, string]] : []),
         ], N),
-        button("See your wallet", `${SITE}/dashboard#wallet`, N),
+        button("See your wallet", `${SITE}/wallet`, N),
         small("Nothing after a few days? Check the payout details in settings and tell staff in the chat.", N),
       ], [`${name}, we sent you ${money(d.amount)} via ${s(d.method)} ${s(d.handle)}.`, d.reference ? `Reference: ${s(d.reference)}` : null], "You're getting this because money was sent to you.");
   }

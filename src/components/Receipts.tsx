@@ -7,7 +7,7 @@ type Item = { id: string; kind: "invoice" | "payment"; at: number; cents: number
   number: string | null; view: string | null; pdf: string | null };
 
 /** Bills and receipts from Stripe, under the wallet. */
-export function Receipts() {
+export function Receipts({ always = false }: { always?: boolean }) {
   const [items, setItems] = useState<Item[] | null>(null);
   const [open, setOpen] = useState(false);
   useEffect(() => {
@@ -19,8 +19,12 @@ export function Receipts() {
       setItems(j.items ?? []);
     })();
   }, []);
-  if (!items || items.length === 0) return null;
-  const shown = open ? items : items.slice(0, 3);
+  if (!items) return always ? <p className="text-haze">Loading receipts…</p> : null;
+  if (items.length === 0) return always ? (
+    <section className="receipts"><h3 className="text-lg font-extrabold">Receipts</h3>
+      <p className="mt-2 text-haze">No payments yet. Every plan payment and paid download will show up here with its Stripe receipt.</p></section>
+  ) : null;
+  const shown = open || always ? items : items.slice(0, 3);
   return (
     <section className="receipts mt-6">
       <div className="flex items-baseline justify-between gap-3">

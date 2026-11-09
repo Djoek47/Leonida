@@ -1,0 +1,92 @@
+"use client";
+import { useCallback, useEffect, useState } from "react";
+import Link from "@/components/A";
+import { sb } from "@/lib/supabase";
+import type { Profile } from "@/lib/useUser";
+import { money, type Winning } from "@/lib/api";
+
+const methods = [["paypal", "PayPal"], ["venmo", "Venmo"], ["cashapp", "Cash App"], ["interac", "Interac e-Transfer"], ["wise", "Wise"]] as const;
+
+async function call(url: string, body: object) {
+  const t = (await sb()?.auth.getSession())?.data.session?.access_token;
+  const r = await fetch(url, { method: "POST", headers: { "content-type": "application/json", ...(t ? { authorization: `Bearer ${t}` } : {}) }, body: JSON.stringify(body) });
+  return r.json().catch(() => ({}));
+}
+
+/** Where your money goes: Stripe straight to card or bank, or PayPal and co. sent by staff. */
+export function GetPaid({ profile, setProfile }: { profile: Profile; setProfile: (p: Profile) => void }) {
+  const [way, setWay] = useState<"stripe" | "other">(profile.payout_method && profile.payout_method !== "stripe" ? "other" : "stripe");
+  const [busy, setBusy] = useState(false);
+  const [note, setNote] = useState("");
+
+  useEffect(() => {
+    if (!new URLSearchParams(location.search).has("stripe")) return;
+    history.replaceState(null, "", "/wallet#payout");
+    call("/api/payout/stripe", { action: "status" }).then((j) => {
+      setNote(j.ready ? "Stripe connected. Cash-outs now go to your card or bank." : "Stripe still needs a detail or two. Press Connect with Stripe to finish.");
+      if (j.ready) setProfile({ ...profile, payout_method: "stripe", payout_handle: "Stripe account", stripe_connect_ready: true });
+    });
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  async function connect() {
+    setBusy(true);
+    const j = await call("/api/payout/stripe", { action: "connect" });
+    if (j.url) { location.href = j.url; return; }
+    setBusy(false); setNote(j.error ?? "Couldn't open Stripe.");
+  }
+  async function save(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault();
+    const f = new FormData(e.currentTarget);
+    const patch = { payout_method: String(f.get("method")), payout_handle: String(f.get("handle")) };
+    const c = sb(); if (c) await c.from("profiles").update(patch).eq("id", profile.id);
+    setProfile({ ...profile, ...patch }); setNote("Saved.");
+  }
+
+  return (
+    <section className="rounded-xl bg-ink border border-line p-5 grid gap-3">
+      <h2 id="payout" className="text-xl font-extrabold scroll-mt-28">Get paid</h2>
+      <div className="pay-pick" role="radiogroup" aria-label="Payout method">
+        <button type="button" role="radio" aria-checked={way === "stripe"} onClick={() => setWay("stripe")} className={way === "stripe" ? "on" : ""}>
+          <b>Card or bank</b><span>Instant, via Stripe</span></button>
+        <button type="button" role="radio" aria-checked={way === "other"} onClick={() => setWay("other")} className={way === "other" ? "on" : ""}>
+          <b>PayPal & co.</b><span>Sent by staff</span></button>
+      </div>
+      {way === "stripe" ? (
+        profile.stripe_connect_ready && profile.payout_method === "stripe"
+          ? <p className="font-bold text-gulf">Stripe connected. Cash-outs go straight to your card or bank.</p>
+          : <button onClick={connect} disabled={busy} className="btn btn-hot w-fit !py-2">{busy ? "Opening Stripe…" : "Connect with Stripe"}</button>
+      ) : (
+        <form onSubmit={save} className="grid gap-3">
+          <select name="method" defaultValue={profile.payout_method && profile.payout_method !== "stripe" ? profile.payout_method : "paypal"} className="field">{methods.map(([k, v]) => <option key={k} value={k}>{v}</option>)}</select>
+          <input name="handle" defaultValue={profile.payout_method !== "stripe" ? profile.payout_handle ?? "" : ""} required className="field" placeholder="Email, @username or $cashtag" />
+          <button className="btn btn-hot w-fit !py-2">Save</button>
+        </form>
+      )}
+      {note && <p role="status" className="text-sm font-semibold text-gulf">{note}</p>}
+    </section>
+  );
+}
+
+const winText: Record<string, string> = { unclaimed: "Being checked", requested: "Being checked", verifying: "Checking your gamertag", sent: "In your wallet", held: "On hold" };
+
+/** Prize history. */
+export function Winnings({ userId }: { userId: string }) {
+  const [wins, setWins] = useState<Winning[]>([]);
+  const load = useCallback(() => {
+    sb()?.from("winnings").select("*").eq("owner_id", userId).then(({ data }) => setWins((data as Winning[]) ?? []));
+  }, [userId]);
+  useEffect(() => { load(); }, [load]);
+  if (!wins.length) return null;
+  return (
+    <section>
+      <h2 className="text-xl font-extrabold">Prizes</h2>
+      <ul className="mt-3 grid gap-2">{wins.map((w) => (
+        <li key={w.id} className="receipts-row">
+          <span className={`place-chip p${w.place}`}>{["1st", "2nd", "3rd"][w.place - 1]}</span>
+          <b className="flex-1">{money(w.amount_cents)}</b>
+          <span className="text-sm text-haze">{winText[w.status] ?? w.status}</span>
+        </li>))}</ul>
+      <Link href="/rules" className="mt-2 inline-block text-xs text-haze underline">How prizes are checked</Link>
+    </section>
+  );
+}

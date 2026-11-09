@@ -12,9 +12,19 @@ export type NewsItem = {
   links: { label: string; href: string }[];
 };
 
-export const NEWS_UPDATED = "2026-11-07";
+export const NEWS_UPDATED = "2026-11-09";
 
 export const NEWS: NewsItem[] = ([
+  {
+    date: "2026-11-08",
+    title: "Clear some space: reports put the install past 200 GB",
+    body: "Retail listings and press reports put the console download at roughly 200 to 230 GB, and the boxed version is a download code rather than a full disc. Rockstar hasn't published an official size yet, so treat the exact number as reported, not confirmed.",
+    source: "Press preview",
+    links: [
+      { label: "TweakTown on the download size", href: "https://www.tweaktown.com/news/114341/grand-theft-auto-6-download-size-revealed-and-yes-its-over-200-gb/index.html" },
+      { label: "IBTimes on the code-in-a-box", href: "https://www.ibtimes.co.uk/gta-6-210gb-download-boxed-code-ps5-1828349" },
+    ],
+  },
   {
     date: "2026-11-05",
     title: "Rockstar drops 39 new launch screenshots",

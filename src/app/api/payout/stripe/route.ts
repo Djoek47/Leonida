@@ -41,8 +41,8 @@ export async function POST(req: NextRequest) {
     }
     const link = await stripe().accountLinks.create({
       account: id, type: "account_onboarding",
-      refresh_url: `${env.siteUrl}/dashboard?stripe=retry#payout`,
-      return_url: `${env.siteUrl}/dashboard?stripe=done#payout`,
+      refresh_url: `${env.siteUrl}/wallet?stripe=retry#payout`,
+      return_url: `${env.siteUrl}/wallet?stripe=done#payout`,
     });
     return Response.json({ url: link.url });
   } catch (e) {
