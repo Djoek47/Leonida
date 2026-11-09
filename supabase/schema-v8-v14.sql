@@ -92,3 +92,7 @@ begin
   return n;
 end $$;
 drop policy if exists "winnings request" on public.winnings;
+
+-- ── v16: chat_feed() — each message with its author's public face (plan while paid, stars,
+--    verified, best badge by prestige, badge count, staff); members-only rooms stay closed.
+--    See migration v16_chat_feed_with_badges for badge_prestige() and chat_feed().

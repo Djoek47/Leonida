@@ -424,7 +424,7 @@ export default function ClipsPage() {
               <strong className="text-foam">{exactMoney(DOWNLOAD.creatorCents)} of which goes to {ask.gamertag}</strong>,
               the player who made the clip.
             </p>
-            <p className="mt-2 text-sm text-haze">Every file carries the uploader&apos;s name on the video.</p>
+            <p className="mt-2 text-sm text-haze">Credit the player when you post it. On the site, every clip plays with their tag and our seal on it.</p>
             <div className="mt-6 flex gap-3">
               <Link href="/pricing" className="btn btn-hot">See the plans</Link>
               <button onClick={() => setAsk(null)} className="btn btn-ghost">Not now</button>

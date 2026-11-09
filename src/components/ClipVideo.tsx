@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { sb } from "@/lib/supabase";
 import type { Clip } from "@/lib/api";
 
@@ -14,6 +14,7 @@ export function ClipVideo({ clip, poster }: { clip: Clip; poster?: string }) {
   const [url, setUrl] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState("");
+  const frame = useRef<HTMLDivElement>(null);
 
   const path = clip.watermark_path ?? clip.storage_path;
 
@@ -28,10 +29,29 @@ export function ClipVideo({ clip, poster }: { clip: Clip; poster?: string }) {
     else setUrl(data.signedUrl);
   }
 
+  // Our fullscreen, not the browser's: the whole frame goes fullscreen, so the
+  // watermark stays on top of the picture instead of being left behind.
+  function full() {
+    const el = frame.current; if (!el) return;
+    if (document.fullscreenElement) document.exitFullscreen(); else el.requestFullscreen?.();
+  }
+
   if (url) {
     return (
-      <video src={url} poster={poster} controls autoPlay playsInline
-        className="absolute inset-0 h-full w-full bg-black object-contain" />
+      <div ref={frame} className="clip-frame absolute inset-0 bg-black">
+        <video src={url} poster={poster} controls autoPlay playsInline
+          controlsList="nofullscreen nodownload noremoteplayback" disablePictureInPicture
+          onContextMenu={(e) => e.preventDefault()}
+          className="h-full w-full object-contain" />
+        <div className="clip-mark" aria-hidden>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src="/brand/live-from-leonida-avatar-180.png" alt="" />
+          <span><b>@{clip.gamertag}</b><i>livefromleonida.com</i></span>
+        </div>
+        <button type="button" onClick={full} className="clip-full" aria-label="Fullscreen">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg>
+        </button>
+      </div>
     );
   }
 
