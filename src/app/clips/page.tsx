@@ -205,6 +205,7 @@ export default function ClipsPage() {
   const prizes = [b.gold, b.silver, b.bronze].map((d) => Math.round(d * mult * 100));
 
   return (
+    <div className={`tint tint-${paying ? tier.id : "free"}`}>
     <div className="mx-auto max-w-7xl px-4 py-12">
       <DemoNote />
       <div className="flex flex-wrap items-end justify-between gap-6">
@@ -432,6 +433,7 @@ export default function ClipsPage() {
           </div>
         </div>
       )}
+    </div>
     </div>
   );
 }

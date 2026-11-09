@@ -56,6 +56,26 @@ export async function POST(req: NextRequest) {
         break;
       }
 
+      // An upgrade paid on its own page: now switch the subscription. The
+      // difference is already paid, so no second proration charge.
+      if (s.metadata?.kind === "plan_change" && s.payment_status === "paid") {
+        const m = s.metadata;
+        // A monthly/annual switch restarts the period and Stripe bills the new
+        // price at once; credit it first so that bill is $0. The member already
+        // paid the difference (new price minus unused old time) on the payment page.
+        if (m.restart && m.customer && m.cents) {
+          await stripe().customers.createBalanceTransaction(m.customer, {
+            amount: -Number(m.cents), currency: "usd", description: `Plan switch to ${m.tier}: paid at checkout`,
+          }, { idempotencyKey: `switch-credit-${s.id}` });
+        }
+        await stripe().subscriptions.update(m.subscription, {
+          items: [{ id: m.item, price: m.price }], proration_behavior: "none", cancel_at_period_end: false,
+          ...(m.restart ? { billing_cycle_anchor: "now" as const } : {}),
+          metadata: { player_id: m.player_id, tier: m.tier, period: m.period },
+        });
+        break;
+      }
+
       // A subscription checkout: the subscription.* events below carry the detail.
       if (s.client_reference_id && typeof s.customer === "string") {
         await db.from("profiles")

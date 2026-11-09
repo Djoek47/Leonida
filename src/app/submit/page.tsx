@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import Link from "@/components/A";
 import { sb } from "@/lib/supabase";
 import { useUser } from "@/lib/useUser";
+import { TierMedal } from "@/components/TierMedal";
 import { contestClips, currentContest, mmss, platformName, type Clip } from "@/lib/api";
 import { TagPicker } from "@/components/TagPicker";
 import { slugTag } from "@/lib/tags";
@@ -22,9 +23,17 @@ export default function SubmitPage() {
     </div>
   );
   return (
+    <div className={`tint tint-${paying ? tier.id : "free"}`}>
     <div className="mx-auto max-w-3xl px-4 py-12">
       <DemoNote />
-      <h1 className="display text-6xl md:text-8xl">Send it in</h1>
+      <header className="send-hero">
+        <TierMedal tier={paying ? tier.id : "free"} className="send-medal" />
+        <div className="min-w-0">
+          <p className="dash-kicker">{paying ? `${tier.label} submission` : "Free submission"}</p>
+          <h1 className="display text-6xl md:text-8xl leading-[0.9]">Send it in</h1>
+          {user && <p className="send-cap"><b>{Math.max(0, tier.dailySubmissions - (account?.submitted_today ?? 0))}</b> of {tier.dailySubmissions} left today{paying ? "" : <> · <a href="/pricing" className="underline">more with a plan</a></>}</p>}
+        </div>
+      </header>
       <div role="tablist" className="mt-8 inline-flex rounded border border-line p-1 bg-ink">
         {([["send", "Send my clip"], ["claim", "Claim a clip that's mine"]] as const).map(([k, l]) => (
           <button key={k} role="tab" aria-selected={tab === k} onClick={() => setTab(k)}
@@ -44,6 +53,7 @@ export default function SubmitPage() {
       {tab === "send"
         ? <SendForm gamertag={profile?.gamertag ?? null} platform={profile?.platform ?? null} userId={user.id} cap={tier.dailySubmissions} usedToday={account?.submitted_today ?? 0} />
         : <ClaimForm userId={user.id} />}
+    </div>
     </div>
   );
 }

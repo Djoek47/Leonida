@@ -23,7 +23,8 @@ function Clock() {
   return (
     <span className="led-clock" role="timer" aria-label={`${d} days ${h} hours ${m} minutes until GTA VI launches`}>
       <span className="led-tag-sm">GTA VI IN</span>
-      <span className="led-text">{d}D {pad(h)}:{pad(m)}:{pad(sec)}</span>
+      <span className="led-text led-short">{d}D {pad(h)}:{pad(m)}:{pad(sec)}</span>
+      <span className="led-text led-long">{d} DAYS {pad(h)} HRS {pad(m)} MIN {pad(sec)} SEC</span>
     </span>
   );
 }
@@ -49,8 +50,9 @@ export function Ticker() {
       <span className="led-tag shrink-0 h-full flex items-center px-3 z-10">LIVE FROM LEONIDA</span>
       <Clock />
       <div className="ticker overflow-hidden flex-1 min-w-0">
+        {/* Two copies back to back: the loop never shows an empty board. */}
         <div className="ticker-track">
-          {items.map((i, k) => <span key={k} className="led-text">{i.toUpperCase()}</span>)}
+          {[...items, ...items].map((i, k) => <span key={k} className="led-text" aria-hidden={k >= items.length}>{i.toUpperCase()}</span>)}
         </div>
       </div>
     </div>

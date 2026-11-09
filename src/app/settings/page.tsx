@@ -160,6 +160,7 @@ export default function Settings() {
   }
 
   return (
+    <div className={`dash dash-${tier}`}>
     <div className="mx-auto max-w-3xl px-4 py-12 [&>*]:min-w-0">
       <div className="flex items-center gap-4">
         <TierMedal tier={tier} className="size-20 shrink-0" />
@@ -203,24 +204,10 @@ export default function Settings() {
       </section>
 
       <section className="set-card">
-        <h2>Where to send your money</h2>
-        <form onSubmit={savePayout} className="grid gap-3 sm:grid-cols-[12rem_1fr_auto] items-end [&>*]:min-w-0">
-          <label className="grid gap-1.5">
-            <span className="text-sm font-bold">Method</span>
-            <select name="method" defaultValue={profile.payout_method ?? "paypal"} className="field">
-              {METHODS.map(([k, v]) => <option key={k} value={k}>{v}</option>)}
-            </select>
-          </label>
-          <label className="grid gap-1.5">
-            <span className="text-sm font-bold">Account</span>
-            <input name="handle" defaultValue={profile.payout_handle ?? ""} placeholder="email, @handle or phone" className="field" required />
-          </label>
-          <button disabled={busy === "payout"} className="btn btn-hot disabled:opacity-70">
-            {busy === "payout" ? "Saving…" : "Save"}
-          </button>
-        </form>
-        <Flash note={wNote} />
-      </section>
+          <h2>Money</h2>
+          <p className="text-sm opacity-80">Your wallet, where you get paid, prizes and every receipt.</p>
+          <a href="/wallet" className="btn btn-hot mt-4 !py-2">Open Wallet &amp; billing</a>
+        </section>
 
       <section className="set-card">
         <h2>Plan</h2>
@@ -302,6 +289,7 @@ export default function Settings() {
         </div>
         <Flash note={dNote} />
       </section>
+    </div>
     </div>
   );
 }

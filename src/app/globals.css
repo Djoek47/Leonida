@@ -86,8 +86,8 @@ body {
 
 /* Ticker: yellow work-zone bar */
 .ticker { overflow: hidden; white-space: nowrap; }
-.ticker-track { display: inline-flex; gap: 3rem; padding-left: 100%; animation: tick 45s linear infinite; }
-@keyframes tick { to { transform: translateX(-100%); } }
+.ticker-track { display: inline-flex; gap: 3rem; padding-left: 1.5rem; animation: tick 90s linear infinite; }
+@keyframes tick { to { transform: translateX(calc(-50% - 1.5rem)); } }
 
 /* Controls */
 .btn { display: inline-flex; align-items: center; justify-content: center; gap: .5rem; font-weight: 800; padding: .8rem 1.4rem; border-radius: 8px; transition: transform .15s, background .15s; }
@@ -1109,8 +1109,8 @@ body:has(.overlay-root) > *:not(:has(.overlay-root)) { display: none; }
 a.mission-step:hover, button.mission-step:hover { transform: translateY(-2px); border-color: var(--gulf); border-style: solid; }
 .mission-ico { display: grid; place-items: center; width: 1.7rem; height: 1.7rem; border-radius: 999px; flex-shrink: 0; font-size: .85rem;
   background: var(--ink-2); color: var(--gulf); border: 2px solid var(--line); }
-.is-ok .mission-step { opacity: .75; border-style: solid; } .is-ok .mission-ico { background: var(--gulf); color: #fff; border-color: var(--gulf); animation: tick .4s cubic-bezier(.2,1.6,.4,1); }
-@keyframes tick { from { transform: scale(.4); } }
+.is-ok .mission-step { opacity: .75; border-style: solid; } .is-ok .mission-ico { background: var(--gulf); color: #fff; border-color: var(--gulf); animation: tick-pop .4s cubic-bezier(.2,1.6,.4,1); }
+@keyframes tick-pop { from { transform: scale(.4); } }
 .mission.is-ready { border-color: var(--gulf); box-shadow: 0 0 0 3px color-mix(in srgb, var(--gulf) 30%, transparent), 0 14px 28px -20px rgba(0,0,0,.6); }
 .mission-claim { margin-top: .9rem; animation: pulse-claim 1.6s ease-in-out infinite; }
 @keyframes pulse-claim { 50% { transform: scale(1.04); } }
@@ -1261,3 +1261,23 @@ aside .trophy-shelf li { width: 4.1rem; }
 .slide-arrow.is-left { left: .8rem; } .slide-arrow.is-right { right: .8rem; }
 @media (prefers-reduced-motion: reduce) { .slide-shot, .slide-text { transition: none; animation: none; } }
 .from-settings { display: flex; flex-wrap: wrap; align-items: baseline; gap: .4rem 1rem; border-radius: 12px; padding: .8rem 1rem; border: 1px solid var(--line); background: var(--ink); }
+
+.led-long { display: none; }
+@media (min-width: 900px) { .led-short { display: none; } .led-long { display: inline; } .led-clock { padding: 0 1.1rem; } .led-tag-sm { font-size: .7rem; } }
+
+/* Account pages share the dashboard look */
+.dash .set-card { background: linear-gradient(165deg, var(--ink-2), var(--ink)); border-color: var(--line); color: var(--foam);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.07), 0 16px 30px -20px rgba(0,0,0,.6); }
+.dash .set-card h2 { color: var(--foam); }
+
+/* Public pages (clips, send a clip): a lighter wash of your plan colour,
+   so the site stays itself but you can tell it's yours. */
+.tint { --tint: #8d969f; background: linear-gradient(180deg, color-mix(in srgb, var(--tint) 22%, transparent), transparent 460px); padding-bottom: 6rem; margin-bottom: -6rem; }
+.tint-free { --tint: #8d969f; } .tint-street { --tint: #7fb6e0; } .tint-hustler { --tint: #e0679f; } .tint-kingpin { --tint: #6a5be6; }
+.tint .tile, .tint .rounded-lg.bg-ink, .tint .rounded-xl.bg-ink { border-color: color-mix(in srgb, var(--tint) 45%, var(--line)); }
+.tint-kingpin .display { text-shadow: 0 2px 0 color-mix(in srgb, #f2c12e 45%, transparent); }
+.send-hero { display: grid; grid-template-columns: auto 1fr; gap: 1.25rem; align-items: center; }
+.send-medal { width: clamp(5rem, 16vw, 8rem); height: auto; filter: drop-shadow(0 12px 24px rgba(0,0,0,.35)); animation: medal-float 6s ease-in-out infinite; }
+.tint .dash-kicker { color: color-mix(in srgb, var(--tint) 70%, #000); }
+.send-cap { margin-top: .6rem; font-weight: 700; color: var(--haze); } .send-cap b { font-family: "Doto", monospace; font-size: 1.4rem; color: var(--foam); }
+@media (max-width: 520px) { .send-hero { grid-template-columns: 1fr; } }
