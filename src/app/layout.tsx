@@ -20,9 +20,12 @@ export const metadata: Metadata = {
   keywords: ["Leonida", "Live From Leonida", "GTA VI", "GTA 6", "Vice City", "Leonida map", "GTA VI clips", "GTA 6 contest", "Leonida Keys", "Port Gellhorn", "Grassrivers"],
   alternates: { canonical: "/" },
   openGraph: { type: "website", siteName: "Live From Leonida", url: SITE, title: "Live From Leonida", description: "GTA VI clips, weekly cash prizes and the Leonida guide.",
-    images: [{ url: "/brand/banner-x-1500x500.png", width: 1500, height: 500, alt: "Live From Leonida" }] },
-  twitter: { card: "summary_large_image", title: "Live From Leonida", description: "GTA VI clips, weekly cash prizes and the Leonida guide.", images: ["/brand/banner-x-1500x500.png"] },
-  robots: { index: true, follow: true },
+    images: [{ url: "/og.png", width: 1200, height: 630, alt: "Live From Leonida — GTA VI clips, prizes and the Leonida guide" }] },
+  twitter: { card: "summary_large_image", title: "Live From Leonida", description: "GTA VI clips, weekly cash prizes and the Leonida guide.", images: ["/og.png"] },
+  robots: { index: true, follow: true, googleBot: { index: true, follow: true, "max-image-preview": "large", "max-snippet": -1, "max-video-preview": -1 } },
+  // Google Search Console: paste the code from its "HTML tag" option into
+  // GOOGLE_SITE_VERIFICATION in Vercel (just the content="…" value).
+  verification: process.env.GOOGLE_SITE_VERIFICATION ? { google: process.env.GOOGLE_SITE_VERIFICATION } : undefined,
 };
 
 const jsonLd = {
