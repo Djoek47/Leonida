@@ -442,3 +442,204 @@ body:has(.overlay-root) > *:not(:has(.overlay-root)) { display: none; }
 .rung-past .rung-pool { font-size: clamp(1.3rem, 3.4vw, 1.8rem); }
 
 @media (prefers-reduced-motion: reduce) { .rung-bar { transition: none; } }
+
+/* ── The Vault tank ─────────────────────────────────────────────────────────
+   The prize ladder as a tank standing on its point: widest step at the top,
+   poured full of gold as far as the site has climbed, empty steel above. */
+.tank { --steel: #1b1510; --steel-line: #4a3c25; }
+.tank-cap {
+  display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between;
+  gap: .5rem 1rem; padding: 0 0 .6rem;
+  border-bottom: 3px solid #c99a3a;
+}
+.tank-cap-k { font-size: .7rem; font-weight: 900; letter-spacing: .18em; color: var(--haze); }
+.tank-cap-v { font-family: var(--font-display, inherit); font-size: clamp(1.4rem, 4vw, 2rem); color: var(--gulf); }
+
+.tank-steps { display: grid; justify-items: center; gap: 5px; margin-top: 1rem; }
+
+.tank-step {
+  position: relative; box-sizing: border-box;
+  display: flex; align-items: center; gap: .75rem;
+  min-height: 58px; padding: .5rem clamp(.6rem, 2vw, 1.1rem);
+  border: 2px solid var(--steel-line); border-radius: 6px;
+  background:
+    repeating-linear-gradient(135deg, rgba(255,255,255,.028) 0 6px, transparent 6px 12px),
+    linear-gradient(180deg, #241d15, var(--steel));
+  color: #a2957c;
+  transition: width .9s cubic-bezier(.2,.8,.2,1), filter .25s ease;
+}
+
+/* Poured full. */
+.tank-step.is-filled {
+  border-color: #c99a3a;
+  background:
+    repeating-linear-gradient(135deg, rgba(255,255,255,.07) 0 6px, transparent 6px 12px),
+    linear-gradient(180deg, #f6d888 0%, #e0b24c 45%, #b8862a 100%);
+  color: #2b1f05;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.5), 0 2px 10px rgba(160,110,20,.3);
+}
+
+/* The surface of the gold: a bright meniscus with a slow travelling glint. */
+.tank-step.is-surface { box-shadow: inset 0 1px 0 rgba(255,255,255,.7), 0 0 0 2px rgba(255,214,120,.55), 0 6px 22px rgba(200,150,30,.45); }
+.tank-step.is-surface::before {
+  content: ""; position: absolute; inset: 0 0 auto 0; height: 4px;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,.95), transparent);
+  background-size: 45% 100%; background-repeat: no-repeat;
+  animation: tank-glint 3.4s linear infinite;
+}
+@keyframes tank-glint { from { background-position: -50% 0; } to { background-position: 150% 0; } }
+
+.tank-step.is-next { border-color: var(--flamingo); border-style: dashed; }
+
+.tank-members { font-size: .78rem; font-weight: 900; letter-spacing: .02em; white-space: nowrap; }
+.tank-mid { flex: 1; display: flex; justify-content: center; min-width: 0; }
+.tank-flag {
+  border-radius: 999px; padding: .15rem .6rem; white-space: nowrap;
+  font-size: .62rem; font-weight: 900; letter-spacing: .07em; text-transform: uppercase;
+  background: #2b1f05; color: #ffd87a;
+}
+.tank-flag-next { background: var(--flamingo); color: #fff; }
+
+.tank-right { display: flex; align-items: center; gap: .7rem; }
+.tank-pool { font-size: clamp(1.1rem, 3.2vw, 1.8rem); line-height: 1; }
+.tank-cuts { display: none; gap: .25rem; }
+.tank-cuts i {
+  font-style: normal; font-size: .64rem; font-weight: 900;
+  border-radius: 4px; padding: .18rem .4rem; border: 1px solid rgba(0,0,0,.25);
+}
+.tank-cuts .cut-g { background: linear-gradient(160deg,#ffeaad,#e3bd4e); color: #3a2c05; }
+.tank-cuts .cut-s { background: linear-gradient(160deg,#f2f5f7,#c3ccd2); color: #2b3338; }
+.tank-cuts .cut-b { background: linear-gradient(160deg,#f0c49a,#c07f44); color: #3b2410; }
+@media (min-width: 720px) { .tank-cuts { display: flex; } }
+
+.tank-foot { margin-top: 1rem; font-size: .85rem; color: var(--haze); }
+
+@media (prefers-reduced-motion: reduce) {
+  .tank-step { transition: none; }
+  .tank-step.is-surface::before { animation: none; opacity: .55; }
+}
+
+/* ── Panels ─────────────────────────────────────────────────────────────────
+   The site was full of cream rounded rectangles, which is what a box looks
+   like when nobody decided what it was. These are objects: a bolted steel
+   plate, a vitreous enamel plaque, a stencilled crate face. Each one is built
+   to hold a number and a handful of words, not paragraphs. */
+
+/* Brushed steel, bolted at the corners. For hard facts. */
+.panel-steel {
+  position: relative; isolation: isolate;
+  border-radius: 10px; padding: 1.5rem 1.7rem;
+  color: #efe6d2;
+  background:
+    repeating-linear-gradient(97deg, rgba(255,255,255,.045) 0 1px, transparent 1px 3px),
+    linear-gradient(168deg, #3a3228 0%, #241e18 48%, #15110d 100%);
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.14),
+    inset 0 0 0 1px rgba(0,0,0,.6),
+    0 14px 34px -18px rgba(0,0,0,.8);
+}
+.panel-steel::before, .panel-steel::after {
+  content: ""; position: absolute; top: 11px; bottom: 11px; width: 7px;
+  background-image:
+    radial-gradient(circle at 50% 50%, #c9bda4 0 32%, #6b6252 45%, rgba(0,0,0,.65) 62%, transparent 64%);
+  background-size: 7px 7px; background-repeat: no-repeat;
+  background-position: 50% 0, 50% 100%;
+  background-image:
+    radial-gradient(circle at 50% 50%, #cfc3a9 0 30%, #6b6252 46%, rgba(0,0,0,.7) 64%, transparent 66%),
+    radial-gradient(circle at 50% 50%, #cfc3a9 0 30%, #6b6252 46%, rgba(0,0,0,.7) 64%, transparent 66%);
+}
+.panel-steel::before { left: 10px; }
+.panel-steel::after  { right: 10px; }
+.panel-steel .k { font-size: .66rem; font-weight: 900; letter-spacing: .2em; color: #bba87e; text-transform: uppercase; }
+.panel-steel .v { font-family: var(--font-display, inherit); font-size: clamp(2rem, 6vw, 3.2rem); line-height: 1; margin: .2rem 0; }
+.panel-steel .s { font-size: .88rem; color: #b6a98e; }
+
+/* Vitreous enamel: deep colour, white keyline, a little gloss. Road furniture. */
+.panel-enamel {
+  position: relative; border-radius: 12px; padding: 1.5rem 1.7rem;
+  background: var(--gulf); color: #fff;
+  box-shadow:
+    inset 0 0 0 3px var(--gulf), inset 0 0 0 5px #fff, inset 0 0 0 7px var(--gulf),
+    0 16px 36px -20px rgba(0,0,0,.6);
+}
+.panel-enamel::after {
+  content: ""; position: absolute; inset: 7px 7px 55% 7px; border-radius: 7px 7px 40% 40%;
+  background: linear-gradient(180deg, rgba(255,255,255,.14), transparent);
+  pointer-events: none;
+}
+.panel-enamel-red  { background: var(--flamingo); box-shadow: inset 0 0 0 3px var(--flamingo), inset 0 0 0 5px #fff, inset 0 0 0 7px var(--flamingo), 0 16px 36px -20px rgba(0,0,0,.6); }
+.panel-enamel-gold { background: var(--mango); color: #1c1710; box-shadow: inset 0 0 0 3px var(--mango), inset 0 0 0 5px #1c1710, inset 0 0 0 7px var(--mango), 0 16px 36px -20px rgba(0,0,0,.45); }
+.panel-enamel .k { font-size: .66rem; font-weight: 900; letter-spacing: .2em; opacity: .85; text-transform: uppercase; }
+.panel-enamel .v { font-family: var(--font-display, inherit); font-size: clamp(2.2rem, 7vw, 3.6rem); line-height: 1; margin: .25rem 0; }
+.panel-enamel .s { font-size: .88rem; opacity: .85; }
+
+/* A stencilled crate face. For the things that arrive in a shipment. */
+.panel-crate {
+  position: relative; border-radius: 4px; padding: 1.4rem 1.6rem;
+  color: #2a2013;
+  background:
+    repeating-linear-gradient(91deg, rgba(120,88,40,.1) 0 2px, transparent 2px 9px),
+    linear-gradient(170deg, #e8cd93, #cfae6d);
+  box-shadow: inset 0 0 0 2px rgba(80,56,18,.45), 0 12px 30px -18px rgba(0,0,0,.6);
+}
+.panel-crate::before, .panel-crate::after {
+  content: ""; position: absolute; width: 20px; height: 20px; border: 3px solid rgba(70,48,12,.5);
+}
+.panel-crate::before { left: 7px; top: 7px; border-right: 0; border-bottom: 0; }
+.panel-crate::after  { right: 7px; bottom: 7px; border-left: 0; border-top: 0; }
+.panel-crate .k { font-size: .64rem; font-weight: 900; letter-spacing: .22em; text-transform: uppercase; opacity: .7; }
+.panel-crate .v { font-family: var(--font-display, inherit); font-size: clamp(1.9rem, 6vw, 3rem); line-height: 1; margin: .2rem 0; }
+.panel-crate .s { font-size: .86rem; opacity: .78; }
+
+/* ── Guide rail ─────────────────────────────────────────────────────────────
+   Docks to the left edge once the in-flow bar scrolls away, so it stops
+   sitting on top of the thing you're reading. Full labels where there's room,
+   markers where there isn't. */
+.guide-rail {
+  position: fixed; left: 0; top: 50%; z-index: 40;
+  transform: translate(-110%, -50%);
+  transition: transform .35s cubic-bezier(.2,.8,.2,1), opacity .25s ease;
+  opacity: 0; pointer-events: none;
+  max-height: 80vh; overflow: auto; overscroll-behavior: contain;
+  border: 2px solid var(--line); border-left: 0;
+  border-radius: 0 12px 12px 0;
+  background: color-mix(in srgb, var(--ink) 94%, transparent);
+  backdrop-filter: blur(6px);
+  box-shadow: 10px 0 30px -14px rgba(0,0,0,.5);
+  padding: .5rem .45rem;
+}
+.guide-rail.is-docked { transform: translate(0, -50%); opacity: 1; pointer-events: auto; }
+
+.rail-now {
+  display: none;
+  font-size: .58rem; font-weight: 900; letter-spacing: .12em; text-transform: uppercase;
+  color: var(--haze); padding: 0 .35rem .4rem; text-align: center;
+}
+.guide-rail ul { display: grid; gap: .15rem; }
+.guide-rail a {
+  display: flex; align-items: center; gap: .55rem;
+  border-radius: 8px; padding: .5rem .6rem;
+  font-size: .82rem; font-weight: 700; color: var(--haze);
+  transition: background .15s, color .15s;
+}
+.guide-rail a:hover { background: var(--ink-2); color: var(--foam); }
+.guide-rail a.is-on { background: var(--gulf); color: #fff; }
+.rail-dot {
+  width: .45rem; height: .45rem; border-radius: 99px; flex: none;
+  background: currentColor; opacity: .55;
+}
+.guide-rail a.is-on .rail-dot { opacity: 1; }
+.rail-abbr { display: none; font-size: .6rem; letter-spacing: .06em; }
+
+/* No room for seven labels down the side of a phone: markers instead, with
+   the section you're in named above them. */
+@media (max-width: 860px) {
+  /* A strip, not a panel: anything wider sits on top of the paragraph. */
+  .guide-rail { padding: .35rem .2rem; border-radius: 0 9px 9px 0; }
+  .rail-now { display: none; }
+  .rail-text { display: none; }
+  .guide-rail a { justify-content: center; padding: .5rem .3rem; gap: 0; }
+  .rail-dot { width: .5rem; height: .5rem; }
+  .guide-rail a.is-on .rail-dot { box-shadow: 0 0 0 3px color-mix(in srgb, var(--gulf) 40%, transparent); }
+}
+@media (prefers-reduced-motion: reduce) { .guide-rail { transition: none; } }

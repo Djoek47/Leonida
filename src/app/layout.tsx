@@ -8,7 +8,7 @@ import { ThemeToggle, themeScript } from "@/components/ThemeToggle";
 import { SkyBar } from "@/components/SkyBar";
 import { Radio } from "@/components/Radio";
 import { PlatformIcon } from "@/components/Icons";
-import { shop, socials } from "@/lib/content";
+import { socials } from "@/lib/content";
 
 const archivo = localFont({ src: "../fonts/overpass-latin-wght-normal.woff2", variable: "--font-overpass", weight: "100 900", display: "swap" });
 
@@ -70,10 +70,6 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             <div className="flex flex-col gap-2">
               {socials.map((x) => <a key={x.id} href={x.href} target="_blank" rel="noreferrer" className="flex items-center gap-2"><PlatformIcon name={x.id} />{x.label}</a>)}
               <a href="https://www.rockstargames.com/VI" target="_blank" rel="noreferrer">Rockstar&apos;s official site</a>
-            </div>
-            <div className="flex flex-col gap-2">
-              {shop.map((s) => <a key={s.title} href={s.href} target="_blank" rel="noreferrer sponsored">{s.title.replace("Grand Theft Auto VI", "GTA VI")}</a>)}
-              <span className="text-xs opacity-60">Some shop links are affiliate links.</span>
             </div>
           </div>
         </footer>

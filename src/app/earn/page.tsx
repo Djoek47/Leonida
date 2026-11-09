@@ -71,21 +71,15 @@ export default function Earn() {
             <span className="shield shrink-0">2</span>
             <div className="min-w-0">
               <h2 className="display text-5xl md:text-6xl">Cool clips get downloaded</h2>
-              <p className="mt-3 max-w-2xl text-haze">
-                Members download clips to keep, edit and repost. Every download is {usd(DOWNLOAD.priceCents / 100)},
-                and the money goes toward the creator who made the clip. You earn on every single one —
-                whether the member paid cash or spent one of their monthly credits.
-              </p>
-              <p className="mt-3 max-w-2xl text-haze">
-                There&apos;s no cap. A clip that keeps getting downloaded keeps paying, long after its week is over.
-                Earnings are tallied as they happen and paid out once a month.
+              <p className="mt-3 max-w-xl text-haze">
+                No cap, no expiry. A clip that keeps getting downloaded keeps paying. Paid out monthly.
               </p>
             </div>
           </div>
-          <div className="rounded-xl border-2 border-gulf bg-dusk p-6 text-center">
-            <p className="display text-7xl leading-none">{usd(DOWNLOAD.priceCents / 100)}</p>
-            <p className="mt-2 font-bold">every download</p>
-            <p className="mt-4 text-sm text-haze">goes toward the creator who made the clip</p>
+          <div className="panel-enamel text-center">
+            <p className="k">Every download</p>
+            <p className="v">{usd(DOWNLOAD.creatorCents / 100)}</p>
+            <p className="s">straight to the creator</p>
           </div>
         </div>
       </section>
@@ -95,25 +89,19 @@ export default function Earn() {
         <div className="flex items-start gap-4">
           <span className="shield shrink-0">3</span>
           <div className="min-w-0">
-            <h2 className="display text-5xl md:text-6xl">Clip of the Month and Clip of the Year</h2>
-            <p className="mt-3 max-w-2xl text-haze">
-              The weekly winners roll up. Clip of the Month pays {PERIOD_MULTIPLE.month}× the weekly pool,
-              and Clip of the Year pays {PERIOD_MULTIPLE.year}× — the single biggest prize on the site.
-              Same split: Gold, Silver, Bronze.
+            <h2 className="display text-5xl md:text-6xl">The winners roll up</h2>
+            <p className="mt-3 max-w-xl text-haze">
+              Weekly winners go through to the Month, and the Month to the Year.
             </p>
           </div>
         </div>
         <div className="mt-8 grid gap-5 sm:grid-cols-3">
-          {([["Clip of the Week", 1, "Every week"], ["Clip of the Month", PERIOD_MULTIPLE.month, "Best of the month"],
-             ["Clip of the Year", PERIOD_MULTIPLE.year, "Once a year"]] as const).map(([name, mult, when]) => (
-            <div key={name} className={`rounded-xl border-2 p-6 ${mult === PERIOD_MULTIPLE.year ? "border-mango bg-ink" : "border-line bg-ink"}`}>
-              <h3 className="text-xl font-extrabold">{name}</h3>
-              <p className="text-sm text-haze">{when}</p>
-              <p className="display text-5xl mt-3 sunset-text">{usd(live.pool * mult)}</p>
-              <p className="text-sm text-haze mt-1">at today&apos;s member count</p>
-              <p className="text-sm mt-3">
-                Gold {usd(live.gold * mult)} · Silver {usd(live.silver * mult)} · Bronze {usd(live.bronze * mult)}
-              </p>
+          {([["Week", 1, "panel-crate"], ["Month", PERIOD_MULTIPLE.month, "panel-steel"],
+             ["Year", PERIOD_MULTIPLE.year, "panel-enamel panel-enamel-gold"]] as const).map(([name, mult, panel]) => (
+            <div key={name} className={panel}>
+              <p className="k">Clip of the {name}</p>
+              <p className="v">{usd(live.pool * mult)}</p>
+              <p className="s">Gold {usd(live.gold * mult)}</p>
             </div>
           ))}
         </div>

@@ -1,32 +1,30 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
 
-const LINKS: [string, string][] = [
-  ["how-it-plays", "How it plays"], ["map", "Map"], ["places", "Places"], ["people", "People"],
-  ["garage", "Cars and weapons"], ["screenshots", "Screenshots"], ["guides", "Guides"],
+const LINKS: [string, string, string][] = [
+  ["how-it-plays", "How it plays", "HIP"], ["map", "Map", "MAP"], ["places", "Places", "PLC"],
+  ["people", "People", "PPL"], ["garage", "Cars and weapons", "CAR"],
+  ["screenshots", "Screenshots", "SHT"], ["guides", "Guides", "GDE"],
 ];
 
-/** Section nav for the guide. It gets out of the way when you scroll down into the
- *  content and comes back the moment you scroll up, so it never sits on top of
- *  what you're reading. The current section is marked as you pass it. */
+/** Section nav for the guide.
+ *
+ *  It starts as a bar above the content, and once you scroll past it docks to
+ *  the left edge as a vertical rail, out of the way of what you're reading.
+ *  On a phone the rail is a column of markers — there is no room for seven
+ *  labels down the side of a 360px screen — and the one you're in is named. */
 export function GuideNav() {
-  const [hidden, setHidden] = useState(false);
+  const [docked, setDocked] = useState(false);
   const [active, setActive] = useState(LINKS[0][0]);
-  const lastY = useRef(0);
+  const mark = useRef<HTMLDivElement>(null);
 
+  // Dock as soon as the nav's place in the page scrolls off the top.
   useEffect(() => {
-    lastY.current = scrollY;
-    const onScroll = () => {
-      const y = scrollY;
-      const down = y > lastY.current;
-      // a small threshold, or it flickers on trackpad jitter
-      if (Math.abs(y - lastY.current) > 6) {
-        setHidden(down && y > 320);
-        lastY.current = y;
-      }
-    };
-    addEventListener("scroll", onScroll, { passive: true });
-    return () => removeEventListener("scroll", onScroll);
+    const el = mark.current;
+    if (!el) return;
+    const io = new IntersectionObserver(([e]) => setDocked(!e.isIntersecting), { rootMargin: "-88px 0px 0px 0px" });
+    io.observe(el);
+    return () => io.disconnect();
   }, []);
 
   useEffect(() => {
@@ -47,21 +45,44 @@ export function GuideNav() {
     return () => io.disconnect();
   }, []);
 
+  const label = LINKS.find(([id]) => id === active)?.[1] ?? "";
+
   return (
-    <nav aria-label="Guide sections"
-      className={`sticky top-[5.75rem] z-30 transition-[opacity,transform] duration-300 ${
-        hidden ? "pointer-events-none -translate-y-2 opacity-0" : "translate-y-0 opacity-100"}`}>
-      <div className="mx-auto max-w-7xl px-4">
-        <div className="flex gap-1 overflow-x-auto rounded-full border-2 border-line bg-ink/95 p-1 text-sm font-bold shadow-[0_10px_30px_-12px_rgba(0,0,0,.45)] backdrop-blur">
-          {LINKS.map(([id, label]) => (
+    <>
+      <div ref={mark} aria-hidden className="h-px" />
+
+      {/* In flow, above the content. */}
+      <nav aria-label="Guide sections"
+        className={`mx-auto max-w-7xl px-4 transition-opacity duration-200 ${docked ? "opacity-0" : "opacity-100"}`}>
+        <div className="flex gap-1 overflow-x-auto rounded-full border-2 border-line bg-ink/95 p-1 text-sm font-bold">
+          {LINKS.map(([id, text]) => (
             <a key={id} href={`#${id}`} aria-current={active === id ? "true" : undefined}
               className={`shrink-0 rounded-full px-3.5 py-1.5 transition-colors ${
                 active === id ? "bg-gulf text-white" : "text-haze hover:bg-ink-2 hover:text-foam"}`}>
-              {label}
+              {text}
             </a>
           ))}
         </div>
-      </div>
-    </nav>
+      </nav>
+
+      {/* Docked to the left edge. */}
+      <nav aria-label="Guide sections"
+        className={`guide-rail ${docked ? "is-docked" : ""}`}>
+        <p className="rail-now" aria-live="polite">{label}</p>
+        <ul>
+          {LINKS.map(([id, text, abbr]) => (
+            <li key={id}>
+              <a href={`#${id}`} title={text} aria-current={active === id ? "true" : undefined}
+                 className={active === id ? "is-on" : ""}>
+                <span className="rail-dot" aria-hidden />
+                <span className="rail-text">{text}</span>
+                <span className="rail-abbr" aria-hidden>{abbr}</span>
+                <span className="sr-only">{text}</span>
+              </a>
+            </li>
+          ))}
+        </ul>
+      </nav>
+    </>
   );
 }

@@ -172,22 +172,16 @@ export default function Pricing() {
             </p>
           </div>
 
-          <div className="rounded-xl border border-line bg-ink p-6">
-            <h3 className="display text-3xl">Downloads pay the creator</h3>
-            <p className="mt-2 text-haze">
-              Members get free download credits every month. Once those run out a download is{" "}
-              {price(DOWNLOAD.priceCents)}, and that goes toward the creator who made the clip.
-              Credit downloads pay the creator too.
-            </p>
-            <p className="mt-3 text-sm text-haze">Every download carries the uploader&apos;s name on the video.</p>
+          <div className="panel-steel">
+            <p className="k">Every download</p>
+            <p className="v">{price(DOWNLOAD.creatorCents)}</p>
+            <p className="s">to the creator. Credits pay them too.</p>
           </div>
 
-          <div className="rounded-xl border border-line bg-ink p-6">
-            <h3 className="display text-3xl">Cancel whenever</h3>
-            <p className="mt-2 text-haze">
-              Your plan runs to the end of the period you paid for, then stops. Unused download
-              credits don&apos;t roll over. Free accounts keep competing and keep winning.
-            </p>
+          <div className="panel-crate">
+            <p className="k">Cancel</p>
+            <p className="v">Whenever</p>
+            <p className="s">Runs to the end of the period, then stops.</p>
           </div>
         </div>
       </section>

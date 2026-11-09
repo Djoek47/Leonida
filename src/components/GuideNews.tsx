@@ -1,6 +1,5 @@
 import Link from "@/components/A";
 import { HOW_IT_PLAYS } from "@/lib/news";
-import { shop } from "@/lib/content";
 
 /** The places you change how a car, a gun or a character looks. Official Rockstar shots. */
 const SHOPS = [
@@ -51,16 +50,6 @@ export function GuideNews() {
           </section>
         ))}
       </div>
-      <aside aria-label="Sponsored" className="mt-10 rounded-xl border-2 border-mango bg-ink p-5 flex flex-wrap items-center gap-4 justify-between">
-        <div>
-          <p className="text-[11px] font-black uppercase tracking-widest text-haze">Sponsored</p>
-          <p className="display text-3xl mt-1">Get Grand Theft Auto VI</p>
-          <p className="text-haze text-sm">Out November 19 on PS5 and Xbox Series X|S. Preload from November 12.</p>
-        </div>
-        <div className="flex flex-wrap gap-3">
-          {shop.slice(0, 2).map((x) => <a key={x.title} href={x.href} target="_blank" rel="noreferrer sponsored" className="btn btn-hot !py-2.5">{x.title.replace("Grand Theft Auto VI — ", "")}</a>)}
-        </div>
-      </aside>
       <p className="mt-10 text-sm text-haze">Got a source we missed? Drop it in <Link href="/chat" className="underline">Chat</Link>.</p>
     </section>
   );
