@@ -389,3 +389,56 @@ body:has(.overlay-root) > *:not(:has(.overlay-root)) { display: none; }
   .ov-enter { animation: none; }
   .ov-row { transition: none; }
 }
+
+/* ── The prize ladder ───────────────────────────────────────────────────────
+   Each rung is drawn at its true share of the top pool, so the climb from $25
+   to $3,000 is visible rather than tabular. */
+.ladder { display: grid; gap: .55rem; counter-reset: rung; }
+.rung {
+  position: relative; isolation: isolate;
+  border: 2px solid var(--line); border-radius: .7rem;
+  background: var(--ink); overflow: hidden;
+  transition: border-color .2s ease, transform .2s ease;
+}
+.rung-bar {
+  position: absolute; inset: 0 auto 0 0; z-index: -1;
+  background: linear-gradient(90deg, rgba(0,112,74,.34), rgba(0,112,74,.2) 55%, rgba(240,194,75,.62));
+  border-right: 3px solid rgba(201,154,58,.9);
+  transition: width .8s cubic-bezier(.2,.8,.2,1);
+}
+.rung-body {
+  display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between;
+  gap: .75rem 1.25rem; padding: .85rem 1.1rem;
+}
+.rung-members { font-weight: 800; font-size: .9rem; display: flex; flex-wrap: wrap; align-items: center; gap: .5rem; }
+.rung-pool { font-size: clamp(1.75rem, 4.5vw, 2.6rem); line-height: 1; }
+.rung-week { font-family: var(--font-sans, inherit); font-size: .8rem; font-weight: 700; color: var(--haze); }
+
+.rung-cuts { display: flex; gap: .4rem; flex-wrap: wrap; }
+.cut {
+  border-radius: .45rem; padding: .3rem .6rem; min-width: 4.4rem;
+  background: var(--ink-2); border: 1px solid var(--line);
+}
+.cut dt { font-size: .62rem; font-weight: 900; letter-spacing: .07em; text-transform: uppercase; color: var(--haze); }
+.cut dd { font-weight: 900; font-size: 1rem; }
+.cut-g { background: linear-gradient(160deg, #ffeaad, #e3bd4e); border-color: #c99a3a; }
+.cut-g dt, .cut-g dd { color: #3a2c05; }
+.cut-s { background: linear-gradient(160deg, #f2f5f7, #c3ccd2); border-color: #9aa5ac; }
+.cut-s dt, .cut-s dd { color: #2b3338; }
+.cut-b { background: linear-gradient(160deg, #f0c49a, #c07f44); border-color: #a9703a; }
+.cut-b dt, .cut-b dd { color: #3b2410; }
+
+.rung-flag {
+  border-radius: 999px; padding: .1rem .55rem;
+  font-size: .62rem; font-weight: 900; letter-spacing: .06em; text-transform: uppercase;
+}
+.rung-flag-here { background: var(--gulf); color: #fff; }
+.rung-flag-next { background: var(--flamingo); color: #fff; }
+
+.rung-here { border-color: var(--gulf); }
+.rung-next { border-color: var(--flamingo); }
+.rung-past { opacity: .52; }
+.rung-here .rung-bar { background: linear-gradient(90deg, rgba(0,112,74,.5), rgba(240,194,75,.7)); }
+.rung-past .rung-pool { font-size: clamp(1.3rem, 3.4vw, 1.8rem); }
+
+@media (prefers-reduced-motion: reduce) { .rung-bar { transition: none; } }

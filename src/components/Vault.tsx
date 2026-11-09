@@ -81,7 +81,38 @@ function Strap({ i, delay, cols, rows }: { i: number; delay: number; cols: numbe
   );
 }
 
-export function Vault({ payers, pool, compact = false }: { payers: number; pool: number; compact?: boolean }) {
+export function Vault({ payers, pool, compact = false, cycle = false }:
+  { payers: number; pool: number; compact?: boolean; cycle?: boolean }) {
+  // Cycling walks the whole ladder so a visitor can see where this goes, not
+  // just where it is. It always starts and comes to rest on the live figure.
+  const [step, setStep] = useState<number | null>(null);
+  const [held, setHold] = useState(false);
+  const liveIdx = BRACKETS.indexOf(bracketFor(payers));
+
+  useEffect(() => {
+    if (!cycle || held) return;
+    if (matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    const id = setInterval(() => {
+      setStep((n) => {
+        const next = n === null ? liveIdx + 1 : n + 1;
+        return next >= BRACKETS.length ? null : next;   // null = back to live
+      });
+    }, 2600);
+    return () => clearInterval(id);
+  }, [cycle, held, liveIdx]);
+
+  const preview = step !== null ? BRACKETS[step] : null;
+  const shownPayers = preview && step !== null
+    ? Math.max(1, (step === 0 ? 0 : BRACKETS[step - 1].upTo) + 1) : payers;
+  const shownPool = preview ? preview.pool : pool;
+
+  return <VaultBody payers={shownPayers} pool={shownPool} compact={compact}
+    previewing={Boolean(preview)} onHold={setHold} />;
+}
+
+function VaultBody({ payers, pool, compact, previewing, onHold }:
+  { payers: number; pool: number; compact: boolean; previewing: boolean;
+    onHold: (v: boolean) => void }) {
   const bracket = bracketFor(payers);
   const strap = strapFor(pool);
   const straps = Math.max(1, Math.min(MAX, Math.round(pool / strap)));
@@ -106,7 +137,9 @@ export function Vault({ payers, pool, compact = false }: { payers: number; pool:
   const zoom = [1.8, 1.8, 1.6, 1.45, 1.3, 1.18, 1.05][Math.min(6, layers)] ?? 1;
 
   return (
-    <div className={`vault ${compact ? "vault-sm" : ""}`}>
+    <div className={`vault ${compact ? "vault-sm" : ""}`}
+         onMouseEnter={() => onHold(true)} onMouseLeave={() => onHold(false)}
+         onFocusCapture={() => onHold(true)} onBlurCapture={() => onHold(false)}>
       <div className="vault-frame"><div className="vault-stage" aria-hidden style={{ "--zoom": zoom } as React.CSSProperties}>
         <div className="vault-floor"
           style={{ "--fw": `${cols * 84 + 76}px`, "--fh": `${rows * 48 + 76}px` } as React.CSSProperties} />
@@ -120,7 +153,7 @@ export function Vault({ payers, pool, compact = false }: { payers: number; pool:
 
       <div className="vault-read led-board" role="group" aria-label="Prize pool">
         <div className="flex items-baseline justify-between gap-3">
-          <span className="led-tag text-xs">ON THE STACK</span>
+          <span className="led-tag text-xs">{previewing ? "IF WE REACH" : "ON THE STACK"}</span>
           <span className="led-tag text-xs">{payers.toLocaleString("en-US")} PAYING</span>
         </div>
         <p className="led-text vault-total"><Odometer value={pool} /></p>

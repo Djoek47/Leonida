@@ -3,8 +3,10 @@ import { useEffect, useState } from "react";
 import Link from "@/components/A";
 import { TIERS, annualSaving, DOWNLOAD, BRACKETS, bracketFor, type Tier } from "@/lib/tiers";
 import { useUser } from "@/lib/useUser";
+import { sb } from "@/lib/supabase";
 import { money, poolNow, type Pool } from "@/lib/api";
 import { DemoNote } from "@/components/DemoNote";
+import { TestPaymentsNote } from "@/components/TestPayments";
 import { Vault } from "@/components/Vault";
 
 const price = (cents: number) => `$${(cents / 100).toLocaleString("en-US", { maximumFractionDigits: cents % 100 ? 2 : 0 })}`;
@@ -22,13 +24,31 @@ export default function Pricing() {
     if (!user) { location.href = "/login?next=/pricing"; return; }
     setBusy(t.id); setErr("");
     try {
-      const r = await fetch("/api/checkout", {
-        method: "POST", headers: { "content-type": "application/json" },
-        body: JSON.stringify({ tier: t.id, period: annual ? "annual" : "monthly" }),
-      });
+      // The route reads the caller from a bearer token. Without it every
+      // checkout came back "Sign in first", however signed in you were.
+      const token = (await sb()?.auth.getSession())?.data.session?.access_token;
+      const headers = {
+        "content-type": "application/json",
+        ...(token ? { authorization: `Bearer ${token}` } : {}),
+      };
+      const body = JSON.stringify({ tier: t.id, period: annual ? "annual" : "monthly" });
+
+      const r = await fetch("/api/checkout", { method: "POST", headers, body });
       const j = await r.json();
-      if (j.url) location.href = j.url;
-      else setErr(j.error ?? "Checkout is not switched on yet.");
+
+      if (j.url) { location.href = j.url; return; }
+
+      // Test mode: no card, applied straight away, same end state as a real
+      // subscription so everything downstream can be exercised.
+      if (j.mock) {
+        const m = await fetch("/api/mock/subscribe", { method: "POST", headers, body });
+        const mj = await m.json();
+        if (mj.ok) { location.href = "/dashboard?welcome=" + t.id; return; }
+        setErr(mj.error ?? "Test payment failed.");
+        return;
+      }
+
+      setErr(j.error ?? "Checkout is not switched on yet.");
     } catch {
       setErr("Could not reach checkout. Try again in a moment.");
     } finally { setBusy(null); }
@@ -39,6 +59,7 @@ export default function Pricing() {
       <section className="bg-asphalt text-white">
         <div className="mx-auto max-w-7xl px-4 py-14 md:py-20">
           <DemoNote />
+          <TestPaymentsNote paying={paying} />
           <p className="inline-flex items-center gap-2 rounded-full bg-mango text-[#1c1710] px-3 py-1 text-sm font-black">Memberships</p>
           <h1 className="display mt-5 text-[clamp(2.6rem,8vw,6rem)] leading-[0.95]">Back the channel.<br />Get a louder vote.</h1>
           <p className="mt-5 max-w-2xl text-lg text-white/85">

@@ -9,6 +9,8 @@ import { StreakCard, ClipperProgress, BadgeWall, StarTracker, StreakBoard, StarR
   type Badge, type StreakRow } from "@/components/Gamification";
 import { DemoNote } from "@/components/DemoNote";
 import { Wallet } from "@/components/Wallet";
+import { GetStarted } from "@/components/GetStarted";
+import { TestPaymentsNote } from "@/components/TestPayments";
 
 const statusText: Record<string, string> = {
   pending: "Waiting for review", approved: "In this week's vote", featured: "Featured", rejected: "Not selected",
@@ -97,6 +99,7 @@ export default function Dashboard() {
   return (
     <div className="mx-auto max-w-6xl px-4 py-12">
       <DemoNote />
+      <TestPaymentsNote paying={paying} />
       <h1 className="display text-[clamp(2.2rem,10vw,6rem)] break-words">{profile.display_name}</h1>
       <p className="mt-2 flex flex-wrap items-center gap-3 text-sm font-semibold">
         <span className={`rounded-full px-3 py-1 ${paying ? "bg-gulf text-white" : "bg-ink-2"}`}>{plan.label}</span>
@@ -109,21 +112,29 @@ export default function Dashboard() {
       </p>
 
       <dl className="mt-8 grid grid-cols-2 lg:grid-cols-4 border-y border-line lg:divide-x divide-line">
-        {[["Clips sent", String(clips.length)],
-          ["Vote points", totalVotes.toLocaleString()],
-          ["Prize money to redeem", money(owed)],
-          ["Download earnings", exactMoney(pending)]].map(([k, v]) => (
-          <div key={k} className="py-5 px-4"><dt className="text-sm text-haze">{k}</dt><dd className="display text-[clamp(1.6rem,7vw,2.6rem)] mt-1 break-words">{v}</dd></div>
+        {([["Clips sent", String(clips.length), clips.length === 0 ? "none yet" : `${account?.submitted_today ?? 0} today`],
+          ["Vote points", totalVotes.toLocaleString(), paying ? "across your clips" : "members see live counts"],
+          ["Prize money to redeem", money(owed), owed > 0 ? "ready to claim" : "top three each week get paid"],
+          ["Download earnings", exactMoney(pending), `${account?.lifetime_downloads ?? 0} downloads so far`],
+        ] as const).map(([k, v, hint]) => (
+          <div key={k} className="py-5 px-4">
+            <dt className="text-sm text-haze">{k}</dt>
+            <dd className="display text-[clamp(1.6rem,7vw,2.6rem)] mt-1 break-words">{v}</dd>
+            <p className="text-xs text-haze mt-0.5">{hint}</p>
+          </div>
         ))}
       </dl>
       {note && <p role="status" className="mt-6 inline-block bg-ink-2 px-4 py-2 rounded font-semibold">{note}</p>}
+
+      <GetStarted account={account} clips={clips.length} paying={paying}
+        hasGamertag={Boolean(profile.gamertag)} hasPayout={Boolean(profile.payout_method && profile.payout_handle)} />
 
       <div className="mt-12 grid gap-12 lg:grid-cols-[1.4fr_1fr]">
         <section>
           <Wallet payoutReady={Boolean(profile.payout_method && profile.payout_handle)} />
 
           <h2 className="text-2xl font-extrabold mt-12">Winnings</h2>
-          {wins.length === 0 ? <p className="text-haze mt-3">Nothing yet. Top three each week get paid.</p> : (
+          {wins.length === 0 ? <p className="text-haze mt-3">Nothing yet. The top three clips each week split the pool — a win lands here and in your wallet.</p> : (
             <ul className="mt-4 grid gap-3">{wins.map((w) => (
               <li key={w.id} className="flex items-center justify-between rounded-lg bg-ink border border-gulf border-2 p-4">
                 <div><p className="display text-4xl sunset-text">{money(w.amount_cents)}</p><p className="text-sm text-haze">{["1st", "2nd", "3rd"][w.place - 1]} place. {statusText[w.status]}</p></div>
@@ -198,7 +209,7 @@ export default function Dashboard() {
 
         <aside className="grid gap-8 content-start">
           <section className="rounded-lg bg-ink border border-line p-5">
-            <h2 className="text-xl font-extrabold">Prove your gamertag</h2>
+            <h2 id="gamertag" className="text-xl font-extrabold scroll-mt-28">Prove your gamertag</h2>
             <p className="text-sm text-haze mt-1">Only needed to get paid. {profile.gamertag ? <>Gamertag on file: <b className="text-foam">{profile.gamertag}</b> ({platformName[(profile.platform ?? "ps5") as "ps5"]}).</> : null}</p>
             {profile.gamertag_verified ? <p className="mt-4 font-bold text-gulf">Verified</p> : (
               <ol className="mt-4 grid gap-3 text-sm list-decimal pl-5">
@@ -211,7 +222,7 @@ export default function Dashboard() {
           </section>
 
           <form onSubmit={savePayout} className="rounded-lg bg-ink border border-line p-5 grid gap-3">
-            <h2 className="text-xl font-extrabold">Where to send your money</h2>
+            <h2 id="payout" className="text-xl font-extrabold scroll-mt-28">Where to send your money</h2>
             <select name="method" defaultValue={profile.payout_method ?? "paypal"} className="field">{methods.map(([k, v]) => <option key={k} value={k}>{v}</option>)}</select>
             <input name="handle" defaultValue={profile.payout_handle ?? ""} required className="field" placeholder="Email, @username or $cashtag" />
             <button className="btn btn-hot w-fit !py-2">Save payout details</button>

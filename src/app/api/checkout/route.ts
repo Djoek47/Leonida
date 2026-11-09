@@ -1,5 +1,5 @@
 import { NextRequest } from "next/server";
-import { admin, configured, env, notConfigured, stripe, userFromRequest } from "@/lib/server";
+import { admin, configured, env, mockReady, notConfigured, stripe, userFromRequest } from "@/lib/server";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -7,6 +7,13 @@ export const dynamic = "force-dynamic";
 type Body = { tier: "street" | "hustler" | "kingpin"; period: "monthly" | "annual" };
 
 export async function POST(req: NextRequest) {
+  // Test mode wins when it is explicitly on, so a deployment with test Stripe
+  // keys can still be exercised end to end without a card.
+  if (env.mock) {
+    return mockReady
+      ? Response.json({ mock: true })
+      : Response.json({ error: "Test payments need the Supabase service key." }, { status: 503 });
+  }
   if (!configured) return notConfigured();
 
   const me = await userFromRequest(req);

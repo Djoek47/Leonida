@@ -4,6 +4,7 @@ import Link from "@/components/A";
 import { BRACKETS, DOWNLOAD, PERIOD_MULTIPLE, bracketFor } from "@/lib/tiers";
 import { poolNow, type Pool } from "@/lib/api";
 import { Vault } from "@/components/Vault";
+import { PrizeLadder } from "@/components/PrizeLadder";
 import { DemoNote } from "@/components/DemoNote";
 
 const usd = (n: number) => `$${n.toLocaleString("en-US", { minimumFractionDigits: n % 1 ? 2 : 0, maximumFractionDigits: 2 })}`;
@@ -42,7 +43,7 @@ export default function Earn() {
         </div>
 
         <div className="mt-8 grid gap-8 lg:grid-cols-[minmax(0,1fr)_minmax(0,22rem)] items-center [&>*]:min-w-0">
-          <Vault payers={payers} pool={live.pool} />
+          <Vault payers={payers} pool={live.pool} cycle />
           <div className="sign sign-yellow">
             <p className="text-sm font-bold uppercase tracking-wide">This week&apos;s pool · bracket {live.label}</p>
             <dl className="mt-3 grid gap-3">
@@ -55,33 +56,8 @@ export default function Earn() {
           </div>
         </div>
 
-        <div className="mt-8 overflow-x-auto">
-          <table className="w-full min-w-[34rem] text-left text-sm">
-            <caption className="sr-only">Clip of the Week prize pool by number of paying members</caption>
-            <thead><tr className="border-b-2 border-line">
-              <th scope="col" className="py-2.5 pr-4 font-black">Paying members</th>
-              <th scope="col" className="py-2.5 pr-4 font-black">Total pool</th>
-              <th scope="col" className="py-2.5 pr-4 font-black">Gold</th>
-              <th scope="col" className="py-2.5 pr-4 font-black">Silver</th>
-              <th scope="col" className="py-2.5 font-black">Bronze</th>
-            </tr></thead>
-            <tbody>
-              {BRACKETS.map((b) => {
-                const here = b.label === live.label;
-                return (
-                  <tr key={b.label} className={`border-b border-line ${here ? "bg-mango/25" : ""}`}>
-                    <th scope="row" className="py-2.5 pr-4 font-semibold">
-                      {b.label}{here && <span className="ml-2 rounded-full bg-gulf px-2 py-0.5 text-[11px] font-black text-white align-middle">we are here</span>}
-                    </th>
-                    <td className="py-2.5 pr-4 font-bold">{usd(b.pool)}</td>
-                    <td className="py-2.5 pr-4 text-gulf font-bold">{usd(b.gold)}</td>
-                    <td className="py-2.5 pr-4">{usd(b.silver)}</td>
-                    <td className="py-2.5">{usd(b.bronze)}</td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
+        <div className="mt-8">
+          <PrizeLadder payers={payers} />
         </div>
         <p className="mt-3 text-sm text-haze">
           Whatever the pool is when a round opens is locked in, so it can&apos;t shrink under you once you&apos;ve entered.

@@ -9,9 +9,15 @@ export const env = {
   supabaseUrl: process.env.NEXT_PUBLIC_SUPABASE_URL,
   serviceKey: process.env.SUPABASE_SERVICE_ROLE_KEY,
   siteUrl: process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000",
+  /** Test mode: subscriptions and downloads are applied directly, with no card
+   *  and no Stripe round trip, so the whole member experience can be exercised
+   *  before the payment account is live. Refuses to run against live keys. */
+  mock: process.env.MOCK_PAYMENTS === "1" && !process.env.STRIPE_SECRET_KEY?.startsWith("sk_live"),
 };
 
 export const configured = Boolean(env.stripeKey && env.supabaseUrl && env.serviceKey);
+/** Mock mode needs the database but not Stripe. */
+export const mockReady = Boolean(env.mock && env.supabaseUrl && env.serviceKey);
 
 let _stripe: Stripe | null = null;
 export function stripe(): Stripe {
