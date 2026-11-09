@@ -27,6 +27,20 @@ export async function POST(req: NextRequest) {
     .insert({ stripe_event_id: event.id, kind: event.type, payload: event.data.object as object });
   if (dupe?.code === "23505") return Response.json({ received: true, duplicate: true });
 
+  // That marker is written before the work, so if the work then throws we have
+  // to take it back: otherwise the event counts as handled, Stripe's retry is
+  // waved through as a duplicate, and a paid subscription silently never lands.
+  try {
+    await handle();
+  } catch (e) {
+    await db.from("subscription_events").delete().eq("stripe_event_id", event.id);
+    console.error("stripe webhook failed", event.type, event.id, e);
+    return new Response("handler failed", { status: 500 });   // 500 makes Stripe retry
+  }
+
+  return Response.json({ received: true });
+
+  async function handle() {
   switch (event.type) {
     case "checkout.session.completed": {
       const s = event.data.object as Stripe.Checkout.Session;
@@ -61,7 +75,10 @@ export async function POST(req: NextRequest) {
       const gone = event.type === "customer.subscription.deleted"
         || ["canceled", "incomplete_expired", "unpaid"].includes(sub.status);
 
-      const tier = gone ? "street" : (sub.metadata?.tier ?? "hustler");
+      // 'street' is the $8 entry plan, not the free one. Dropping a cancelled
+      // member there leaves their dashboard claiming a plan they stopped paying
+      // for. They go back to 'free'.
+      const tier = gone ? "free" : await tierFor(sub);
       const status = gone ? "canceled"
         : sub.status === "trialing" ? "trialing"
         : sub.status === "past_due" ? "past_due"
@@ -103,6 +120,12 @@ export async function POST(req: NextRequest) {
           p_user: playerId, p_period_end: new Date(end * 1000).toISOString(),
         });
       }
+      // A renewal that cleared is proof the plan is live: a member who went
+      // past_due and then paid has to come off past_due here, because no
+      // subscription.updated necessarily follows.
+      await db.from("profiles").update({ subscription_status: "active" })
+        .eq("id", playerId).in("subscription_status", ["past_due", "none"]);
+
       await db.from("money_events").insert({
         kind: "invoice_paid", player_id: playerId,
         amount_cents: inv.amount_paid ?? 0, note: inv.number ?? undefined,
@@ -117,8 +140,23 @@ export async function POST(req: NextRequest) {
       break;
     }
   }
+  }
 
-  return Response.json({ received: true });
+  /** Which plan this subscription is. Trust the metadata we set at checkout,
+   *  but only if it names a tier that exists; otherwise match on what they are
+   *  actually being charged, and fall back to the cheapest paid plan rather
+   *  than quietly handing out the most expensive one. */
+  async function tierFor(sub: Stripe.Subscription): Promise<string> {
+    const { data: tiers } = await db.from("tiers").select("id, monthly_cents, annual_cents");
+    const ids = new Set((tiers ?? []).map((t) => t.id as string));
+    const named = sub.metadata?.tier;
+    if (named && ids.has(named) && named !== "free") return named;
+
+    const paid = sub.items.data[0]?.price.unit_amount ?? 0;
+    const match = (tiers ?? []).find((t) =>
+      t.id !== "free" && (t.monthly_cents === paid || t.annual_cents === paid));
+    return (match?.id as string | undefined) ?? "street";
+  }
 
   async function playerByCustomer(customer: string | Stripe.Customer | Stripe.DeletedCustomer | null) {
     const id = typeof customer === "string" ? customer : customer?.id;
