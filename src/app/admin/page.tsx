@@ -208,6 +208,7 @@ function Staff({ isOwner }: { isOwner: boolean }) {
       </section>
       <section>
         <PoolPanel />
+        <OverlayPanel />
         {note && <p role="status" className="mt-4 font-semibold text-gulf">{note}</p>}
       </section>
     </div>
@@ -521,6 +522,74 @@ function Wallets() {
           </ul>
         </div>
       )}
+    </div>
+  );
+}
+
+
+/** The OBS browser sources, with their key already in the URL.
+ *  The standings carry vote counts, which free accounts never see, so the
+ *  overlays are gated on a token rather than left open. */
+function OverlayPanel() {
+  const [token, setToken] = useState<string | null>(null);
+  const [busy, setBusy] = useState(false);
+  const [copied, setCopied] = useState<string | null>(null);
+
+  useEffect(() => {
+    const s = sb();
+    if (!s) { setToken("demo-token-not-live"); return; }
+    s.from("site_settings").select("overlay_token").maybeSingle()
+      .then(({ data }) => setToken((data?.overlay_token as string) ?? null));
+  }, []);
+
+  async function rotate() {
+    if (!confirm("Rotate the key? Every overlay already running goes blank until you paste the new URL into OBS.")) return;
+    setBusy(true);
+    const s = sb();
+    if (s) { const { data } = await s.rpc("rotate_overlay_token"); if (data) setToken(data as string); }
+    setBusy(false);
+  }
+
+  const origin = typeof window !== "undefined" ? window.location.origin : "";
+  const sources: [string, string, string][] = [
+    ["Top 10 standings", `/overlay/top10?key=${token}`, "Ranked clips with live vote counts. &side=left, &count=5, &title=0"],
+    ["Lower third", `/overlay/nameplate?key=${token}&place=1`, "Whose clip is on screen. Change place=1-10, or use &name=Tag&title=Caption"],
+    ["Pool bug", `/overlay/pool?key=${token}`, "Prize pool, member count and time left. &side=right"],
+  ];
+
+  async function copy(url: string) {
+    try { await navigator.clipboard.writeText(url); setCopied(url); setTimeout(() => setCopied(null), 2000); } catch {}
+  }
+
+  return (
+    <div className="rounded-xl border-2 border-line bg-ink p-5">
+      <h2 className="text-xl font-extrabold">Stream overlays</h2>
+      <p className="text-sm text-haze mt-1">
+        In OBS: Sources &rarr; <strong>Browser</strong>, 1920 &times; 1080, paste a URL. Leave the
+        background transparent — the page already is.
+      </p>
+
+      <ul className="mt-4 grid gap-3">
+        {sources.map(([label, path, hint]) => (
+          <li key={label} className="rounded-lg border border-line p-3">
+            <p className="font-bold">{label}</p>
+            <p className="text-xs text-haze">{hint}</p>
+            <div className="mt-2 flex items-center gap-2 [&>*]:min-w-0">
+              <code className="flex-1 truncate rounded bg-ink-2 px-2 py-1.5 text-xs">{origin}{path}</code>
+              <button onClick={() => copy(origin + path)} className="btn btn-ghost !py-1.5 !px-3 text-sm shrink-0">
+                {copied === origin + path ? "Copied" : "Copy"}
+              </button>
+            </div>
+          </li>
+        ))}
+      </ul>
+
+      <p className="mt-4 text-sm text-haze">
+        The key is what lets an overlay read vote counts without signing in. Keep the URLs off stream.
+      </p>
+      <button onClick={rotate} disabled={busy} className="btn btn-ghost mt-3 disabled:opacity-70">
+        {busy ? "Rotating…" : "Rotate key"}
+      </button>
     </div>
   );
 }

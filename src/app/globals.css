@@ -345,3 +345,47 @@ html { transition: background-color .4s; }
   .vault-strap { animation: none; }
   .vault-gauge-fill { transition: none; }
 }
+
+/* ── Stream overlays (OBS browser source) ───────────────────────────────────
+   A browser source composites whatever the page paints, so the page has to be
+   genuinely transparent — not "the same colour as the stream". Everything is
+   sized in px against a 1920x1080 canvas and carries its own shadow, because
+   it will sit over footage of any brightness. */
+.overlay-root {
+  position: fixed; inset: 0; overflow: hidden;
+  background: transparent;
+  font-feature-settings: "tnum" 1;
+}
+html:has(.overlay-root), body:has(.overlay-root) { background: transparent !important; }
+body:has(.overlay-root) > *:not(:has(.overlay-root)) { display: none; }
+
+.ov-card {
+  background: linear-gradient(170deg, rgba(10,8,6,.93), rgba(10,8,6,.82));
+  border: 2px solid #c99a3a;
+  border-radius: 14px;
+  box-shadow: 0 18px 50px rgba(0,0,0,.55), inset 0 1px 0 rgba(255,255,255,.1);
+  backdrop-filter: blur(3px);
+}
+.ov-shadow { text-shadow: 0 2px 6px rgba(0,0,0,.85), 0 0 22px rgba(0,0,0,.5); }
+/* The ticker's .led-tag carries a black plate and a divider, which paints a
+   slab across a transparent overlay. Same glow, no furniture. */
+.ov-tag { color: #ffa21a; font-weight: 800;
+  text-shadow: 0 0 4px rgba(255,140,0,.85), 0 0 10px rgba(255,120,0,.45); }
+
+.ov-row { transition: transform .5s cubic-bezier(.2,.8,.2,1), opacity .5s ease; }
+.ov-enter { animation: ov-in .5s cubic-bezier(.2,.9,.25,1) backwards; }
+@keyframes ov-in { from { opacity: 0; transform: translateX(26px); } to { opacity: 1; transform: none; } }
+
+.ov-place {
+  display: grid; place-items: center; width: 54px; height: 54px; flex: none;
+  font-family: var(--font-display, inherit); font-size: 30px; line-height: 1;
+  border-radius: 10px; color: #0a0806; background: #e9d49a;
+}
+.ov-place-1 { background: linear-gradient(160deg,#ffe9a8,#d9a925); }
+.ov-place-2 { background: linear-gradient(160deg,#eef1f3,#aab4bb); }
+.ov-place-3 { background: linear-gradient(160deg,#f0c49a,#b5743c); }
+
+@media (prefers-reduced-motion: reduce) {
+  .ov-enter { animation: none; }
+  .ov-row { transition: none; }
+}
