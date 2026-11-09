@@ -3,30 +3,33 @@ import { useEffect, useRef, useState } from "react";
 import { HOW_IT_PLAYS } from "@/lib/news";
 import { TopicEmblem, type EmblemId } from "@/components/TopicEmblem";
 
-/** Which pictures sit behind each topic, and which mark it carries. Four each:
- *  enough for the tile to play like a short loop, few enough to preload. */
+/** Each topic's mark, and one picture per tip, in the same order as the
+ *  tips in HOW_IT_PLAYS. The tile loops the first four. */
 const LOOK: Record<string, { emblem: EmblemId; kicker: string; shots: string[] }> = {
   "Guns": { emblem: "guns", kicker: "Aim, recoil, Focus", shots: [
-    "ultimate/hawk_and_little_morgan_revolvers_01", "ultimate/hawk_and_little_morgan_revolvers_02",
-    "ultimate/weapon_variants_01", "vintage/weapon_pattern_01"] },
+    "people/jason_duval_5", "people/jason_and_lucia_12", "vintage/weapon_pattern_01",
+    "people/jason_and_lucia_4", "ultimate/hawk_and_little_morgan_revolvers_01"] },
   "Police and Heat": { emblem: "heat", kicker: "What the cops know", shots: [
-    "people/jason_and_lucia_3", "people/jason_and_lucia_8", "places/vice_city_4", "places/vice_city_9"] },
+    "places/vice_city_6", "people/jason_duval_7", "people/lucia_caminos_7",
+    "people/jason_and_lucia_9", "people/jason_and_lucia_13"] },
   "Cars": { emblem: "cars", kicker: "Fuel, locks, handling", shots: [
-    "ultimate/grotti_cheetah_01", "ultimate/grotti_cheetah_03", "ultimate/stock_305_01", "ultimate/vapid_buggy_02"] },
+    "art/jason_and_lucia_robbery_landscape", "ultimate/grotti_cheetah_04", "people/boobie_ike_2",
+    "ultimate/safehouse_vehicles_01", "people/jason_and_lucia_11"] },
   "Money and robberies": { emblem: "money", kicker: "Bank, cash, loot", shots: [
-    "ultimate/ptt_store_01", "places/ambrosia_2", "people/real_dimez_1", "places/vice_city_6"] },
+    "people/jason_and_lucia_8", "people/jason_and_lucia_2", "people/jason_and_lucia_5"] },
   "Criminal Profile": { emblem: "profile", kicker: "Professional to Psycho", shots: [
-    "people/jason_duval_2", "people/lucia_caminos_3", "people/raul_bautista_1", "people/jason_and_lucia_11"] },
+    "people/jason_duval_10", "places/vice_city_12", "people/jason_and_lucia_7"] },
   "Customising cars": { emblem: "custom", kicker: "Rideout and One-Eyed Willie's", shots: [
-    "ultimate/rideout_customs_01", "ultimate/rideout_customs_02", "ultimate/one_eyed_willie_01", "ultimate/one_eyed_willie_03"] },
+    "ultimate/rideout_customs_01", "ultimate/rideout_customs_02", "ultimate/one_eyed_willie_01",
+    "ultimate/one_eyed_willie_03", "ultimate/wyman_car_collection_04", "ultimate/rideout_customs_03",
+    "ultimate/vapid_ganado_retro_build_01"] },
   "Restoring and fencing": { emblem: "fencing", kicker: "Wyman's collection", shots: [
-    "ultimate/wyman_car_collection_01", "ultimate/wyman_car_collection_03",
-    "ultimate/wyman_car_collection_05", "ultimate/safehouse_vehicles_02"] },
+    "ultimate/wyman_car_collection_01", "people/brian_heder_3", "people/cal_hampton_4", "ultimate/ptt_store_01"] },
   "Looking the part": { emblem: "looks", kicker: "Fits, ink, hair", shots: [
-    "ultimate/saras_salon_01", "ultimate/vice_city_style_02", "vintage/pack_exclusive_looks_01",
-    "vintage/pack_exclusive_looks_04"] },
+    "ultimate/electric_fang_04", "ultimate/saras_salon_03", "ultimate/weapon_variants_01", "ultimate/vice_city_style_01"] },
   "Life in Leonida": { emblem: "leonida", kicker: "The state itself", shots: [
-    "places/leonida_keys_2", "places/grassrivers_3", "places/mount_kalaga_national_park_4", "places/port_gellhorn_1"] },
+    "places/leonida_keys_1", "people/raul_bautista_1", "people/lucia_caminos_9",
+    "people/jason_duval_3", "people/real_dimez_4"] },
 };
 
 const FALLBACK = { emblem: "leonida" as EmblemId, kicker: "", shots: ["places/vice_city_1"] };
@@ -44,7 +47,7 @@ export function TopicCards() {
             <li key={t.topic}>
               <button onClick={() => setOpen(t.topic)} className="tile group" aria-haspopup="dialog">
                 <span className="tile-reel" aria-hidden>
-                  {look.shots.map((src, i) => (
+                  {look.shots.slice(0, 4).map((src, i) => (
                     // eslint-disable-next-line @next/next/no-img-element
                     <img key={src} src={`/media/${src}.webp`} alt="" loading="lazy" decoding="async"
                       style={{ animationDelay: `${i * 1.4}s` }} />
@@ -64,40 +67,65 @@ export function TopicCards() {
 
       {topic && <TopicPopup topic={topic.topic} points={topic.points}
         emblem={(LOOK[topic.topic] ?? FALLBACK).emblem}
-        shot={(LOOK[topic.topic] ?? FALLBACK).shots[0]}
+        shots={(LOOK[topic.topic] ?? FALLBACK).shots}
         onClose={() => setOpen(null)} />}
     </>
   );
 }
 
-function TopicPopup({ topic, points, emblem, shot, onClose }: {
-  topic: string; points: string[]; emblem: EmblemId; shot: string; onClose: () => void;
+/** One tip at a time, on its own picture. Arrows, keys or a swipe move
+ *  through them; the picture stays clear and the tip sits on a dark fade. */
+function TopicPopup({ topic, points, emblem, shots, onClose }: {
+  topic: string; points: string[]; emblem: EmblemId; shots: string[]; onClose: () => void;
 }) {
   const box = useRef<HTMLDivElement>(null);
+  const [at, setAt] = useState(0);
+  const n = points.length;
+  const go = (d: number) => setAt((i) => (i + d + n) % n);
+  const touch = useRef<number | null>(null);
 
   useEffect(() => {
-    const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") onClose(); };
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") onClose();
+      if (e.key === "ArrowRight") setAt((i) => (i + 1) % n);
+      if (e.key === "ArrowLeft") setAt((i) => (i - 1 + n) % n);
+    };
     addEventListener("keydown", onKey);
     const prev = document.body.style.overflow;
-    document.body.style.overflow = "hidden";       // the page shouldn't scroll behind it
+    document.body.style.overflow = "hidden";
     box.current?.focus();
+    shots.forEach((s) => { const im = new Image(); im.src = `/media/${s}.webp`; });   // no blank flash between tips
     return () => { removeEventListener("keydown", onKey); document.body.style.overflow = prev; };
-  }, [onClose]);
+  }, [onClose, n, shots]);
 
   return (
     <div className="pop-back" onMouseDown={(e) => { if (e.target === e.currentTarget) onClose(); }}>
-      <div ref={box} tabIndex={-1} role="dialog" aria-modal="true" aria-label={topic} className="pop">
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src={`/media/${shot}.webp`} alt="" className="pop-shot" />
-        <TopicEmblem id={emblem} className="pop-mark" />
+      <div ref={box} tabIndex={-1} role="dialog" aria-modal="true" aria-label={`${topic}: tip ${at + 1} of ${n}`} className="slide"
+        onTouchStart={(e) => { touch.current = e.touches[0].clientX; }}
+        onTouchEnd={(e) => { if (touch.current === null) return; const dx = e.changedTouches[0].clientX - touch.current; if (Math.abs(dx) > 40) go(dx < 0 ? 1 : -1); touch.current = null; }}>
+        {points.map((_, i) => (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img key={i} src={`/media/${shots[i % shots.length]}.webp`} alt="" className={`slide-shot ${i === at ? "is-on" : ""}`} />
+        ))}
+        <div className="slide-top">
+          <TopicEmblem id={emblem} className="slide-mark" />
+          <span className="slide-topic">{topic}</span>
+          <span className="slide-count">{at + 1} / {n}</span>
+          <button onClick={onClose} className="slide-x" aria-label="Close">✕</button>
+        </div>
 
-        <button onClick={onClose} className="pop-x" aria-label="Close">✕</button>
+        <button className="slide-arrow is-left" onClick={() => go(-1)} aria-label="Previous tip">
+          <svg viewBox="0 0 48 48" aria-hidden><circle cx="24" cy="24" r="21" /><path d="M28 14 18 24l10 10" /></svg>
+        </button>
+        <button className="slide-arrow is-right" onClick={() => go(1)} aria-label="Next tip">
+          <svg viewBox="0 0 48 48" aria-hidden><circle cx="24" cy="24" r="21" /><path d="M20 14l10 10-10 10" /></svg>
+        </button>
 
-        <div className="pop-body">
-          <h3 className="display text-[clamp(1.8rem,5vw,2.6rem)] leading-none">{topic}</h3>
-          <ul className="pop-list">
-            {points.map((p) => <li key={p}>{p}</li>)}
-          </ul>
+        <div className="slide-tip" aria-live="polite">
+          <p key={at} className="slide-text">{points[at]}</p>
+          <div className="slide-dots">
+            {points.map((_, i) => <button key={i} onClick={() => setAt(i)} aria-label={`Tip ${i + 1}`} className={i === at ? "on" : ""} />)}
+          </div>
         </div>
       </div>
     </div>

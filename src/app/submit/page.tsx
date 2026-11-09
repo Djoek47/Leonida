@@ -11,7 +11,7 @@ import { DemoNote } from "@/components/DemoNote";
 type Tab = "send" | "claim";
 
 export default function SubmitPage() {
-  const { user, account, paying, tier, loading } = useUser();
+  const { user, profile, account, paying, tier, loading } = useUser();
   const [tab, setTab] = useState<Tab>("send");
   if (loading) return <div className="mx-auto max-w-xl px-4 py-24 text-haze font-semibold" role="status">Loading your account…</div>;
   if (!user) return (
@@ -42,7 +42,7 @@ export default function SubmitPage() {
         </p>
       )}
       {tab === "send"
-        ? <SendForm userId={user.id} cap={tier.dailySubmissions} usedToday={account?.submitted_today ?? 0} />
+        ? <SendForm gamertag={profile?.gamertag ?? null} platform={profile?.platform ?? null} userId={user.id} cap={tier.dailySubmissions} usedToday={account?.submitted_today ?? 0} />
         : <ClaimForm userId={user.id} />}
     </div>
   );
@@ -64,7 +64,7 @@ function durationOf(file: File): Promise<number | null> {
   });
 }
 
-function SendForm({ userId, cap, usedToday }: { userId: string; cap: number; usedToday: number }) {
+function SendForm({ userId, cap, usedToday, gamertag, platform }: { userId: string; cap: number; usedToday: number; gamertag: string | null; platform: string | null }) {
   const [mode, setMode] = useState<"file" | "link">("file");
   const [state, setState] = useState<"idle" | "sending" | "sent" | "error">("idle");
   const [err, setErr] = useState("");
@@ -144,15 +144,26 @@ function SendForm({ userId, cap, usedToday }: { userId: string; cap: number; use
     <form onSubmit={submit} className="mt-8 grid gap-5 [&>*]:min-w-0">
       <label className="grid gap-1.5"><span className="font-bold">What happens in the clip?</span>
         <input name="title" required maxLength={90} className="field" placeholder="Airboat chase through Grassrivers at night" /></label>
+      {gamertag ? (
+        // Your tag and console come from your account; change them in settings.
+        <div className="from-settings">
+          <input type="hidden" name="gamertag" value={gamertag} />
+          <input type="hidden" name="platform" value={platform ?? "ps5"} />
+          <span className="text-xs font-black uppercase tracking-[0.18em] text-haze">Sending as</span>
+          <span className="font-extrabold">{gamertag} <span className="text-haze font-semibold">on {platformName[(platform ?? "ps5") as keyof typeof platformName]}</span></span>
+          <a href="/settings" className="text-sm font-bold text-gulf underline underline-offset-4">Change in settings</a>
+        </div>
+      ) : (
       <div className="grid sm:grid-cols-2 gap-5 [&>*]:min-w-0">
         <label className="grid gap-1.5"><span className="font-bold">Console</span>
-          <select name="platform" className="field" defaultValue="ps5">
+          <select name="platform" className="field" defaultValue={platform ?? "ps5"}>
             {Object.entries(platformName).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
           </select></label>
         <label className="grid gap-1.5"><span className="font-bold">Your gamertag</span>
           <input name="gamertag" required className="field" placeholder="PSN ID or Xbox gamertag" />
-          <span className="text-xs text-haze">If you win, you&apos;ll prove this account is yours before we pay.</span></label>
+          <span className="text-xs text-haze">Saved to your account, so you only type it once.</span></label>
       </div>
+      )}
       <div>
         <div className="flex gap-4 text-sm font-bold mb-2">
           <button type="button" onClick={() => setMode("file")} className={mode === "file" ? "text-foam underline underline-offset-4" : "text-haze"}>Upload a file</button>
