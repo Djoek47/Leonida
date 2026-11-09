@@ -8,6 +8,7 @@ import { tierById, MAX_STARS } from "@/lib/tiers";
 import { StreakCard, ClipperProgress, BadgeWall, StarTracker, StreakBoard, StarRank,
   type Badge, type StreakRow } from "@/components/Gamification";
 import { DemoNote } from "@/components/DemoNote";
+import { Wallet } from "@/components/Wallet";
 
 const statusText: Record<string, string> = {
   pending: "Waiting for review", approved: "In this week's vote", featured: "Featured", rejected: "Not selected",
@@ -119,7 +120,9 @@ export default function Dashboard() {
 
       <div className="mt-12 grid gap-12 lg:grid-cols-[1.4fr_1fr]">
         <section>
-          <h2 className="text-2xl font-extrabold">Winnings</h2>
+          <Wallet payoutReady={Boolean(profile.payout_method && profile.payout_handle)} />
+
+          <h2 className="text-2xl font-extrabold mt-12">Winnings</h2>
           {wins.length === 0 ? <p className="text-haze mt-3">Nothing yet. Top three each week get paid.</p> : (
             <ul className="mt-4 grid gap-3">{wins.map((w) => (
               <li key={w.id} className="flex items-center justify-between rounded-lg bg-ink border border-gulf border-2 p-4">

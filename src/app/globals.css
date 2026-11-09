@@ -221,3 +221,121 @@ html { transition: background-color .4s; }
 @media (min-width: 1024px) {
   .mosaic { grid-template-columns: repeat(4, 1fr); grid-auto-rows: 9rem; }
 }
+
+/* ── The Vault ──────────────────────────────────────────────────────────────
+   A 3D rack of banded cash, drawn in plain transforms: no canvas, no WebGL,
+   no library. Twenty-four straps maximum — the denomination climbs instead of
+   the count, so the pile stays legible and each strap is worth drawing well.
+   Camera sits low (52deg) so the note faces carry the picture and the cut
+   paper edges only cap them; any higher and they read as crates. */
+.vault { display: grid; gap: 1rem; }
+.vault-stage {
+  position: relative; height: 300px;
+  perspective: 1700px; perspective-origin: 50% 40%;
+  transform-style: preserve-3d;
+  transform: scale(var(--zoom, 1));
+  transition: transform .7s cubic-bezier(.2, .8, .2, 1);
+}
+.vault-stage > * { position: absolute; left: 50%; top: 58%; transform-style: preserve-3d; }
+.vault-floor {
+  width: var(--fw, 330px); height: var(--fh, 220px);
+  margin: calc(var(--fh, 220px) / -2) 0 0 calc(var(--fw, 330px) / -2);
+  background: radial-gradient(ellipse at 50% 50%, rgba(0,0,0,.42), rgba(0,0,0,0) 64%);
+  transition: width .6s ease, height .6s ease, margin .6s ease;
+  transform: rotateX(52deg) rotateZ(45deg) translateZ(-2px);
+}
+
+/* One strap: 74 wide, 38 deep, 20 of stacked paper. */
+.vault-strap {
+  width: 74px; height: 38px; margin: -19px 0 0 -37px;
+  transform: rotateX(52deg) rotateZ(45deg) translate3d(var(--x), var(--y), var(--z)) rotate(var(--spin));
+  animation: vault-drop .68s cubic-bezier(.22, .9, .26, 1.02) backwards;
+}
+.vault-strap > * { position: absolute; display: block; transform-origin: 0 0; }
+
+/* Cut paper, seen from above: hundreds of leaf edges, not a flat lid. */
+.vs-top {
+  left: 0; top: 0; width: 74px; height: 38px; transform: translateZ(20px);
+  background:
+    linear-gradient(rgba(0,0,0,var(--dim, 0)), rgba(0,0,0,var(--dim, 0))),
+    repeating-linear-gradient(88deg, rgba(150,132,78,.26) 0 1px, rgba(255,255,255,.3) 1px 2px, transparent 2px 3px),
+    linear-gradient(118deg, #fdf8e4 0%, #efe8c9 46%, #d9d0a6 100%);
+  box-shadow: inset 0 0 0 1px rgba(104,92,52,.4), inset 0 -3px 6px -3px rgba(80,68,30,.5);
+}
+/* The two straps crossing the top of the bundle. */
+.vs-top i {
+  position: absolute; top: -1px; bottom: -1px; width: 9px;
+  background: linear-gradient(90deg, #c69a28, #fbeeb4 40%, #e3bd4e 70%, #b98f20);
+  box-shadow: 0 0 0 .5px rgba(72,50,0,.45);
+}
+.vs-top i:first-child { left: 13px; }
+.vs-top i:last-child  { right: 13px; }
+
+/* The printed face of the top note. */
+.vs-face {
+  width: 74px; height: 20px; transform: translate3d(0, 38px, 0) rotateX(90deg);
+  background:
+    linear-gradient(rgba(0,0,0,var(--dim, 0)), rgba(0,0,0,var(--dim, 0))),
+    repeating-linear-gradient(0deg, rgba(255,255,255,.1) 0 1px, rgba(0,0,0,.07) 1px 2px),
+    linear-gradient(170deg, #55a378 0%, #2f7049 44%, #1b4d31 100%);
+  box-shadow: inset 0 0 0 1px rgba(0,0,0,.42), inset 0 1px 0 rgba(255,255,255,.22);
+  overflow: hidden;
+}
+/* The pale oval a banknote always has in the middle. */
+.vs-oval {
+  position: absolute; left: 50%; top: 50%; width: 22px; height: 12px;
+  transform: translate(-50%, -50%);
+  border-radius: 50%;
+  background: radial-gradient(ellipse, rgba(226,240,226,.5), rgba(226,240,226,.08) 70%, transparent 72%);
+  box-shadow: 0 0 0 1px rgba(210,235,214,.22);
+}
+.vs-corner {
+  position: absolute; left: 4px; top: 4px; width: 7px; height: 5px;
+  background: rgba(228,243,226,.5);
+  clip-path: polygon(0 0, 100% 0, 100% 40%, 55% 40%, 55% 100%, 0 100%);
+}
+/* The strap seen edge-on, wrapping the face. */
+.vs-face .vs-band {
+  position: absolute; left: 13px; width: 9px; top: 0; bottom: 0;
+  background: linear-gradient(90deg, #b98f20, #fbeeb4 42%, #d5ad3c);
+  box-shadow: 0 0 0 .5px rgba(72,50,0,.5), inset 0 2px 3px -2px rgba(255,255,255,.8);
+}
+
+/* The short side: the same cut paper, lit a touch darker. */
+.vs-edge {
+  width: 20px; height: 38px; transform: translate3d(74px, 0, 0) rotateY(-90deg);
+  background:
+    linear-gradient(rgba(0,0,0,calc(var(--dim, 0) + .1)), rgba(0,0,0,calc(var(--dim, 0) + .1))),
+    repeating-linear-gradient(0deg, rgba(0,0,0,.2) 0 1px, rgba(255,255,255,.26) 1px 2px, transparent 2px 3px),
+    linear-gradient(#ece5c6, #b6ae8a);
+  box-shadow: inset 0 0 0 1px rgba(104,92,52,.35);
+}
+
+@keyframes vault-drop {
+  0%   { opacity: 0; transform: rotateX(52deg) rotateZ(45deg) translate3d(var(--x), var(--y), calc(var(--z) + 300px)) rotate(var(--spin)); }
+  55%  { opacity: 1; }
+  100% { opacity: 1; transform: rotateX(52deg) rotateZ(45deg) translate3d(var(--x), var(--y), var(--z)) rotate(var(--spin)); }
+}
+
+.vault-read { border-radius: .75rem; padding: .9rem 1rem 1rem; border: 2px solid #c99a3a; }
+.vault-total { font-size: clamp(2.5rem, 7vw, 3.75rem); line-height: 1; margin: .15rem 0 .6rem; }
+.vault-gauge {
+  position: relative; height: 16px; border-radius: 3px; overflow: hidden;
+  background: #1a1510; box-shadow: inset 0 0 0 1px rgba(255,162,26,.35);
+}
+.vault-gauge-fill {
+  position: absolute; inset: 0 auto 0 0;
+  background: linear-gradient(90deg, #b24a00, #ffa21a);
+  box-shadow: 0 0 10px rgba(255,140,0,.6);
+  transition: width .9s cubic-bezier(.2, .8, .2, 1);
+}
+.vault-gauge i { position: absolute; top: 0; bottom: 0; width: 1px; background: rgba(10,8,6,.75); }
+.vault-next { font-size: .8rem; margin-top: .5rem; }
+
+.vault-sm .vault-stage { height: 230px; transform: scale(calc(var(--zoom, 1) * .78)); }
+@media (max-width: 460px) { .vault-stage { height: 240px; transform: scale(calc(var(--zoom, 1) * .7)); } }
+
+@media (prefers-reduced-motion: reduce) {
+  .vault-strap { animation: none; }
+  .vault-gauge-fill { transition: none; }
+}

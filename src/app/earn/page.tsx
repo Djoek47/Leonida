@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import Link from "@/components/A";
 import { BRACKETS, DOWNLOAD, PERIOD_MULTIPLE, bracketFor } from "@/lib/tiers";
 import { poolNow, type Pool } from "@/lib/api";
+import { Vault } from "@/components/Vault";
 import { DemoNote } from "@/components/DemoNote";
 
 const usd = (n: number) => `$${n.toLocaleString("en-US", { minimumFractionDigits: n % 1 ? 2 : 0, maximumFractionDigits: 2 })}`;
@@ -40,17 +41,18 @@ export default function Earn() {
           </div>
         </div>
 
-        <div className="mt-8 sign sign-yellow flex flex-wrap items-center justify-between gap-6">
-          <div>
-            <p className="text-sm font-bold uppercase tracking-wide">This week&apos;s pool</p>
-            <p className="display text-6xl md:text-7xl leading-none">{usd(live.pool)}</p>
-            <p className="font-semibold mt-1">{payers.toLocaleString()} paying {payers === 1 ? "member" : "members"} · bracket {live.label}</p>
+        <div className="mt-8 grid gap-8 lg:grid-cols-[minmax(0,1fr)_minmax(0,22rem)] items-center [&>*]:min-w-0">
+          <Vault payers={payers} pool={live.pool} />
+          <div className="sign sign-yellow">
+            <p className="text-sm font-bold uppercase tracking-wide">This week&apos;s pool · bracket {live.label}</p>
+            <dl className="mt-3 grid gap-3">
+              {([["Gold", live.gold], ["Silver", live.silver], ["Bronze", live.bronze]] as const).map(([k, v]) => (
+                <div key={k} className="flex items-baseline justify-between gap-4 border-b border-black/20 pb-1.5 last:border-0">
+                  <dt className="font-bold">{k}</dt><dd className="display text-4xl">{usd(v)}</dd>
+                </div>
+              ))}
+            </dl>
           </div>
-          <dl className="flex gap-6">
-            {([["Gold", live.gold], ["Silver", live.silver], ["Bronze", live.bronze]] as const).map(([k, v]) => (
-              <div key={k}><dt className="text-sm font-bold">{k}</dt><dd className="display text-4xl">{usd(v)}</dd></div>
-            ))}
-          </dl>
         </div>
 
         <div className="mt-8 overflow-x-auto">

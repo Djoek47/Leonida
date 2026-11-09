@@ -5,6 +5,7 @@ import { TIERS, annualSaving, DOWNLOAD, BRACKETS, bracketFor, type Tier } from "
 import { useUser } from "@/lib/useUser";
 import { money, poolNow, type Pool } from "@/lib/api";
 import { DemoNote } from "@/components/DemoNote";
+import { Vault } from "@/components/Vault";
 
 const price = (cents: number) => `$${(cents / 100).toLocaleString("en-US", { maximumFractionDigits: cents % 100 ? 2 : 0 })}`;
 
@@ -143,11 +144,11 @@ export default function Pricing() {
         </div>
 
         <div className="grid gap-5 content-start">
-          <div className="sign sign-yellow">
-            <p className="font-bold">Right now</p>
-            <p className="display text-6xl mt-1">{pool ? money(pool.weekly_cents) : "—"}</p>
-            <p className="font-semibold">this week, with {pool?.paying_users ?? 0} paying {pool?.paying_users === 1 ? "member" : "members"}</p>
-            <p className="mt-2 text-sm">Clip of the Month: {pool ? money(pool.monthly_cents) : "—"}</p>
+          <div>
+            <Vault payers={pool?.paying_users ?? 0} pool={Math.round((pool?.weekly_cents ?? 2500) / 100)} />
+            <p className="mt-3 text-sm text-haze">
+              One bundle is $25. Clip of the Month pays {pool ? money(pool.monthly_cents) : "—"}.
+            </p>
           </div>
 
           <div className="rounded-xl border border-line bg-ink p-6">

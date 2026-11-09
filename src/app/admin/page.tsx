@@ -6,7 +6,7 @@ import { DEMO_CLIPS, DEMO_CONTEST, exactMoney, money, platformName, poolNow, typ
 import { BRACKETS } from "@/lib/tiers";
 import { DemoNote } from "@/components/DemoNote";
 
-type Tab = "review" | "contest" | "payouts" | "creators" | "claims" | "drops" | "staff";
+type Tab = "review" | "contest" | "payouts" | "creators" | "wallets" | "claims" | "drops" | "staff";
 type Row = Record<string, unknown> & { id: string };
 
 export default function Admin() {
@@ -14,7 +14,7 @@ export default function Admin() {
   const [tab, setTab] = useState<Tab>("review");
   if (loading) return null;
   if (!profile?.is_admin) return <div className="mx-auto max-w-xl px-4 py-24"><h1 className="display text-6xl">Staff only</h1><p className="text-haze mt-3">Ask an admin to set <code>is_admin</code> on your profile.</p></div>;
-  const tabs: [Tab, string][] = [["review", "Review queue"], ["contest", "Weekly round"], ["payouts", "Prize payouts"], ["creators", "Creator payouts"], ["claims", "Claims"], ["drops", "Daily Drops"], ["staff", "Staff and settings"]];
+  const tabs: [Tab, string][] = [["review", "Review queue"], ["contest", "Weekly round"], ["payouts", "Prize payouts"], ["creators", "Creator payouts"], ["wallets", "Member money"], ["claims", "Claims"], ["drops", "Daily Drops"], ["staff", "Staff and settings"]];
   return (
     <div className="mx-auto max-w-7xl px-4 py-10">
       <DemoNote />
@@ -31,6 +31,7 @@ export default function Admin() {
         {tab === "staff" && <Staff isOwner={profile.role === "owner"} />}
         {tab === "creators" && <CreatorPayouts />}
         {tab === "drops" && <Drops />}
+        {tab === "wallets" && <Wallets />}
       </div>
     </div>
   );
@@ -393,6 +394,133 @@ function Drops() {
           ))}
         </ul>
       </section>
+    </div>
+  );
+}
+
+
+/** Member money. Add it, take it off, see where it went. Every move writes a
+ *  ledger row with your name on it — balances are the sum of that history, so
+ *  they can't drift from it. */
+type Member = { id: string; display_name: string; tier: string; balance_cents: number };
+type Move = { id: number; player_id: string; amount_cents: number; kind: string; note: string | null; created_at: string };
+
+function Wallets() {
+  const [q, setQ] = useState("");
+  const [members, setMembers] = useState<Member[]>([]);
+  const [picked, setPicked] = useState<Member | null>(null);
+  const [moves, setMoves] = useState<Move[]>([]);
+  const [amount, setAmount] = useState("");
+  const [note, setNote] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [msg, setMsg] = useState("");
+  const [err, setErr] = useState("");
+
+  const search = useCallback(async () => {
+    const s = sb(); if (!s) return;
+    let sel = s.from("profiles").select("id,display_name,tier").order("created_at", { ascending: false }).limit(25);
+    if (q.trim()) sel = s.from("profiles").select("id,display_name,tier").ilike("display_name", `%${q.trim()}%`).limit(25);
+    const { data } = await sel;
+    const ids = (data ?? []).map((m) => (m as { id: string }).id);
+    const { data: bal } = await s.from("wallet_balances").select("player_id,balance_cents").in("player_id", ids);
+    const by = new Map((bal ?? []).map((b) => [(b as { player_id: string }).player_id, (b as { balance_cents: number }).balance_cents]));
+    setMembers((data ?? []).map((m) => ({ ...(m as Omit<Member, "balance_cents">), balance_cents: by.get((m as { id: string }).id) ?? 0 })));
+  }, [q]);
+  useEffect(() => { search(); }, [search]);
+
+  const openMember = useCallback(async (m: Member) => {
+    setPicked(m); setMsg(""); setErr("");
+    const s = sb(); if (!s) return;
+    const { data } = await s.from("wallet_entries").select("*").eq("player_id", m.id)
+      .order("created_at", { ascending: false }).limit(40);
+    setMoves((data ?? []) as Move[]);
+  }, []);
+
+  async function move(sign: 1 | -1) {
+    if (!picked) return;
+    const cents = Math.round(parseFloat(amount) * 100) * sign;
+    if (!Number.isFinite(cents) || cents === 0) { setErr("Enter an amount."); return; }
+    setBusy(true); setErr(""); setMsg("");
+    const s = sb(); if (!s) { setBusy(false); return; }
+    const { data, error } = await s.rpc("adjust_wallet", { p_user: picked.id, p_cents: cents, p_note: note || null });
+    setBusy(false);
+    if (error) {
+      setErr(error.message.includes("INSUFFICIENT_FUNDS")
+        ? "They don't have that much — you'd push the balance below zero."
+        : error.message);
+      return;
+    }
+    setMsg(`${sign > 0 ? "Added" : "Took off"} ${money(Math.abs(cents))}. New balance ${money(data as number)}.`);
+    setAmount(""); setNote("");
+    openMember({ ...picked, balance_cents: data as number });
+    search();
+  }
+
+  return (
+    <div className="grid gap-8 lg:grid-cols-[20rem_1fr] items-start [&>*]:min-w-0">
+      <div>
+        <h2 className="text-xl font-extrabold">Members</h2>
+        <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search by name"
+          aria-label="Search members" className="field mt-3" />
+        <ul className="mt-3 grid gap-px overflow-hidden rounded-lg border border-line bg-line max-h-[28rem] overflow-y-auto">
+          {members.length === 0 && <li className="bg-ink px-4 py-3 text-haze text-sm">Nobody yet.</li>}
+          {members.map((m) => (
+            <li key={m.id}>
+              <button onClick={() => openMember(m)} aria-current={picked?.id === m.id}
+                className={`w-full text-left px-4 py-3 ${picked?.id === m.id ? "bg-ink-2" : "bg-ink"}`}>
+                <span className="font-bold block truncate">{m.display_name}</span>
+                <span className="text-xs text-haze">{m.tier} · {money(m.balance_cents)}</span>
+              </button>
+            </li>
+          ))}
+        </ul>
+      </div>
+
+      {!picked ? (
+        <p className="text-haze">Pick a member to see their money.</p>
+      ) : (
+        <div>
+          <h2 className="text-xl font-extrabold">{picked.display_name}</h2>
+          <p className="display text-6xl mt-1 sunset-text">{money(picked.balance_cents)}</p>
+
+          <div className="mt-6 rounded-xl border-2 border-line bg-ink p-5 grid gap-3">
+            <div className="flex flex-wrap gap-3 [&>*]:min-w-0">
+              <label className="grid gap-1.5 flex-1 min-w-[8rem]">
+                <span className="text-sm font-bold">Amount</span>
+                <input value={amount} onChange={(e) => setAmount(e.target.value)} inputMode="decimal"
+                  placeholder="25.00" className="field" />
+              </label>
+              <label className="grid gap-1.5 flex-[2] min-w-[12rem]">
+                <span className="text-sm font-bold">Why (shown to them)</span>
+                <input value={note} onChange={(e) => setNote(e.target.value)}
+                  placeholder="Goodwill for the week 3 outage" className="field" />
+              </label>
+            </div>
+            <div className="flex gap-2">
+              <button onClick={() => move(1)} disabled={busy} className="btn btn-hot disabled:opacity-70">Add money</button>
+              <button onClick={() => move(-1)} disabled={busy} className="btn btn-ghost disabled:opacity-70">Take money off</button>
+            </div>
+            {msg && <p role="status" className="font-semibold text-gulf">{msg}</p>}
+            {err && <p role="alert" className="font-semibold text-flamingo">{err}</p>}
+          </div>
+
+          <h3 className="text-lg font-extrabold mt-8">History</h3>
+          <ul className="mt-3 grid gap-px overflow-hidden rounded-lg border border-line bg-line">
+            {moves.length === 0 && <li className="bg-ink px-4 py-3 text-haze text-sm">No movements.</li>}
+            {moves.map((m) => (
+              <li key={m.id} className="bg-ink px-4 py-3 flex items-baseline justify-between gap-4">
+                <span className="min-w-0">
+                  <span className="font-semibold block truncate">{m.kind.replace(/_/g, " ")}</span>
+                  <span className="text-xs text-haze">{new Date(m.created_at).toLocaleString()}{m.note ? ` · ${m.note}` : ""}</span>
+                </span>
+                <span className={`font-black tabular-nums shrink-0 ${m.amount_cents > 0 ? "text-gulf" : "text-flamingo"}`}>
+                  {m.amount_cents > 0 ? "+" : "−"}{money(Math.abs(m.amount_cents))}
+                </span>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
     </div>
   );
 }
