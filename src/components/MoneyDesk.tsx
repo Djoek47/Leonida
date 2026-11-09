@@ -32,7 +32,11 @@ export function GetPaid({ profile, setProfile }: { profile: Profile; setProfile:
     setBusy(true);
     const j = await call("/api/payout/stripe", { action: "connect" });
     if (j.url) { location.href = j.url; return; }
-    setBusy(false); setNote(j.error ?? "Couldn't open Stripe.");
+    setBusy(false);
+    if (String(j.error ?? "").includes("switched on")) {
+      setWay("other");
+      setNote("Card and bank payouts aren't available yet. Use PayPal, Venmo, Cash App, Interac or Wise for now; nothing is lost, your wallet keeps the money.");
+    } else setNote(j.error ?? "Couldn't open Stripe.");
   }
   async function save(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();

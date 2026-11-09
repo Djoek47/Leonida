@@ -33,7 +33,7 @@ const jsonLd = {
   "@graph": [
     { "@type": "WebSite", "@id": `${SITE}/#site`, url: SITE, name: "Live From Leonida", alternateName: ["LiveFromLeonida", "Leonida Live"] },
     { "@type": "Organization", "@id": `${SITE}/#org`, name: "Live From Leonida", url: SITE, logo: `${SITE}/brand/live-from-leonida-avatar-400.png`,
-      sameAs: ["https://www.tiktok.com/@lfleonida", "https://www.instagram.com/lfleonida", "https://www.twitch.tv/livefromleonida"] },
+      sameAs: ["https://www.tiktok.com/@lfleonida", "https://www.instagram.com/lfleonida", "https://www.twitch.tv/livefromleonida", "https://x.com/livefromgta6"] },
   ],
 };
 

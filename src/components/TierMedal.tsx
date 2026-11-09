@@ -32,8 +32,8 @@ const SPEC: Record<TierId, Spec> = {
     rim: "beaded", scene: "skyline",
   },
   hustler: {
-    ring: ["#ffd9c0", "#d98b5f", "#7a3f22"], field: ["#f0579f", "#6d124a"],
-    ink: "#ffe6f2", banner: "#450d2e", bannerInk: "#ffd9ea", stars: 2,
+    ring: ["#ffe7b0", "#e0a93a", "#7a4f12"], field: ["#ff3b5f", "#8a0c24"],
+    ink: "#ffe9ea", banner: "#4a0a16", bannerInk: "#ffe2b8", stars: 2,
     rim: "rope", scene: "sunset",
   },
   kingpin: {

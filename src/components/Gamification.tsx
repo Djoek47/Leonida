@@ -155,7 +155,7 @@ export function BadgeWall({ badges }: { badges: Badge[] }) {
 /** Today's rotating challenge. Open to everyone; the winner gets a week in Trending. */
 export type Drop = { id: string; theme: string; blurb: string | null; closes_at: string };
 
-export function DailyDrop({ drop }: { drop: Drop }) {
+export function DailyDrop({ drop, look = "free" }: { drop: Drop; look?: string }) {
   const [left, setLeft] = useState("");
   useEffect(() => {
     const tick = () => {
@@ -169,17 +169,19 @@ export function DailyDrop({ drop }: { drop: Drop }) {
     return () => clearInterval(id);
   }, [drop.closes_at]);
 
+  // A real road sign in fixed colours per plan, so it never inherits a
+  // theme colour that washes the lettering out.
   return (
-    <div className="sign sign-yellow flex flex-col md:flex-row md:items-center justify-between gap-5">
-      <div className="min-w-0">
-        <p className="flex items-center gap-2 text-sm font-black uppercase tracking-wide">
-          <span className="rec" aria-hidden />Daily Drop · {left}
-        </p>
-        <p className="display text-4xl md:text-5xl mt-1">{drop.theme}</p>
-        {drop.blurb && <p className="font-semibold mt-1">{drop.blurb}</p>}
-        <p className="text-sm mt-2">Open to everyone. The winner is featured in Trending for a full week.</p>
+    <div className={`drop-sign drop-${look}`}>
+      <span className="drop-bolt tl" /><span className="drop-bolt tr" /><span className="drop-bolt bl" /><span className="drop-bolt br" />
+      <div className="drop-inner">
+        <div className="min-w-0">
+          <p className="drop-k"><span className="rec" aria-hidden />Daily Drop · {left}</p>
+          <p className="drop-title">{drop.theme}</p>
+          <p className="drop-blurb">{drop.blurb ?? "Open to everyone. The winner is featured in Trending for a full week."}</p>
+        </div>
+        <Link href="/submit" className="drop-cta">Enter today&apos;s drop →</Link>
       </div>
-      <Link href="/submit" className="btn bg-[#1c1710] text-white shrink-0">Enter today&apos;s drop</Link>
     </div>
   );
 }

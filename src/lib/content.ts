@@ -63,7 +63,7 @@ export const socials = [
   { id: "youtube", label: "YouTube", href: "https://www.youtube.com/@livefromleonida" },
   { id: "twitch", label: "Twitch", href: "https://www.twitch.tv/livefromleonida" },
   { id: "tiktok", label: "TikTok", href: "https://www.tiktok.com/@lfleonida" },
-  { id: "x", label: "X", href: "https://x.com/livefromleonida" },
+  { id: "x", label: "X", href: "https://x.com/livefromgta6" },
   { id: "instagram", label: "Instagram", href: "https://www.instagram.com/lfleonida" },
   { id: "facebook", label: "Facebook", href: "https://www.facebook.com/livefromleonida" },
 ] as const;

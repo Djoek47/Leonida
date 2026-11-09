@@ -252,7 +252,7 @@ export default function ClipsPage() {
         {pool && <span className="token-pool">Pool this week <b>{money(pool.weekly_cents)}</b></span>}
       </div>
 
-      {drop && <div className="mt-8"><DailyDrop drop={drop} /></div>}
+      {drop && <div className="mt-8"><DailyDrop drop={drop} look={paying ? tier.id : "free"} /></div>}
 
       {msg && <p role="status" className="mt-5 inline-block bg-ink-2 px-4 py-2 rounded font-semibold">{msg} {!user && <Link className="text-gulf underline" href="/login">Sign in</Link>}</p>}
 

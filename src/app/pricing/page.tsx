@@ -1,7 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
 import Link from "@/components/A";
-import { TIERS, annualSaving, DOWNLOAD, type Tier } from "@/lib/tiers";
+import { TIERS, annualSaving, DOWNLOAD, tierById, type Tier } from "@/lib/tiers";
 import { useUser } from "@/lib/useUser";
 import { sb } from "@/lib/supabase";
 import { money, poolNow, type Pool } from "@/lib/api";
@@ -18,6 +18,13 @@ export default function Pricing() {
   const [pool, setPool] = useState<Pool | null>(null);
   const [busy, setBusy] = useState<string | null>(null);
   const [err, setErr] = useState("");
+  const [ask, setAsk] = useState<Tier | null>(null);
+
+  /** Paying members confirm any change first; a downgrade lists what goes. */
+  function choose(t: Tier) {
+    if (paying && profile?.tier && profile.tier !== "free" && t.id !== profile.tier) { setAsk(t); return; }
+    subscribe(t);
+  }
 
   useEffect(() => { poolNow().then(setPool); }, []);
 
@@ -55,8 +62,46 @@ export default function Pricing() {
     } finally { setBusy(null); }
   }
 
+  const from = paying ? tierById(profile?.tier) : null;
+  const down = Boolean(ask && from && ask.rank < from.rank);
   return (
     <div>
+      {ask && from && (
+        <div role="dialog" aria-modal="true" aria-labelledby="chg-t" className="fixed inset-0 z-50 grid place-items-center bg-black/65 p-4" onClick={() => setAsk(null)}>
+          <div className={`chg-card ${down ? "is-down" : ""}`} onClick={(e) => e.stopPropagation()}>
+            <p className="chg-k">{down ? "Heads up" : "Plan change"}</p>
+            <h2 id="chg-t" className="display text-3xl md:text-4xl">{down ? `Drop to ${ask.label}?` : `Move up to ${ask.label}?`}</h2>
+            {down ? (
+              <>
+                <p className="mt-3">{ask.id === "free" ? <>Your plan ends at the close of this billing period. After that you lose:</> : <>This takes effect <b>right away</b>. You&apos;re leaving {from.label}, so you lose:</>}</p>
+                <ul className="chg-list">
+                  {from.votes > ask.votes && <li>{from.votes - ask.votes} vote{from.votes - ask.votes === 1 ? "" : "s"} per round ({from.votes} → {ask.votes})</li>}
+                  {from.dailySubmissions > ask.dailySubmissions && <li>Daily uploads: {from.dailySubmissions} → {ask.dailySubmissions}</li>}
+                  {from.creditsPerMonth > ask.creditsPerMonth && <li>Free downloads a month: {from.creditsPerMonth} → {ask.creditsPerMonth}</li>}
+                  {from.streakFreezes > ask.streakFreezes && <li>Streak freezes: {from.streakFreezes} → {ask.streakFreezes}</li>}
+                </ul>
+                <p className="text-sm opacity-80">No refund for the rest of this period; the lower price starts at your next renewal. Your clips, badges, stars and wallet stay.</p>
+              </>
+            ) : (
+              <p className="mt-3">Next you&apos;ll see Stripe&apos;s payment page with the exact difference for the rest of this period. Nothing is charged until you pay there.</p>
+            )}
+            <div className="mt-6 flex flex-wrap gap-3">
+              <button autoFocus={!down} onClick={async () => {
+                const t = ask; setAsk(null);
+                if (t.id === "free") {
+                  const token = (await sb()?.auth.getSession())?.data.session?.access_token;
+                  await fetch("/api/billing/cancel", { method: "POST", headers: { "content-type": "application/json", ...(token ? { authorization: `Bearer ${token}` } : {}) }, body: "{}" });
+                  location.href = "/wallet"; return;
+                }
+                subscribe(t);
+              }} className={`btn ${down ? "chg-danger" : "btn-hot"} flex-1`}>
+                {down ? `Yes, drop to ${ask.label}` : "Continue to payment"}
+              </button>
+              <button autoFocus={down} onClick={() => setAsk(null)} className="btn btn-ghost">{down ? `Keep ${from.label}` : "Cancel"}</button>
+            </div>
+          </div>
+        </div>
+      )}
       <section className="bg-asphalt text-white">
         <div className="mx-auto max-w-7xl px-4 py-14 md:py-20">
           <DemoNote />
@@ -117,7 +162,7 @@ export default function Pricing() {
                   {current ? "Your plan" : "Start free"}
                 </Link>
               ) : (
-                <button onClick={() => subscribe(t)} disabled={busy === t.id || current}
+                <button onClick={() => choose(t)} disabled={busy === t.id || current}
                   className={`btn mt-6 w-full justify-center ${best ? "btn-hot" : "bg-mango text-[#1c1710] hover:brightness-110"} disabled:opacity-70`}>
                   {current ? "Your plan" : busy === t.id ? "Opening checkout…" : `Get ${t.label}`}
                 </button>

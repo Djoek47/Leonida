@@ -826,7 +826,7 @@ body:has(.overlay-root) > *:not(:has(.overlay-root)) { display: none; }
    across the page before a word is read. */
 .plan { --tone: #7c858e; --stone: #39404a; }
 .plan-street  { --tone: #cdd6de; --stone: #1a6f95; }
-.plan-hustler { --tone: #e2a37c; --stone: #c0317c; }
+.plan-hustler { --tone: #e0a93a; --stone: #dc143c; }
 .plan-kingpin { --tone: #f0cd6e; --stone: #7a46bd; }
 
 .plan::before {
@@ -961,7 +961,7 @@ body:has(.overlay-root) > *:not(:has(.overlay-root)) { display: none; }
 .chat-medal { width: 2.25rem; height: 2.25rem; }
 .chat-chip { border-radius: 999px; padding: .1rem .5rem; font-size: 10px; font-weight: 900; text-transform: uppercase; letter-spacing: .05em; white-space: nowrap; }
 .chip-street { background: #c6ced6; color: #1d2329; }
-.chip-hustler { background: #d9508f; color: #fff; }
+.chip-hustler { background: linear-gradient(135deg, #ff3b5f, #dc143c); color: #fff; }
 .chip-kingpin { background: linear-gradient(135deg, #fff1a8, #e3a91d 55%, #8a5a00); color: #2a1a00; }
 .chip-staff { background: var(--flamingo); color: #fff; }
 .chip-badge { background: var(--ink-2); color: var(--foam); border: 1px solid var(--line); }
@@ -991,7 +991,7 @@ body:has(.overlay-root) > *:not(:has(.overlay-root)) { display: none; }
   linear-gradient(180deg, var(--dash-top), var(--dusk) 520px); }
 .dash-free    { --dusk:#c3cad1; --ink:#e6eaee; --ink-2:#d5dbe1; --line:#9ba4ae; --foam:#1d2329; --haze:#56606b; --gulf:#2f5577; --mango:#4a5560; --dash-top:#a7b0ba; --dash-glow:rgba(255,255,255,.55); --plan:#6f7983; }
 .dash-street  { --dusk:#cfdeea; --ink:#eef5fb; --ink-2:#dce8f2; --line:#8fabc2; --foam:#132230; --haze:#4a6276; --gulf:#1c6aa3; --mango:#2d4a63; --dash-top:#a9c4da; --dash-glow:rgba(255,255,255,.6); --plan:#9fb3c4; }
-.dash-hustler { --dusk:#f0cfe0; --ink:#fcedf5; --ink-2:#f6dbe9; --line:#d58ab0; --foam:#3a0d28; --haze:#874266; --gulf:#bf2f78; --mango:#8a2a5c; --dash-top:#e3a3c6; --dash-glow:rgba(255,255,255,.55); --plan:#e0679f; }
+.dash-hustler { --dusk:#f6cdd3; --ink:#fff0f2; --ink-2:#fbdde2; --line:#e88a9a; --foam:#40081a; --haze:#8e3348; --gulf:#e0193f; --mango:#c8901a; --dash-top:#f08a9c; --dash-glow:rgba(255,255,255,.55); --plan:#e8264a; }
 .dash-kingpin { --dusk:#1c1f4a; --ink:#2a2d63; --ink-2:#363a78; --line:#5b61b0; --foam:#f6f3ff; --haze:#c3c3ec; --gulf:#ffd24a; --mango:#ffe08a; --dash-top:#3a2f7a; --dash-glow:rgba(255,210,74,.25); --plan:#f2c12e; }
 .dash .field { background: var(--ink-2); color: var(--foam); border-color: var(--line); }
 .dash .field::placeholder { color: var(--haze); }
@@ -1159,7 +1159,7 @@ a.mission-step:hover, button.mission-step:hover { transform: translateY(-2px); b
 .dash-stat dd { font-family: "Doto", monospace; font-weight: 900; color: var(--gulf); letter-spacing: .02em;
   text-shadow: 0 0 14px color-mix(in srgb, var(--gulf) 55%, transparent); }
 .dash-kingpin .dash-stats { background: linear-gradient(180deg, #0f1130, #090a1f); }
-.dash-free .dash-stat dd { color: #cfe3f5; } .dash-street .dash-stat dd { color: #9fe0ff; } .dash-hustler .dash-stat dd { color: #ff8fc6; }
+.dash-free .dash-stat dd { color: #cfe3f5; } .dash-street .dash-stat dd { color: #9fe0ff; } .dash-hustler .dash-stat dd { color: #ff5a78; }
 
 /* Status strip: streak flame, clipper ring, wanted stars. */
 .status-strip { margin-top: 1rem; display: grid; gap: .6rem; grid-template-columns: 1fr; }
@@ -1273,7 +1273,7 @@ aside .trophy-shelf li { width: 4.1rem; }
 /* Public pages (clips, send a clip): a lighter wash of your plan colour,
    so the site stays itself but you can tell it's yours. */
 .tint { --tint: #8d969f; background: linear-gradient(180deg, color-mix(in srgb, var(--tint) 22%, transparent), transparent 460px); padding-bottom: 6rem; margin-bottom: -6rem; }
-.tint-free { --tint: #8d969f; } .tint-street { --tint: #7fb6e0; } .tint-hustler { --tint: #e0679f; } .tint-kingpin { --tint: #6a5be6; }
+.tint-free { --tint: #8d969f; } .tint-street { --tint: #7fb6e0; } .tint-hustler { --tint: #e8264a; } .tint-kingpin { --tint: #6a5be6; }
 .tint .tile, .tint .rounded-lg.bg-ink, .tint .rounded-xl.bg-ink { border-color: color-mix(in srgb, var(--tint) 45%, var(--line)); }
 .tint-kingpin .display { text-shadow: 0 2px 0 color-mix(in srgb, #f2c12e 45%, transparent); }
 .send-hero { display: grid; grid-template-columns: auto 1fr; gap: 1.25rem; align-items: center; }
@@ -1325,3 +1325,32 @@ aside .trophy-shelf li { width: 4.1rem; }
 .set-danger > h2:first-child { background: repeating-linear-gradient(135deg, rgba(0,0,0,.15) 0 10px, transparent 10px 20px), #c41f2d; }
 .dash-hustler .set-card > h2:first-child, .dash-free .set-card > h2:first-child, .dash-street .set-card > h2:first-child { color: #fff !important; }
 .send-form { padding: 1.5rem; margin-top: 2rem; }
+
+/* Daily Drop: a hung road sign. Fixed colours and lettering per plan. */
+.drop-sign { --sign: #00704a; --ink-s: #fff; --edge: #fff; position: relative; padding: 7px; border-radius: 14px; background: var(--sign);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--sign) 70%, #000), 0 14px 0 -9px #6b7178, 0 22px 30px -18px rgba(0,0,0,.6);
+  -webkit-font-smoothing: antialiased; }
+.drop-sign::before, .drop-sign::after { content: ""; position: absolute; top: -14px; width: 10px; height: 14px; background: linear-gradient(90deg, #8a9097, #c9cdd1, #7c8288); border-radius: 2px; }
+.drop-sign::before { left: 18%; } .drop-sign::after { right: 18%; }
+.drop-inner { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 1rem 2rem; padding: 1rem 1.4rem;
+  border: 3px solid var(--edge); border-radius: 9px; color: var(--ink-s); }
+.drop-k { display: flex; align-items: center; gap: .5rem; font-size: .78rem; font-weight: 900; letter-spacing: .14em; text-transform: uppercase; opacity: .92; }
+.drop-title { font-weight: 900; letter-spacing: -0.02em; font-size: clamp(1.9rem, 4.5vw, 3rem); line-height: 1; margin-top: .25rem; }
+.drop-blurb { margin-top: .4rem; font-weight: 700; opacity: .92; }
+.drop-cta { flex-shrink: 0; border-radius: 8px; padding: .8rem 1.2rem; font-weight: 900; background: var(--ink-s); color: var(--sign); transition: transform .15s; }
+.drop-cta:hover { transform: translateY(-2px); }
+.drop-bolt { position: absolute; width: 7px; height: 7px; border-radius: 99px; background: radial-gradient(circle at 35% 35%, #fff, #9aa0a6); box-shadow: 0 1px 1px rgba(0,0,0,.4); }
+.drop-bolt.tl { top: 13px; left: 13px; } .drop-bolt.tr { top: 13px; right: 13px; } .drop-bolt.bl { bottom: 13px; left: 13px; } .drop-bolt.br { bottom: 13px; right: 13px; }
+.drop-free    { --sign: #00704a; --ink-s: #fff; --edge: #fff; }
+.drop-street  { --sign: #1d4fa3; --ink-s: #fff; --edge: #fff; }
+.drop-hustler { --sign: #dc143c; --ink-s: #fff; --edge: #ffe2b8; }
+.drop-kingpin { --sign: #0e0e12; --ink-s: #f2c12e; --edge: #f2c12e; }
+.drop-kingpin .drop-cta { color: #0e0e12; }
+.chg-card { width: min(520px, 100%); border-radius: 12px; padding: 1.6rem; background: #fff8ec; color: #1b1308; border: 3px solid #1b1308;
+  box-shadow: 0 30px 80px rgba(0,0,0,.5); animation: vote-in .22s cubic-bezier(.2,.9,.3,1.2); }
+.chg-card.is-down { border-color: #c41f2d; box-shadow: 0 0 0 6px rgba(196,31,45,.18), 0 30px 80px rgba(0,0,0,.5); }
+.chg-k { font-size: .7rem; font-weight: 900; letter-spacing: .25em; text-transform: uppercase; color: #8a6a2b; }
+.is-down .chg-k { color: #c41f2d; }
+.chg-list { margin: .8rem 0; display: grid; gap: .35rem; font-weight: 700; }
+.chg-list li::before { content: "−"; color: #c41f2d; font-weight: 900; margin-right: .5rem; }
+.chg-danger { background: #c41f2d; color: #fff; }
