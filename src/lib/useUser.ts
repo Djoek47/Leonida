@@ -11,6 +11,7 @@ export type Profile = {
   tier: TierId; billing_period: "monthly" | "annual" | null;
   subscription_status: "none" | "active" | "past_due" | "canceled" | "trialing";
   current_period_end: string | null; credits_remaining: number;
+  verify_requested_at?: string | null; stripe_connect_ready?: boolean; bonus_votes?: number;
 };
 
 /** What the member sees about their own account (public.my_account). */

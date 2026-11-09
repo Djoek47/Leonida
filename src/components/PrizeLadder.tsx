@@ -1,6 +1,17 @@
 "use client";
 import { BRACKETS, bracketFor } from "@/lib/tiers";
 
+/** Courses climb the plan scale: Free steel at the base, Street silver-ice,
+ *  then greenback, sapphire and amethyst, gold at the capstone. */
+const METAL: [string, string, string][] = [
+  ["#eef1f4", "#aab2ba", "#59616a"], ["#eef1f4", "#aab2ba", "#59616a"],          // steel
+  ["#ffffff", "#c9d6e2", "#667d93"], ["#ffffff", "#c9d6e2", "#667d93"],          // silver-ice
+  ["#c9f5d9", "#2fae6a", "#0d5532"], ["#c9f5d9", "#2fae6a", "#0d5532"],          // greenback
+  ["#cfe0ff", "#2f6fe0", "#0f2f7a"], ["#cfe0ff", "#2f6fe0", "#0f2f7a"],          // sapphire
+  ["#ead6ff", "#8b4ce6", "#3f1677"],                                             // amethyst
+  ["#fff6c2", "#f2c12e", "#8a6400"],                                             // gold capstone
+];
+
 const usd = (n: number) =>
   "$" + n.toLocaleString("en-US", { minimumFractionDigits: n % 1 ? 2 : 0, maximumFractionDigits: 2 });
 
@@ -17,14 +28,14 @@ const usd = (n: number) =>
  *  Courses step in evenly so the silhouette is a true pyramid; the pool
  *  figures carry the real proportions.
  */
-export function PrizeLadder({ payers }: { payers: number }) {
+export function PrizeLadder({ payers, variant = "slope" }: { payers: number; variant?: "slope" | "steps" }) {
   const live = bracketFor(payers);
   const liveIdx = BRACKETS.indexOf(live);
   const top = BRACKETS[BRACKETS.length - 1].pool;
   const steps = [...BRACKETS].reverse();          // biggest at the top
 
   return (
-    <div className="tank" role="img"
+    <div className={`tank tank-v-${variant}`} role="img"
          aria-label={`Prize pool ladder. Currently ${live.label} paying members, ${usd(live.pool)} a week.`}>
       <p className="tank-cap">
         <span className="tank-cap-k">THE CAPSTONE</span>
@@ -43,8 +54,8 @@ export function PrizeLadder({ payers }: { payers: number }) {
 
           return (
             <li key={b.label}
-                className={`tank-step ${filled ? "is-filled" : ""} ${surface ? "is-surface" : ""} ${next ? "is-next" : ""} ${apex ? "is-apex" : ""}`}
-                style={{ width: `${width}%` }}>
+                className={`tank-step ${i >= BRACKETS.length - 3 ? "is-narrow" : ""} ${filled ? "is-filled" : ""} ${surface ? "is-surface" : ""} ${next ? "is-next" : ""} ${apex ? "is-apex" : ""}`}
+                style={{ width: `${width}%`, "--m1": METAL[i][0], "--m2": METAL[i][1], "--m3": METAL[i][2] } as React.CSSProperties}>
               <span className="tank-members">{b.label}</span>
 
               <span className="tank-mid">

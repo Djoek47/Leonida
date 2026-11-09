@@ -70,7 +70,7 @@ export default function ClipsPage() {
   }, []);
   useEffect(() => { setCredits(account?.credits_remaining ?? 0); }, [account]);
 
-  const maxVotes = tier.votes;
+  const maxVotes = account?.votes ?? tier.votes;   // includes any earned bonus vote
   const votesLeft = maxVotes - voted.length;
 
   /** Nudge a clip's tally on screen so the vote is visible straight away;

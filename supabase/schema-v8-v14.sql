@@ -96,3 +96,9 @@ drop policy if exists "winnings request" on public.winnings;
 -- ── v16: chat_feed() — each message with its author's public face (plan while paid, stars,
 --    verified, best badge by prestige, badge count, staff); members-only rooms stay closed.
 --    See migration v16_chat_feed_with_badges for badge_prestige() and chat_feed().
+
+-- ── v17 – v19: starter mission (+1 permanent vote, server-checked), Stripe Connect payouts
+--    (profiles.stripe_connect_id / stripe_connect_ready, payout method 'stripe'), gamertag
+--    check requests (verify_requested_at), withdraw_for() for server cash-outs, Stripe
+--    cash-outs mail payout_sent instead of withdrawal_requested. See migrations
+--    v17_starter_bonus_and_stripe_payouts, v18_gamertag_check_request, v19_withdraw_for_server.

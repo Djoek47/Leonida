@@ -1,13 +1,14 @@
 "use client";
 import { useEffect, useState } from "react";
 import Link from "@/components/A";
-import { TIERS, annualSaving, DOWNLOAD, BRACKETS, bracketFor, type Tier } from "@/lib/tiers";
+import { TIERS, annualSaving, DOWNLOAD, type Tier } from "@/lib/tiers";
 import { useUser } from "@/lib/useUser";
 import { sb } from "@/lib/supabase";
 import { money, poolNow, type Pool } from "@/lib/api";
 import { DemoNote } from "@/components/DemoNote";
 import { TierMedal } from "@/components/TierMedal";
 import { Vault } from "@/components/Vault";
+import { PrizeLadder } from "@/components/PrizeLadder";
 
 const price = (cents: number) => `$${(cents / 100).toLocaleString("en-US", { maximumFractionDigits: cents % 100 ? 2 : 0 })}`;
 
@@ -133,27 +134,7 @@ export default function Pricing() {
             The weekly pool grows with the number of paying members. Whatever it is when a round
             opens is locked in, so it can&apos;t shrink under you.
           </p>
-          <div className="mt-6 overflow-x-auto">
-            <table className="w-full min-w-[22rem] text-left text-sm">
-              <thead><tr className="border-b-2 border-line">
-                <th scope="col" className="py-2 font-black">Paying members</th>
-                <th scope="col" className="py-2 font-black">Weekly pool</th>
-                <th scope="col" className="py-2 font-black">Gold</th>
-              </tr></thead>
-              <tbody>
-                {BRACKETS.map((b) => {
-                  const here = b.label === bracketFor(pool?.paying_users ?? 0).label;
-                  return (
-                    <tr key={b.label} className={`border-b border-line ${here ? "bg-mango/25" : ""}`}>
-                      <th scope="row" className="py-2.5 font-semibold">{b.label}</th>
-                      <td className="py-2.5 display text-2xl text-gulf">{price(b.pool * 100)}</td>
-                      <td className="py-2.5 font-bold">{price(b.gold * 100)}</td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
+          <div className="mt-6"><PrizeLadder payers={pool?.paying_users ?? 0} /></div>
           <p className="mt-4 text-sm">
             <Link href="/earn" className="text-gulf font-bold underline underline-offset-4">
               See all three ways to earn →

@@ -27,6 +27,9 @@ const DEMO: Message[] = [
 
 /** Rendered only after mount: the server has no idea what timezone the reader is in,
  *  and formatting it during SSR makes React throw a hydration mismatch. */
+const TONE: Record<string, string> = { lobby: "#00704a", clips: "#c7248a", trending: "#e8590c", members: "#2f6fe0", kingpins: "#b8860b" };
+const tone = (id: string) => TONE[id] ?? "#00704a";
+
 function Time({ iso }: { iso: string }) {
   const [text, setText] = useState("");
   useEffect(() => { setText(new Date(iso).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" })); }, [iso]);
@@ -43,6 +46,7 @@ export default function Chat() {
   const [loaded, setLoaded] = useState(false);
   const [draft, setDraft] = useState("");
   const [err, setErr] = useState("");
+  const [here, setHere] = useState(0);
   const endRef = useRef<HTMLDivElement>(null);
 
   const channel = channels.find((c) => c.id === active) ?? channels[0];
@@ -70,13 +74,15 @@ export default function Chat() {
   // Live fan-out, so a message shows up without a refresh.
   useEffect(() => {
     const c = sb(); if (!c) return;
-    const sub = c.channel(`chat:${active}`)
+    const key = user?.id ?? `guest-${Math.random().toString(36).slice(2)}`;
+    const sub = c.channel(`chat:${active}`, { config: { presence: { key } } })
       .on("postgres_changes",
         { event: "INSERT", schema: "public", table: "chat_messages", filter: `channel_id=eq.${active}` },
         () => load())
-      .subscribe();
+      .on("presence", { event: "sync" }, () => setHere(Object.keys(sub.presenceState()).length))
+      .subscribe((status) => { if (status === "SUBSCRIBED") sub.track({ at: Date.now() }); });
     return () => { c.removeChannel(sub); };
-  }, [active, load]);
+  }, [active, load, user?.id]);
 
   useEffect(() => { endRef.current?.scrollIntoView({ block: "end" }); }, [msgs]);
 
@@ -109,7 +115,8 @@ export default function Chat() {
             const shut = ch.members_only && myRank < ch.min_rank;
             return (
               <button key={ch.id} onClick={() => setActive(ch.id)} aria-current={ch.id === active}
-                className={`rounded-lg px-3.5 py-2.5 text-left font-bold border-2 ${ch.id === active ? "border-gulf bg-ink" : "border-transparent hover:bg-ink"}`}>
+                style={{ "--tone": tone(ch.id) } as React.CSSProperties}
+                className={`chat-room ${ch.id === active ? "is-on" : ""}`}>
                 <span className="flex items-center gap-2">
                   <span className="text-haze" aria-hidden>#</span>
                   <span className="flex-1 min-w-0 truncate">{ch.label}</span>
@@ -121,10 +128,13 @@ export default function Chat() {
           })}
         </nav>
 
-        <section className="rounded-xl border-2 border-line bg-ink flex flex-col min-h-[32rem]">
-          <header className="border-b border-line px-5 py-3">
-            <h2 className="font-extrabold"># {channel.label}</h2>
-            {channel.description && <p className="text-sm text-haze">{channel.description}</p>}
+        <section className="chat-panel flex flex-col min-h-[32rem]" style={{ "--tone": tone(channel.id) } as React.CSSProperties}>
+          <header className="chat-head">
+            <div className="min-w-0">
+              <h2 className="display text-2xl md:text-3xl truncate"># {channel.label}</h2>
+              {channel.description && <p className="text-sm opacity-85 truncate">{channel.description}</p>}
+            </div>
+            <span className="chat-live"><span className="rec" aria-hidden />{here > 0 ? `${here} here now` : "Live"}</span>
           </header>
 
           {locked ? (

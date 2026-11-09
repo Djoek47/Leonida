@@ -22,11 +22,13 @@ export function Welcome({ onLanded }: { onLanded: () => void }) {
     let tries = 0, stop = false;
     const check = async () => {
       if (stop) return;
-      const { data: { user } } = await c.auth.getUser();
-      const { data } = user ? await c.from("profiles").select("tier, subscription_status").eq("id", user.id).maybeSingle() : { data: null };
-      if (data?.tier === t && ["active", "trialing"].includes(data.subscription_status)) { setState("done"); onLanded(); return; }
-      if (++tries >= 15) { setState("slow"); return; }
-      setTimeout(check, 1500);
+      // Ask Stripe directly (it also applies the plan if the webhook hasn't yet).
+      const token = (await c.auth.getSession()).data.session?.access_token;
+      const r = await fetch("/api/billing/sync", { method: "POST", headers: token ? { authorization: `Bearer ${token}` } : {} }).catch(() => null);
+      const data = r ? await r.json().catch(() => null) as { tier?: string; status?: string } | null : null;
+      if (data?.tier === t && ["active", "trialing"].includes(data.status ?? "")) { setState("done"); onLanded(); return; }
+      if (++tries >= 10) { setState("slow"); return; }
+      setTimeout(check, 2000);
     };
     check();
     return () => { stop = true; };

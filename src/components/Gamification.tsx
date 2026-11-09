@@ -83,23 +83,71 @@ export function ClipperProgress({ fallback }: { fallback: Progress }) {
 
 export type Badge = { id: string; label: string; blurb: string; earned: boolean };
 
+/** One badge as a struck coin. Placements are gold, silver or bronze;
+ *  Clipper badges are green enamel; a Daily Drop win is red. Locked ones
+ *  are a dark blank with a keyhole. */
+function BadgeCoin({ id, earned }: { id: string; earned: boolean }) {
+  const metal = /_gold$/.test(id) ? ["#fff3b0", "#f0b429", "#8a5a00"]
+    : /_silver$/.test(id) ? ["#ffffff", "#c3ccd6", "#5d6b7a"]
+    : /_bronze$/.test(id) ? ["#ffd2a8", "#c07a3a", "#6b3a12"]
+    : id === "drop_winner" ? ["#ffb3b3", "#d1263a", "#6e0d18"]
+    : ["#b7f0cf", "#1f9d63", "#0b4a2d"];
+  const mark = id.startsWith("year") ? "Y" : id.startsWith("month") ? "M" : id.startsWith("week") ? "W"
+    : id === "drop_winner" ? "D" : id.replace("clipper_", "");
+  const u = `bc-${id}`;
+  if (!earned) return (
+    <svg viewBox="0 0 64 64" className="badge-coin is-locked" aria-hidden>
+      <circle cx="32" cy="32" r="28" fill="rgba(0,0,0,.35)" stroke="rgba(255,255,255,.18)" strokeWidth="2" strokeDasharray="3 4" />
+      <circle cx="32" cy="28" r="5" fill="rgba(255,255,255,.22)" /><path d="M29 31h6l2 12h-10z" fill="rgba(255,255,255,.22)" />
+    </svg>
+  );
+  return (
+    <svg viewBox="0 0 64 64" className="badge-coin" aria-hidden>
+      <defs>
+        <linearGradient id={u} x1="0" y1="0" x2="1" y2="1"><stop offset="0" stopColor={metal[0]} /><stop offset=".55" stopColor={metal[1]} /><stop offset="1" stopColor={metal[2]} /></linearGradient>
+      </defs>
+      <circle cx="32" cy="32" r="29" fill={`url(#${u})`} />
+      <circle cx="32" cy="32" r="23" fill="none" stroke={metal[2]} strokeWidth="1.5" strokeDasharray="1.5 3" />
+      <circle cx="32" cy="32" r="20" fill={metal[1]} stroke={metal[0]} strokeWidth="1.5" />
+      <text x="32" y={mark.length > 2 ? 37 : 39} textAnchor="middle" fontFamily="Arial Black,Arial" fontWeight="900"
+        fontSize={mark.length > 2 ? 14 : 18} fill={metal[2]}>{mark}</text>
+      <path d="M14 22a20 20 0 0 1 22-12" fill="none" stroke="#fff" strokeOpacity=".55" strokeWidth="3" strokeLinecap="round" />
+    </svg>
+  );
+}
+
+/** The trophy case: lit glass shelves, earned coins on display, the rest
+ *  waiting as blanks. Grouped the way they're won. */
 export function BadgeWall({ badges }: { badges: Badge[] }) {
   const got = badges.filter((b) => b.earned).length;
+  const shelves: [string, (b: Badge) => boolean][] = [
+    ["Clipper", (b) => b.id.startsWith("clipper")],
+    ["Podium", (b) => /^(week|month|year)_/.test(b.id)],
+    ["Daily Drop", (b) => b.id === "drop_winner"],
+  ];
   return (
-    <div>
-      <div className="flex items-baseline justify-between gap-4">
-        <h3 className="text-xl font-extrabold">Badges</h3>
-        <p className="text-sm text-haze">{got} of {badges.length}</p>
+    <div className="trophy-case">
+      <div className="trophy-head">
+        <h3 className="display text-3xl">Trophy case</h3>
+        <p className="trophy-count"><b>{got}</b> / {badges.length}</p>
       </div>
-      <ul className="mt-4 grid gap-3 grid-cols-2 sm:grid-cols-3 lg:grid-cols-4">
-        {badges.map((b) => (
-          <li key={b.id} title={b.blurb}
-            className={`rounded-lg border-2 px-3 py-2.5 ${b.earned ? "border-gulf bg-ink" : "border-dashed border-line opacity-55"}`}>
-            <p className="font-bold text-sm leading-tight">{b.label}</p>
-            <p className="text-xs text-haze mt-0.5">{b.earned ? b.blurb : "Not yet"}</p>
-          </li>
-        ))}
-      </ul>
+      {shelves.map(([name, test]) => {
+        const row = badges.filter(test);
+        if (!row.length) return null;
+        return (
+          <div key={name} className="trophy-shelf">
+            <p className="trophy-label">{name}</p>
+            <ul>
+              {row.map((b) => (
+                <li key={b.id} className={b.earned ? "is-earned" : "is-locked"} title={b.earned ? b.blurb : `Locked: ${b.blurb}`}>
+                  <BadgeCoin id={b.id} earned={b.earned} />
+                  <span>{b.label}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
+        );
+      })}
     </div>
   );
 }

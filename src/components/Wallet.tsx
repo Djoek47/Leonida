@@ -58,13 +58,16 @@ export function Wallet({ payoutReady }: { payoutReady: boolean }) {
     setBusy(true); setErr(""); setMsg("");
     const c = sb();
     if (!c) { setMsg("Demo mode — nothing was moved."); setBusy(false); return; }
-    const { error } = await c.rpc("request_withdrawal", { p_cents: cents });
+    const token = (await c.auth.getSession()).data.session?.access_token;
+    const r = await fetch("/api/wallet/withdraw", { method: "POST",
+      headers: { "content-type": "application/json", ...(token ? { authorization: `Bearer ${token}` } : {}) },
+      body: JSON.stringify({ cents }) });
+    const j = await r.json().catch(() => ({}));
     setBusy(false);
-    if (error) {
-      setErr(error.message.includes("INSUFFICIENT_FUNDS") ? "That's more than your balance." : error.message);
-    } else {
-      setAmount(""); setMsg("Requested. It goes out with the next payout run."); load();
-    }
+    if (!r.ok) { setErr(j.error ?? "Couldn't start that. Try again."); load(); return; }
+    setAmount("");
+    setMsg(j.sent ? "Sent to your Stripe account. It reaches your card or bank on Stripe's schedule." : "Requested. Staff send it, usually within a few days.");
+    load();
   }
 
   return (

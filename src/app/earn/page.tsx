@@ -57,7 +57,7 @@ export default function Earn() {
         </div>
 
         <div className="mt-8">
-          <PrizeLadder payers={payers} />
+          <PrizeLadder payers={payers} variant="steps" />
         </div>
         <p className="mt-3 text-sm text-haze">
           Whatever the pool is when a round opens is locked in, so it can&apos;t shrink under you once you&apos;ve entered.
