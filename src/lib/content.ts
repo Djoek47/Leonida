@@ -58,12 +58,12 @@ export const guides = [
   { title: "What we know so far", status: "Live", note: "Characters, regions and editions from Rockstar's official releases." },
 ] as const;
 
-/** Official Live From Leonida accounts. Handle: livefromleonida everywhere. Update the URLs once each account exists. */
+/** Official Live From Leonida accounts. TikTok and Instagram are @lfleonida; Twitch is livefromleonida. */
 export const socials = [
   { id: "youtube", label: "YouTube", href: "https://www.youtube.com/@livefromleonida" },
   { id: "twitch", label: "Twitch", href: "https://www.twitch.tv/livefromleonida" },
-  { id: "tiktok", label: "TikTok", href: "https://www.tiktok.com/@livefromleonida" },
+  { id: "tiktok", label: "TikTok", href: "https://www.tiktok.com/@lfleonida" },
   { id: "x", label: "X", href: "https://x.com/livefromleonida" },
-  { id: "instagram", label: "Instagram", href: "https://www.instagram.com/livefromleonida" },
+  { id: "instagram", label: "Instagram", href: "https://www.instagram.com/lfleonida" },
   { id: "facebook", label: "Facebook", href: "https://www.facebook.com/livefromleonida" },
 ] as const;
