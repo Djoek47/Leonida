@@ -4,13 +4,17 @@ import { BRACKETS, bracketFor } from "@/lib/tiers";
 
 /** The Vault.
  *
- *  The rack never grows past twenty-four bundles. What grows is the bundle:
- *  $25 a strap at the bottom of the ladder, $250 a strap at the top. The pile
- *  looks much the same at $500 and at $3,000 — the money just quietly gets
- *  denser. That is the joke, and it is also the honest way to draw it, because
- *  a hundred and twenty identical tokens read as wallpaper rather than money.
+ *  Money stacks up, it does not spread out. Straps land on a 2x2 footprint and
+ *  the tower rises a layer at a time, so the pile gets taller as the pool
+ *  grows rather than creeping across the floor.
+ *
+ *  It never passes twenty-four straps. What grows instead is the strap: $25 at
+ *  the bottom of the ladder, $250 at the top. The stack looks much the same at
+ *  $500 and at $3,000 — the money just quietly gets denser. That is the joke,
+ *  and it is also the honest way to draw it, because a hundred identical
+ *  tokens read as wallpaper rather than as money.
  */
-const COLS = 4, DEPTH = 2, LAYERS = 3;        // 24 straps, stacked three high
+const COLS = 2, DEPTH = 2, LAYERS = 6;        // a 2x2 tower, six straps high
 const MAX = COLS * DEPTH * LAYERS;
 
 /** Denomination ladder. Chosen so the count always lands between 1 and 20. */
@@ -42,10 +46,13 @@ function Odometer({ value }: { value: number }) {
 }
 
 function Strap({ i, delay, cols, rows }: { i: number; delay: number; cols: number; rows: number }) {
-  const pile = Math.floor(i / LAYERS);
-  const layer = i % LAYERS;
-  const col = pile % COLS;
-  const row = Math.floor(pile / COLS);
+  // Layer by layer, so the stack visibly gains height with every new strap
+  // instead of finishing one tower before starting the next.
+  const perLayer = COLS * DEPTH;
+  const layer = Math.floor(i / perLayer);
+  const slot = i % perLayer;
+  const col = slot % COLS;
+  const row = Math.floor(slot / COLS);
   // Deterministic jitter — a real pile is never square, but it mustn't
   // reshuffle itself on every render either.
   const j = ((i * 2654435761) % 1000) / 1000;
@@ -91,20 +98,20 @@ export function Vault({ payers, pool, compact = false }: { payers: number; pool:
   useEffect(() => { prev.current = straps; }, [straps]);
 
   const list = useMemo(() => Array.from({ length: straps }, (_, i) => i), [straps]);
-  const piles = Math.ceil(straps / LAYERS);
-  const cols = Math.min(COLS, piles);
-  const rows = Math.ceil(piles / COLS);
-  // One strap adrift in a big empty stage looks like a mistake. Zoom in when
-  // there is little money and pull back as the pallet fills.
-  const zoom = [1.7, 1.7, 1.45, 1.25, 1.1][Math.min(4, piles)] ?? 1;
+  const cols = Math.min(COLS, straps);
+  const rows = Math.min(DEPTH, Math.ceil(straps / COLS));
+  const layers = Math.ceil(straps / (COLS * DEPTH));
+  // One strap adrift in a big empty stage looks like a mistake. Zoom in while
+  // the stack is short and pull back as the tower rises.
+  const zoom = [1.8, 1.8, 1.6, 1.45, 1.3, 1.18, 1.05][Math.min(6, layers)] ?? 1;
 
   return (
     <div className={`vault ${compact ? "vault-sm" : ""}`}>
-      <div className="vault-stage" aria-hidden style={{ "--zoom": zoom } as React.CSSProperties}>
+      <div className="vault-frame"><div className="vault-stage" aria-hidden style={{ "--zoom": zoom } as React.CSSProperties}>
         <div className="vault-floor"
-          style={{ "--fw": `${cols * 84 + 70}px`, "--fh": `${rows * 48 + 70}px` } as React.CSSProperties} />
+          style={{ "--fw": `${cols * 84 + 76}px`, "--fh": `${rows * 48 + 76}px` } as React.CSSProperties} />
         {list.map((i) => <Strap key={i} i={i} cols={cols} rows={rows} delay={i >= fresh ? (i - fresh) * 55 : 0} />)}
-      </div>
+      </div></div>
 
       <p className="sr-only">
         This week&apos;s prize pool is {money(pool)}: {straps} strap{straps === 1 ? "" : "s"} of {money(strap)}.
@@ -113,7 +120,7 @@ export function Vault({ payers, pool, compact = false }: { payers: number; pool:
 
       <div className="vault-read led-board" role="group" aria-label="Prize pool">
         <div className="flex items-baseline justify-between gap-3">
-          <span className="led-tag text-xs">ON THE RACK</span>
+          <span className="led-tag text-xs">ON THE STACK</span>
           <span className="led-tag text-xs">{payers.toLocaleString("en-US")} PAYING</span>
         </div>
         <p className="led-text vault-total"><Odometer value={pool} /></p>

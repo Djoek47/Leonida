@@ -9,6 +9,8 @@ import { useUser } from "@/lib/useUser";
 import { sb } from "@/lib/supabase";
 import { DOWNLOAD } from "@/lib/tiers";
 import { DemoNote } from "@/components/DemoNote";
+import { ClipVideo } from "@/components/ClipVideo";
+import { TAG_LABEL, FLAGGED_SLUGS } from "@/lib/tags";
 import { DailyDrop, type Drop } from "@/components/Gamification";
 import { PlatformIcon } from "@/components/Icons";
 
@@ -29,6 +31,7 @@ export default function ClipsPage() {
   const [credits, setCredits] = useState(0);
   const [msg, setMsg] = useState<string | null>(null);
   const [ask, setAsk] = useState<Clip | null>(null);
+  const [tag, setTag] = useState<string | null>(null);
   const [drop, setDrop] = useState<Drop | null>(null);
   const [watchers, setWatchers] = useState<Record<string, number>>({});
   const [kingpins, setKingpins] = useState<Record<string, number>>({});
@@ -112,7 +115,15 @@ export default function ClipsPage() {
   if (!contest) return <div className="mx-auto max-w-7xl px-4 py-24 text-haze">Loading this week&apos;s round…</div>;
 
   // Free accounts don't see tallies, so the order they get is the submission order.
-  const sorted = paying ? [...clips].sort((a, b) => (b.votes ?? 0) - (a.votes ?? 0)) : clips;
+  const shown = tag ? clips.filter((c) => c.tags?.includes(tag)) : clips;
+  const sorted = paying ? [...shown].sort((a, b) => (b.votes ?? 0) - (a.votes ?? 0)) : shown;
+  // Every tag in play this round, commonest first, so the filter reflects the
+  // clips that actually exist rather than all 121 possibilities.
+  const inPlay = Object.entries(
+    clips.reduce<Record<string, number>>((n, c) => {
+      for (const t of c.tags ?? []) n[t] = (n[t] ?? 0) + 1;
+      return n;
+    }, {})).sort((a, b) => b[1] - a[1]).slice(0, 14);
   const open = contest.status === "voting" && new Date(contest.voting_closes) > new Date();
 
   return (
@@ -166,7 +177,31 @@ export default function ClipsPage() {
           <Link href="/submit" className="btn btn-hot mt-6">Send a clip</Link>
         </div>
       ) : (
-        <ol className="mt-8 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+        <>
+        {inPlay.length > 1 && (
+          <div className="mt-8 flex flex-wrap items-center gap-2">
+            <span className="text-sm font-bold text-haze">Filter</span>
+            {inPlay.map(([t, n]) => (
+              <button key={t} onClick={() => setTag(tag === t ? null : t)} aria-pressed={tag === t}
+                className={`rounded-full border-2 px-3 py-1 text-sm font-bold
+                  ${tag === t ? "border-gulf bg-gulf text-white" : "border-line text-haze hover:border-gulf"}`}>
+                {TAG_LABEL[t] ?? t} <span className="opacity-60">{n}</span>
+              </button>
+            ))}
+            {tag && (
+              <button onClick={() => setTag(null)} className="text-sm font-bold text-gulf underline underline-offset-4">
+                Clear
+              </button>
+            )}
+          </div>
+        )}
+        {sorted.length === 0 && tag && (
+          <p className="mt-8 text-haze">
+            Nothing tagged {TAG_LABEL[tag] ?? tag} this round.{" "}
+            <button onClick={() => setTag(null)} className="text-gulf underline underline-offset-4">Show everything</button>
+          </p>
+        )}
+        <ol className="mt-6 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
           {sorted.map((c, i) => {
             const at = ytAt(contest.youtube_url, c.youtube_timestamp);
             const mine = voted.includes(c.id);
@@ -176,6 +211,7 @@ export default function ClipsPage() {
                 <div className="relative aspect-video bg-ink-2">
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   {c.thumb && <img src={c.thumb} alt="" className="h-full w-full object-cover" />}
+                  <ClipVideo clip={c} poster={c.thumb} />
                   {paying && <span className={`absolute left-0 top-3 display text-3xl px-3 py-1 ${top ? "bg-mango text-foam" : "bg-white text-foam"}`}>{i + 1}</span>}
                   {!paying && <span className="absolute left-0 top-3 bg-white/90 text-foam px-2.5 py-1 text-[11px] font-black tracking-wide">{c.gamertag.toUpperCase()}</span>}
                   {at && <a href={at} target="_blank" rel="noreferrer" className="absolute right-3 bottom-3 btn !py-1.5 !px-3 text-sm bg-white text-foam">Watch</a>}
@@ -191,6 +227,20 @@ export default function ClipsPage() {
                 <div className="p-4">
                   <p className="font-bold leading-snug">{c.title}</p>
                   <p className="text-sm text-haze mt-1 flex items-center gap-1.5"><PlatformIcon name={c.platform} className="size-4" />{c.gamertag} on {platformName[c.platform]}</p>
+                  {c.tags && c.tags.length > 0 && (
+                    <ul className="mt-2.5 flex flex-wrap gap-1.5">
+                      {c.tags.map((t) => (
+                        <li key={t}>
+                          <button onClick={() => setTag(tag === t ? null : t)} aria-pressed={tag === t}
+                            className={`rounded-full px-2.5 py-0.5 text-[11px] font-black uppercase tracking-wide
+                              ${FLAGGED_SLUGS.has(t) ? "bg-flamingo text-white"
+                                : tag === t ? "bg-gulf text-white" : "bg-ink-2 text-haze"}`}>
+                            {TAG_LABEL[t] ?? t}
+                          </button>
+                        </li>
+                      ))}
+                    </ul>
+                  )}
                   {kingpins[c.id] >= 2 && (
                     <p className="mt-2 text-xs font-black uppercase tracking-wide text-mango">
                       Kingpins are voting heavily on this one
@@ -216,6 +266,7 @@ export default function ClipsPage() {
             );
           })}
         </ol>
+        </>
       )}
 
       <p className="mt-10 text-sm text-haze">

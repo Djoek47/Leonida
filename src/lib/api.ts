@@ -11,7 +11,7 @@ export type Clip = {
   platform: "ps5" | "xbox" | "pc"; gamertag: string; storage_path: string | null;
   source_url: string | null; edited_url: string | null; youtube_timestamp: number | null;
   status: string; votes: number | null; created_at: string; thumb?: string;
-  duration_seconds?: number | null; for_contest?: boolean;
+  duration_seconds?: number | null; for_contest?: boolean; watermark_path?: string | null;
   trending_until?: string | null; tags?: string[];
 };
 export type Winning = { id: string; contest_id: string; clip_id: string; place: number; amount_cents: number; status: string };
@@ -51,7 +51,19 @@ export async function contestClips(contestId: string): Promise<Clip[]> {
   if (!c) return DEMO_CLIPS;
   const { data } = await c.from("clip_scores").select("*").eq("contest_id", contestId)
     .in("status", ["approved", "featured"]).order("votes", { ascending: false });
-  return (data as Clip[]) ?? [];
+  const clips = (data as Clip[]) ?? [];
+  if (clips.length === 0) return clips;
+
+  // Tags live in their own table. One round trip for all of them beats one
+  // per clip, and a failure here must not cost the reader the clips.
+  const { data: tagged } = await c.from("clip_tags").select("clip_id,tag")
+    .in("clip_id", clips.map((x) => x.id));
+  const by = new Map<string, string[]>();
+  for (const row of (tagged ?? []) as { clip_id: string; tag: string }[]) {
+    const list = by.get(row.clip_id);
+    if (list) list.push(row.tag); else by.set(row.clip_id, [row.tag]);
+  }
+  return clips.map((x) => ({ ...x, tags: by.get(x.id) ?? [] }));
 }
 
 /** Clip ids this account has voted for in the round. Paying members hold several. */

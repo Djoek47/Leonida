@@ -95,3 +95,11 @@ export const MAX_TAGS_PER_CLIP = 3;
 /** Tags that hide a clip behind a warning until the viewer opts in. */
 export const FLAGGED = new Set(TAG_GROUPS.find((g) => g.group === "Flagged")!.tags);
 export const slugTag = (t: string) => t.toLowerCase().replace(/[^a-z0-9]+/g, "-");
+
+/** slug -> label, so a clip's stored tags can be shown the way they were picked. */
+export const TAG_LABEL: Record<string, string> =
+  Object.fromEntries(ALL_TAGS.map((t) => [slugTag(t), t]));
+
+/** Slugs of the tags that hide a clip behind a warning until the viewer opts in. */
+export const FLAGGED_SLUGS: Set<string> =
+  new Set([...FLAGGED].map((t) => slugTag(t)));

@@ -228,9 +228,15 @@ html { transition: background-color .4s; }
    the count, so the pile stays legible and each strap is worth drawing well.
    Camera sits low (52deg) so the note faces carry the picture and the cut
    paper edges only cap them; any higher and they read as crates. */
-.vault { display: grid; gap: 1rem; }
+.vault { display: grid; gap: 1rem; min-width: 0; }
+/* A scaled element still contributes its scaled box to the page's scroll area,
+   so the zoomed-in tower widens the whole document inside a narrow column.
+   The frame clips it. The clip has to live on a parent, never on the stage:
+   any overflow other than visible flattens preserve-3d and collapses every
+   strap into a flat sticker. */
+.vault-frame { overflow: clip; min-width: 0; }
 .vault-stage {
-  position: relative; height: 300px;
+  position: relative; height: 300px; width: 100%;
   perspective: 1700px; perspective-origin: 50% 40%;
   transform-style: preserve-3d;
   transform: scale(var(--zoom, 1));

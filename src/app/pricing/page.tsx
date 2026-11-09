@@ -147,7 +147,7 @@ export default function Pricing() {
           <div>
             <Vault payers={pool?.paying_users ?? 0} pool={Math.round((pool?.weekly_cents ?? 2500) / 100)} />
             <p className="mt-3 text-sm text-haze">
-              One bundle is $25. Clip of the Month pays {pool ? money(pool.monthly_cents) : "—"}.
+              Each strap is a real bundle — the straps get fatter as the site grows. Clip of the Month pays {pool ? money(pool.monthly_cents) : "—"}.
             </p>
           </div>
 
