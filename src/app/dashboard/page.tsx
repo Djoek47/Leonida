@@ -170,10 +170,15 @@ export default function Dashboard() {
               </button>
             )}
           </section>
-          {badges.length > 0 && <BadgeWall badges={badges} />}
           {board.length > 0 && <StreakBoard rows={board} />}
         </aside>
       </div>
+
+      {/* The trophy case runs full width. In a side column it was a tall
+          ladder beside a short list of clips, which left the page half
+          empty for anyone who hasn't filled it yet; across the page the
+          shelves lay out as shelves. */}
+      {badges.length > 0 && <div className="mt-10"><BadgeWall badges={badges} /></div>}
     </div>
     </div>
   );

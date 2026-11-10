@@ -111,6 +111,16 @@ export default function Login() {
       </div>
 
       <div className="login-col">
+        <div className="login-stack">
+        <div className="login-masthead">
+          <p className="login-mast-k">Live From Leonida</p>
+          <p className="login-mast-sub">The GTA VI clip contest. Send clips, win the week, cash out.</p>
+          <ul className="login-perks">
+            <li><b>Free</b> to join &amp; win</li>
+            <li><b>Weekly</b> cash prizes</li>
+            <li><b>Your clips</b> pay you</li>
+          </ul>
+        </div>
         <div className="set-card login-panel">
           <h2>{h.kicker}</h2>
 
@@ -202,9 +212,10 @@ export default function Login() {
         </div>
 
         <p className="login-fine">
-          Free to join, free to win. You must be 18 or over, and the{" "}
+          You must be 18 or over, and the{" "}
           <Link href="/rules" className="underline underline-offset-4">contest rules</Link> apply.
         </p>
+        </div>
       </div>
     </div>
   );
