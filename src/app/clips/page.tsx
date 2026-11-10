@@ -88,6 +88,7 @@ export default function ClipsPage() {
 
   /** Tapping Vote opens the confirmation; tapping a vote you already cast takes it back. */
   async function vote(c: Clip) {
+    if (!open) { setMsg(shutReason); return; }
     if (!user) { setMsg("Sign in to vote. It's free and takes ten seconds."); return; }
     if (c.owner_id && c.owner_id === user.id) { setMsg("You can't vote for your own clip."); return; }
     if (voted.includes(c.id)) {
@@ -198,6 +199,16 @@ export default function ClipsPage() {
   const closesAt = new Date(contest.voting_closes).getTime();
   const opensAt = Math.max(new Date(contest.voting_opens).getTime(), closesAt - (contest.deadline_hours ?? 48) * 36e5);
   const open = contest.status === "voting" && Date.now() >= opensAt && Date.now() <= closesAt;
+  // A disabled button with no reason reads as a broken one. Whenever voting
+  // is shut, say so in the same words the round header uses.
+  const whenOpens = new Date(opensAt).toLocaleString(undefined,
+    { weekday: "long", month: "short", day: "numeric", hour: "numeric", minute: "2-digit" });
+  const shutReason =
+    contest.status === "submissions" ? `Clips are still coming in. Voting opens ${whenOpens}.`
+    : contest.status === "review" ? `Staff are reviewing this week's clips. Voting opens ${whenOpens}.`
+    : contest.status === "voting" && Date.now() < opensAt ? `Voting opens ${whenOpens}.`
+    : contest.status === "voting" ? "Voting has closed for this round. Winners are being counted."
+    : "This round is finished. The next one opens soon.";
   // The prizes close_contest() will actually pay: the bracket for the paying
   // count locked when the round opened (or today's count), times the period.
   const b = bracketFor(contest.payers_at_open ?? pool?.paying_users ?? 0);
@@ -341,10 +352,10 @@ export default function ClipsPage() {
                     <div className="flex gap-2">
                       <button onClick={() => download(c)} title={paying ? "Download this clip" : "Downloads are for members"}
                         className="btn btn-ghost !py-2 !px-3 text-sm">↓</button>
-                      <button disabled={!open || Boolean(user && c.owner_id === user.id)} onClick={() => vote(c)}
-                        title={user && c.owner_id === user.id ? "Your own clip" : undefined}
-                        className={`btn !py-2 text-sm ${mine ? "bg-gulf text-white" : "btn-hot"} disabled:opacity-60`}>
-                        {user && c.owner_id === user.id ? "Yours" : mine ? "Voted ✓" : "Vote"}
+                      <button disabled={Boolean(user && c.owner_id === user.id)} onClick={() => vote(c)}
+                        title={user && c.owner_id === user.id ? "Your own clip" : open ? undefined : shutReason}
+                        className={`btn !py-2 text-sm ${mine ? "bg-gulf text-white" : open ? "btn-hot" : "btn-ghost"} disabled:opacity-60`}>
+                        {user && c.owner_id === user.id ? "Yours" : mine ? "Voted ✓" : open ? "Vote" : "Not open yet"}
                       </button>
                     </div>
                   </div>

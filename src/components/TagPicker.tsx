@@ -24,27 +24,35 @@ export function TagPicker({ value, onChange }: { value: string[]; onChange: (t: 
           {value.map((t) => (
             <li key={t}>
               <button type="button" onClick={() => toggle(t)}
-                className={`rounded-full px-3 py-1 text-sm font-bold ${FLAGGED.has(t) ? "bg-flamingo text-white" : "bg-gulf text-white"}`}>
-                {t} <span aria-hidden>×</span><span className="sr-only">Remove {t}</span>
+                className={`tag-picked${FLAGGED.has(t) ? " warn" : ""}`}>
+                {FLAGGED.has(t) && <span aria-hidden>⚠</span>}{t} <span aria-hidden>×</span>
+                <span className="sr-only">Remove {t}</span>
               </button>
             </li>
           ))}
         </ul>
       )}
 
-      <div className="mt-3 flex gap-1.5 overflow-x-auto pb-1 max-w-full">
-        {TAG_GROUPS.map((g) => (
-          <button key={g.group} type="button" onClick={() => setOpen(g.group)} aria-pressed={open === g.group}
-            aria-label={`Show ${g.group} tags`}
-            className={`shrink-0 rounded-full px-3 py-1 text-sm font-bold ${open === g.group ? "bg-foam text-dusk" : "bg-ink-2 text-haze"}`}>
-            {g.group}
-          </button>
-        ))}
+      {/* Wrapped, not scrolled: a sideways scroller hid half the groups and
+          nothing told you they were there. */}
+      <div className="tag-groups">
+        {TAG_GROUPS.map((g) => {
+          const warn = g.group === "Flagged";
+          return (
+            <button key={g.group} type="button" onClick={() => setOpen(g.group)} aria-pressed={open === g.group}
+              aria-label={`Show ${g.group} tags`}
+              className={`tag-group${open === g.group ? " on" : ""}${warn ? " warn" : ""}`}>
+              {warn && <span aria-hidden>⚠</span>}{g.group}
+            </button>
+          );
+        })}
       </div>
 
       {TAG_GROUPS.filter((g) => g.group === open).map((g) => (
         <div key={g.group} className="mt-3">
-          <p className="text-xs text-haze">{g.blurb}</p>
+          <p className={`text-xs ${g.group === "Flagged" ? "tag-warn-note" : "text-haze"}`}>
+            {g.group === "Flagged" && <span aria-hidden>⚠ </span>}{g.blurb}
+          </p>
           <ul className="mt-2 flex flex-wrap gap-2">
             {g.tags.map((t) => {
               const on = value.includes(t);
@@ -52,9 +60,8 @@ export function TagPicker({ value, onChange }: { value: string[]; onChange: (t: 
                 <li key={t}>
                   <button type="button" onClick={() => toggle(t)} aria-pressed={on}
                     disabled={!on && full}
-                    className={`rounded-full border-2 px-3 py-1 text-sm font-semibold disabled:opacity-40
-                      ${on ? "border-gulf bg-gulf text-white" : "border-line hover:border-gulf"}`}>
-                    {t}
+                    className={`tag-chip${on ? " on" : ""}${FLAGGED.has(t) ? " warn" : ""}`}>
+                    {FLAGGED.has(t) && <span aria-hidden>⚠</span>}{t}
                   </button>
                 </li>
               );

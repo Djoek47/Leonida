@@ -71,6 +71,7 @@ function SendForm({ userId, cap, usedToday, gamertag, platform }: { userId: stri
   const [forContest, setForContest] = useState(true);
   const [len, setLen] = useState<number | null>(null);
   const [tags, setTags] = useState<string[]>([]);
+  const [agreed, setAgreed] = useState(false);
   const atCap = usedToday >= cap;
   const tooLong = forContest && len != null && len >= MAX_CONTEST_SECONDS;
 
@@ -192,9 +193,14 @@ function SendForm({ userId, cap, usedToday, gamertag, platform }: { userId: stri
         <span>Enter this in Clip of the Week and Clip of the Month.
           <span className="block text-haze">Untick to post it without entering — then it can run any length.</span></span>
       </label>
-      <label className="flex gap-3 items-start text-sm text-haze">
-        <input type="checkbox" required className="mt-1 accent-[var(--flamingo)]" />
-        This is my own gameplay, and Live From Leonida can edit it and publish it in its videos. I&apos;ve read the <Link href="/rules" className="underline">contest rules</Link>.
+      {/* Same two-line shape as the entry tick above it, so the pair line up. */}
+      <label className="flex gap-3 items-start text-sm">
+        <input type="checkbox" checked={agreed} onChange={(e) => setAgreed(e.target.checked)}
+          className="mt-1 accent-[var(--flamingo)]" />
+        <span>This is my own gameplay, and Live From Leonida can edit it and publish it in its videos.
+          <span className="block text-haze">
+            I&apos;ve read the <Link href="/rules" className="rules-link">contest rules</Link>.
+          </span></span>
       </label>
       {state === "error" && <p role="alert" className="text-flamingo font-semibold">{err}</p>}
       {atCap && (
@@ -203,7 +209,14 @@ function SendForm({ userId, cap, usedToday, gamertag, platform }: { userId: stri
           <Link href="/pricing" className="underline">Members get more</Link>.
         </p>
       )}
-      <button disabled={state === "sending" || atCap || tooLong} className="btn btn-hot w-fit disabled:opacity-60">
+      {!agreed && (
+        <p className="send-gate">
+          <span aria-hidden>☐</span>
+          Tick the box above to send your clip — we can&apos;t publish it without your say-so.
+        </p>
+      )}
+      <button disabled={state === "sending" || atCap || tooLong || !agreed}
+        className="btn btn-hot w-fit disabled:opacity-60">
         {state === "sending" ? "Sending…" : "Send clip"}
       </button>
     </form>
