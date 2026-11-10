@@ -4,7 +4,7 @@ import Link from "@/components/A";
 import { sb } from "@/lib/supabase";
 import { useUser } from "@/lib/useUser";
 import { TierMedal } from "@/components/TierMedal";
-import { contestClips, currentContest, mmss, platformName, type Clip } from "@/lib/api";
+import { contestClips, currentContest, openContests, mmss, platformName, type Clip, type Contest } from "@/lib/api";
 import { TagPicker } from "@/components/TagPicker";
 import { slugTag } from "@/lib/tags";
 import { DemoNote } from "@/components/DemoNote";
@@ -34,6 +34,8 @@ export default function SubmitPage() {
           {user && <p className="send-cap"><b>{Math.max(0, tier.dailySubmissions - (account?.submitted_today ?? 0))}</b> of {tier.dailySubmissions} left today{paying ? "" : <> · <a href="/pricing" className="underline">more with a plan</a></>}</p>}
         </div>
       </header>
+      <RoundWindow />
+
       <div role="tablist" className="mt-8 inline-flex rounded border border-line p-1 bg-ink">
         {([["send", "Send my clip"], ["claim", "Claim a clip that's mine"]] as const).map(([k, l]) => (
           <button key={k} role="tab" aria-selected={tab === k} onClick={() => setTab(k)}
@@ -48,8 +50,10 @@ export default function SubmitPage() {
   );
 }
 
-/** Contest entries must come in under three minutes. */
-const MAX_CONTEST_SECONDS = 180;
+/** Every clip: under two minutes and under 600 MB. Both are hard limits,
+ *  checked here and again on the server. */
+const MAX_SECONDS = 120;
+const MAX_BYTES = 600 * 1024 * 1024;
 
 /** Read the duration out of the file in the browser, so we can refuse a long clip
  *  before uploading 400 MB of it. The database enforces the same rule. */
@@ -64,16 +68,54 @@ function durationOf(file: File): Promise<number | null> {
   });
 }
 
+/** Which competition this clip is going into, and when its doors shut.
+ *  Announced up front, so nobody films for a round that has already closed. */
+function RoundWindow() {
+  const [c, setC] = useState<Contest | null>(null);
+  useEffect(() => { currentContest().then(setC).catch(() => {}); }, []);
+  if (!c) return null;
+  const subsClose = new Date(c.submissions_close).getTime();
+  const opens = new Date(c.voting_opens).getTime();
+  const closes = new Date(c.voting_closes).getTime();
+  const now = Date.now();
+  const takingClips = now < subsClose && !["closed", "paid"].includes(c.status);
+  const when = (t: number) => new Date(t).toLocaleString(undefined,
+    { weekday: "short", month: "short", day: "numeric", hour: "numeric", minute: "2-digit" });
+  return (
+    <section className={`round-window${takingClips ? "" : " shut"}`}>
+      <p className="rw-k">{takingClips ? "Now taking clips" : "Entries closed"}</p>
+      <p className="rw-t">{c.title}</p>
+      <dl className="rw-dates">
+        <div><dt>Entries close</dt><dd>{when(subsClose)}</dd></div>
+        <div><dt>Voting opens</dt><dd>{when(opens)}</dd></div>
+        <div><dt>Voting closes</dt><dd>{when(closes)}</dd></div>
+      </dl>
+      <p className="rw-note">
+        {takingClips
+          ? "Send it before entries close and it goes into this round. Staff approve it, then it is in the vote the moment voting opens."
+          : "This round has stopped taking clips. Anything you send now waits for the next one."}
+      </p>
+    </section>
+  );
+}
+
 function SendForm({ userId, cap, usedToday, gamertag, platform }: { userId: string; cap: number; usedToday: number; gamertag: string | null; platform: string | null }) {
   const [mode, setMode] = useState<"file" | "link">("file");
   const [state, setState] = useState<"idle" | "sending" | "sent" | "error">("idle");
   const [err, setErr] = useState("");
-  const [forContest, setForContest] = useState(true);
+  // Which round this clip is going into. "" means none — they just want it
+  // on the site, earning from downloads.
+  const [rounds, setRounds] = useState<Contest[] | null>(null);
+  const [roundId, setRoundId] = useState<string>("");
+  useEffect(() => {
+    openContests().then((rs) => { setRounds(rs); setRoundId(rs[0]?.id ?? ""); }).catch(() => setRounds([]));
+  }, []);
+  const forContest = roundId !== "";
   const [len, setLen] = useState<number | null>(null);
   const [tags, setTags] = useState<string[]>([]);
   const [agreed, setAgreed] = useState(false);
   const atCap = usedToday >= cap;
-  const tooLong = forContest && len != null && len >= MAX_CONTEST_SECONDS;
+  const tooLong = len != null && len >= MAX_SECONDS;
 
   async function submit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -82,27 +124,26 @@ function SendForm({ userId, cap, usedToday, gamertag, platform }: { userId: stri
     const c = sb();
     if (!c) { setTimeout(() => setState("sent"), 600); return; }
     try {
-      const contest = await currentContest();
       let storage_path: string | null = null;
       const file = f.get("file") as File | null;
 
       // Ask before uploading. The database enforces the daily cap anyway, but
-      // only once the row goes in — by which point up to 500 MB is already in
+      // only once the row goes in — by which point up to 600 MB is already in
       // storage, and a refused row would leave it there forever.
       const { data: allowed } = await c.rpc("can_submit");
       if (allowed === false) throw new Error("DAILY_LIMIT");
 
       if (mode === "file" && file && file.size) {
-        if (file.size > 500 * 1024 * 1024) throw new Error("That file is over 500 MB. Trim it or paste a link instead.");
-        if (forContest && len != null && len >= MAX_CONTEST_SECONDS) {
-          throw new Error(`Contest clips have to come in under 3 minutes. Yours is ${mmss(len)}.`);
+        if (file.size >= MAX_BYTES) throw new Error("That file is 600 MB or over. Clips have to come in under 600 MB — trim it or paste a link instead.");
+        if (len != null && len >= MAX_SECONDS) {
+          throw new Error(`Clips have to come in under 2 minutes. Yours is ${mmss(len)}.`);
         }
         storage_path = `${userId}/${crypto.randomUUID()}-${file.name.replace(/[^\w.-]/g, "_")}`;
         const up = await c.storage.from("clips").upload(storage_path, file);
         if (up.error) throw up.error;
       }
       const { data: clip, error } = await c.from("clips").insert({
-        contest_id: contest.id === "none" ? null : contest.id, owner_id: userId, submitted_by: userId,
+        contest_id: roundId || null, owner_id: userId, submitted_by: userId,
         title: f.get("title"), platform: f.get("platform"), gamertag: f.get("gamertag"),
         storage_path, source_url: mode === "link" ? f.get("url") : null,
         for_contest: forContest, duration_seconds: len == null ? null : Math.round(len),
@@ -127,7 +168,7 @@ function SendForm({ userId, cap, usedToday, gamertag, platform }: { userId: stri
     } catch (x) {
       const m = (x as Error).message;
       setErr(m.includes("DAILY_LIMIT") ? `That's your ${cap} clips for today. The limit resets at midnight.`
-           : m.includes("CLIP_TOO_LONG") ? "Contest clips have to come in under 3 minutes."
+           : m.includes("CLIP_TOO_LONG") ? "Clips have to come in under 2 minutes."
            : m);
       setState("error");
     }
@@ -176,8 +217,8 @@ function SendForm({ userId, cap, usedToday, gamertag, platform }: { userId: stri
               className="field file:mr-4 file:rounded file:border-0 file:bg-flamingo file:px-3 file:py-1.5 file:font-bold file:text-white" />
           : <input name="url" type="url" required className="field" placeholder="YouTube, TikTok, Twitch clip or PlayStation share link" />}
         <p className="text-xs text-haze mt-1.5">
-          MP4, MOV or WebM up to 500 MB. Raw footage is fine, we edit.
-          {forContest && " Contest clips must be under 3 minutes."}
+          Upload a clip under 2 minutes and under 600 MB. MP4, MOV or WebM. Raw footage is fine, we edit.
+          
         </p>
         {len != null && (
           <p className={`text-sm mt-1.5 font-semibold ${tooLong ? "text-flamingo" : "text-gulf"}`}>
@@ -188,11 +229,43 @@ function SendForm({ userId, cap, usedToday, gamertag, platform }: { userId: stri
         )}
       </div>
       <TagPicker value={tags} onChange={setTags} />
-      <label className="flex gap-3 items-start text-sm">
-        <input type="checkbox" checked={forContest} onChange={(e) => setForContest(e.target.checked)} className="mt-1 accent-[var(--flamingo)]" />
-        <span>Enter this in Clip of the Week and Clip of the Month.
-          <span className="block text-haze">Untick to post it without entering — then it can run any length.</span></span>
-      </label>
+      <fieldset className="round-pick">
+        <legend>Which competition?</legend>
+        {rounds === null ? <p className="text-sm text-haze">Looking up the rounds…</p> : (
+          <div className="grid gap-2">
+            {rounds.map((r) => (
+              <label key={r.id} className={`round-opt${roundId === r.id ? " on" : ""}`}>
+                <input type="radio" name="round" value={r.id} checked={roundId === r.id}
+                  onChange={() => setRoundId(r.id)} />
+                <span>
+                  <b>{r.title}</b>
+                  <small>
+                    Entries close {new Date(r.submissions_close).toLocaleString(undefined,
+                      { weekday: "short", month: "short", day: "numeric", hour: "numeric", minute: "2-digit" })}
+                    {" · voting "}
+                    {new Date(r.voting_opens).toLocaleDateString(undefined, { month: "short", day: "numeric" })}
+                    {"–"}
+                    {new Date(r.voting_closes).toLocaleDateString(undefined, { month: "short", day: "numeric" })}
+                  </small>
+                </span>
+              </label>
+            ))}
+            <label className={`round-opt${roundId === "" ? " on" : ""}`}>
+              <input type="radio" name="round" value="" checked={roundId === ""} onChange={() => setRoundId("")} />
+              <span>
+                <b>No competition — just put it up</b>
+                <small>It goes on the site and earns from downloads. You can enter it in a round later.</small>
+              </span>
+            </label>
+          </div>
+        )}
+        {rounds !== null && rounds.length === 0 && (
+          <p className="text-sm text-haze mt-1">
+            No round is taking entries right now. Send it anyway — it goes up to earn, and you can
+            enter it when the next round opens.
+          </p>
+        )}
+      </fieldset>
       {/* Same two-line shape as the entry tick above it, so the pair line up. */}
       <label className="flex gap-3 items-start text-sm">
         <input type="checkbox" checked={agreed} onChange={(e) => setAgreed(e.target.checked)}

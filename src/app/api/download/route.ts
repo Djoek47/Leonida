@@ -26,6 +26,21 @@ export async function POST(req: NextRequest) {
     return Response.json({ error: "That clip is not available." }, { status: 404 });
   }
 
+  // Once its week has closed a clip is archived. It stays available, but the
+  // archive is a Kingpin room — including for people who bought it when it
+  // was current.
+  const { data: archived } = await db.rpc("clip_archived", { p_clip: clipId });
+  if (archived) {
+    const { data: p } = await db.from("profiles").select("tier, subscription_status").eq("id", me.id).single();
+    const kingpin = p?.tier === "kingpin" && ["active", "trialing", "past_due"].includes(p.subscription_status ?? "");
+    if (!kingpin) {
+      return Response.json({
+        error: "That clip is in the archive. Kingpin members can download clips after their week has closed.",
+        archived: true,
+      }, { status: 403 });
+    }
+  }
+
   const owned = async () => {
     const { data } = await db.from("downloads").select("id").eq("clip_id", clipId).eq("downloader_id", me.id).limit(1);
     return Boolean(data?.length);

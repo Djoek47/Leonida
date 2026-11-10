@@ -90,16 +90,6 @@
   "img": "/media/arsenal/v-albany-buccaneer.webp"
  },
  {
-  "id": "v-albany-manana",
-  "kind": "vehicle",
-  "name": "Albany Manana",
-  "category": "Donk",
-  "maker": "",
-  "inspiration": "",
-  "note": "West Coast Customs build: Vice City blue flake, gold trim, sky-high ride",
-  "img": "/media/arsenal/v-albany-manana.webp"
- },
- {
   "id": "v-progen-emerus",
   "kind": "vehicle",
   "name": "Progen Emerus",
@@ -108,16 +98,6 @@
   "inspiration": "",
   "note": "West Coast Customs build: candy orange, big wing, center-lock rims",
   "img": "/media/arsenal/v-progen-emerus.webp"
- },
- {
-  "id": "v-coquette",
-  "kind": "vehicle",
-  "name": "Coquette",
-  "category": "Sports",
-  "maker": "",
-  "inspiration": "",
-  "note": "West Coast Customs build: camo livery, pink calipers",
-  "img": "/media/arsenal/v-coquette.webp"
  },
  {
   "id": "v-pegassi-tempesta",

@@ -1636,3 +1636,47 @@ aside .trophy-shelf li { width: 4.1rem; }
   transition: color .12s, background .12s; padding: 0 .15em; }
 .rules-link:hover, .rules-link:focus-visible {
   color: #fff; background: var(--gulf); text-decoration-color: transparent; }
+
+/* A clip you've already bought: fetching it again costs nothing, and the
+   button says so rather than looking like another charge. */
+.btn-owned { background: color-mix(in srgb, var(--gulf) 18%, transparent);
+  color: var(--gulf); border: 2px solid var(--gulf); font-weight: 900; }
+.btn-owned:hover { background: var(--gulf); color: #fff; }
+
+/* The round you are entering, announced before you film for it. */
+.round-window { margin-top: 1.6rem; border-left: 4px solid var(--gulf); padding: .9rem 0 .9rem 1rem; }
+.round-window.shut { border-left-color: var(--mango); }
+.rw-k { font-size: .68rem; font-weight: 900; letter-spacing: .2em; text-transform: uppercase; color: var(--gulf); }
+.round-window.shut .rw-k { color: var(--mango); }
+.rw-t { font-weight: 900; font-size: 1.25rem; margin-top: .2rem; }
+.rw-dates { display: flex; flex-wrap: wrap; gap: 1.4rem; margin-top: .7rem; }
+.rw-dates dt { font-size: .62rem; font-weight: 900; letter-spacing: .14em; text-transform: uppercase; color: var(--haze); }
+.rw-dates dd { font-weight: 800; font-size: .88rem; margin-top: .1rem; }
+.rw-note { margin-top: .7rem; font-size: .8rem; line-height: 1.5; color: var(--haze); max-width: 46rem; }
+
+/* Console: the actions beyond approve and disapprove. */
+.mod-row { display: flex; flex-wrap: wrap; align-items: center; gap: .4rem; margin-top: .9rem;
+  padding-top: .8rem; border-top: 1px dashed var(--line); }
+.mod-k { font-size: .62rem; font-weight: 900; letter-spacing: .18em; text-transform: uppercase;
+  color: var(--haze); margin-right: .2rem; }
+.mod-btn { border: 2px solid var(--line); border-radius: 999px; padding: .2rem .7rem;
+  font-size: .76rem; font-weight: 800; }
+.mod-btn:hover:not(:disabled) { border-color: var(--flamingo); color: var(--flamingo); }
+.mod-btn:disabled { opacity: .5; }
+
+/* Choosing the round a clip competes in — or none at all. */
+.round-pick { display: grid; gap: .6rem; }
+.round-pick legend { font-size: .72rem; font-weight: 900; letter-spacing: .16em;
+  text-transform: uppercase; color: var(--haze); margin-bottom: .2rem; }
+.round-opt { display: flex; gap: .7rem; align-items: flex-start; border: 2px solid var(--line);
+  border-radius: 10px; padding: .65rem .85rem; cursor: pointer; transition: border-color .12s, background .12s; }
+.round-opt:hover { border-color: var(--gulf); }
+.round-opt.on { border-color: var(--gulf); background: color-mix(in srgb, var(--gulf) 10%, transparent); }
+.round-opt input { margin-top: .25rem; accent-color: var(--gulf); }
+.round-opt b { display: block; font-weight: 900; font-size: .92rem; }
+.round-opt small { display: block; font-size: .74rem; color: var(--haze); margin-top: .15rem; }
+
+/* Pulling your own clip out of the running. */
+.pull-out { font-size: .68rem; font-weight: 900; letter-spacing: .06em; text-transform: uppercase;
+  color: var(--haze); border: 1.5px solid var(--line); border-radius: 999px; padding: .15rem .6rem; }
+.pull-out:hover { color: var(--flamingo); border-color: var(--flamingo); }

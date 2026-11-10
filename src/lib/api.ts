@@ -39,6 +39,18 @@ export const DEMO_CLIPS: Clip[] = demo.map(([title, gamertag, platform, thumb, v
   votes, created_at: new Date(now - (i + 2) * day).toISOString(), thumb: `/media/${thumb}.webp`,
 }));
 
+/** Every round still taking entries, soonest first. A clip picks the one it
+ *  is going into — this week's if it's still open, otherwise a later one. */
+export async function openContests(): Promise<Contest[]> {
+  const c = sb();
+  if (!c) return [DEMO_CONTEST];
+  const { data } = await c.from("contests").select("*")
+    .not("status", "in", "(closed,paid)")
+    .gt("submissions_close", new Date().toISOString())
+    .order("submissions_close", { ascending: true }).limit(6);
+  return (data ?? []) as Contest[];
+}
+
 export async function currentContest(): Promise<Contest> {
   const c = sb();
   if (!c) return DEMO_CONTEST;

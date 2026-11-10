@@ -13,7 +13,8 @@ import { GamertagDialog } from "@/components/GamertagDialog";
 import { TierMedal } from "@/components/TierMedal";
 
 const clipState: Record<string, [string, string]> = {
-  pending: ["Under review", "wait"], approved: ["In the vote", "live"], featured: ["Featured", "gold"], rejected: ["Not selected", "off"],
+  pending: ["Under review", "wait"], approved: ["In the vote", "live"], featured: ["Featured", "gold"],
+  rejected: ["Not selected", "off"], suspended: ["Suspended", "off"], withdrawn: ["Out of the running", "off"],
 };
 type Sale = { clip_id: string; downloads: number; earned_cents: number; last_sale: string | null };
 
@@ -55,6 +56,18 @@ export default function Dashboard() {
     });
     c.from("streak_board").select("*").limit(10).then(({ data }) => setBoard((data as StreakRow[]) ?? []));
   }, [user]);
+
+  // Taking a clip out of the running. The clip and its file stay with us —
+  // that is what the terms say — it simply stops competing.
+  async function pullOut(c: Clip) {
+    if (!window.confirm(`Take "${c.title}" out of the competition?\n\nIt stops competing straight away. We keep the clip and its file, as the terms set out, and it carries on earning from downloads.`)) return;
+    const s = sb();
+    if (s) {
+      const { error } = await s.rpc("withdraw_my_clip", { p_clip: c.id, p_reason: null });
+      if (error) { alert(error.message); return; }
+    }
+    setClips((cs) => cs.map((x) => (x.id === c.id ? { ...x, status: "withdrawn" } : x)));
+  }
 
   if (loading) return <div className="mx-auto max-w-xl px-4 py-24 text-haze font-semibold" role="status">Loading your account…</div>;
   if (user && !profile) return (
@@ -148,6 +161,10 @@ export default function Dashboard() {
                     <div className="sales-n" title="Votes"><b>{c.votes ?? "—"}</b><small>votes</small></div>
                     <div className="sales-n" title="Downloads"><b>{s?.downloads ?? 0}</b><small>sold</small></div>
                     <div className="sales-n money" title="Earned from downloads"><b>{exactMoney(s?.earned_cents ?? 0)}</b><small>earned</small></div>
+                    {["approved", "featured", "pending"].includes(c.status) && (
+                      <button onClick={() => pullOut(c)} className="pull-out"
+                        title="Take this clip out of the competition">Withdraw</button>
+                    )}
                   </li>
                 );
               })}

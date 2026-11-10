@@ -6,7 +6,7 @@ const UPDATED = "November 9, 2026";
 const PLAIN: [string, string][] = [
   ["Free to enter, free to win", "No payment, ever, to enter or to collect. Paying changes nothing about your odds."],
   ["18 and over", "Or the age of majority where you live. Staff and their households can't win."],
-  ["Your own footage", "GTA VI gameplay you recorded yourself. Under 3 minutes. No mods, no cheats, no one else's clips."],
+  ["Your own footage", "GTA VI gameplay you recorded yourself. Under 2 minutes and under 600 MB. No mods, no cheats, no one else's clips."],
   ["One round a week", "The round page shows the deadlines, in Eastern Time."],
   ["Votes decide it", "Everyone gets at least one. Members get more. You can't vote for your own clip."],
   ["Top three split the pool", "Gold 60%, Silver 25%, Bronze 15%. The pool is locked when the round opens, so it can't shrink under you."],

@@ -36,6 +36,9 @@ export default function ClipsPage() {
   const [drop, setDrop] = useState<Drop | null>(null);
   const [watchers, setWatchers] = useState<Record<string, number>>({});
   const [kingpins, setKingpins] = useState<Record<string, number>>({});
+  // Clips this member has already paid for. Fetching one of these again costs
+  // nothing, so the button has to look different from one that will charge.
+  const [owned, setOwned] = useState<string[]>([]);
 
   useEffect(() => {
     currentContest().then(async (c) => {
@@ -52,6 +55,9 @@ export default function ClipsPage() {
       setWatchers({}); setKingpins({});
       return;
     }
+    c.rpc("my_downloaded_clips").then(({ data }) =>
+      setOwned(((data ?? []) as { clip_id: string }[]).map((d) => d.clip_id)));
+
     c.from("daily_drops").select("id,theme,blurb,closes_at").eq("day", new Date().toISOString().slice(0, 10))
       .maybeSingle().then(({ data }) => data && setDrop(data as Drop));
 
@@ -142,8 +148,17 @@ export default function ClipsPage() {
 
   const download = useCallback(async (c: Clip) => {
     if (!user) { setMsg("Sign in to download."); return; }
-    if (!paying) { setAsk(c); return; }
     if (demo) { setMsg("Demo mode: a real download would spend a credit here."); return; }
+    // Already bought: it costs nothing to take it again while it's current,
+    // so don't send them past the members-only gate or spend a credit.
+    if (owned.includes(c.id)) {
+      setMsg("Getting your file…");
+      const j = await fetchFile(c.id);
+      if (!deliver(j)) { setMsg(j.error ?? "Could not start the download."); return; }
+      setMsg("Downloading — this one's already yours, so it costs nothing.");
+      return;
+    }
+    if (!paying) { setAsk(c); return; }
     setMsg("Getting the file ready…");
     if (credits > 0) {
       const { row, error } = await downloadWithCredit(c.id);
@@ -154,14 +169,16 @@ export default function ClipsPage() {
       if (fresh) setCredits((n) => Math.max(0, n - 1));
       const j = await fetchFile(c.id);
       if (!deliver(j)) { setMsg(j.error ?? "Could not start the download."); return; }
+      setOwned((o) => (o.includes(c.id) ? o : [...o, c.id]));
       setMsg(fresh && c.owner_id !== user.id ? `Downloading. ${c.gamertag} gets their share — it lands in their wallet.` : "Downloading.");
       return;
     }
     const j = await fetchFile(c.id);
     if (j.checkout) { location.href = j.checkout; return; }
     if (!deliver(j)) { setMsg(j.error ?? "Could not start the download."); return; }
+    setOwned((o) => (o.includes(c.id) ? o : [...o, c.id]));
     setMsg(c.owner_id !== user.id ? `Downloading. ${c.gamertag} gets their share — it lands in their wallet.` : "Downloading.");
-  }, [user, paying, credits, demo, fetchFile]);
+  }, [user, paying, credits, demo, fetchFile, owned]);
 
   // Back from Stripe: the webhook records the sale a moment later, so wait for it, then hand over the file.
   useEffect(() => {
@@ -197,18 +214,16 @@ export default function ClipsPage() {
   // Same window the database enforces in voting_open(): status 'voting', and
   // between the later of voting_opens and (closes - deadline_hours) and the close.
   const closesAt = new Date(contest.voting_closes).getTime();
-  const opensAt = Math.max(new Date(contest.voting_opens).getTime(), closesAt - (contest.deadline_hours ?? 48) * 36e5);
-  const open = contest.status === "voting" && Date.now() >= opensAt && Date.now() <= closesAt;
+  const opensAt = new Date(contest.voting_opens).getTime();
+  const open = !["closed", "paid"].includes(contest.status) && Date.now() >= opensAt && Date.now() <= closesAt;
   // A disabled button with no reason reads as a broken one. Whenever voting
   // is shut, say so in the same words the round header uses.
   const whenOpens = new Date(opensAt).toLocaleString(undefined,
     { weekday: "long", month: "short", day: "numeric", hour: "numeric", minute: "2-digit" });
   const shutReason =
-    contest.status === "submissions" ? `Clips are still coming in. Voting opens ${whenOpens}.`
-    : contest.status === "review" ? `Staff are reviewing this week's clips. Voting opens ${whenOpens}.`
-    : contest.status === "voting" && Date.now() < opensAt ? `Voting opens ${whenOpens}.`
-    : contest.status === "voting" ? "Voting has closed for this round. Winners are being counted."
-    : "This round is finished. The next one opens soon.";
+    ["closed", "paid"].includes(contest.status) ? "This round is finished. The next one opens soon."
+    : Date.now() < opensAt ? `Voting opens ${whenOpens}.`
+    : "Voting has closed for this round. Winners are being counted.";
   // The prizes close_contest() will actually pay: the bracket for the paying
   // count locked when the round opened (or today's count), times the period.
   const b = bracketFor(contest.payers_at_open ?? pool?.paying_users ?? 0);
@@ -221,7 +236,7 @@ export default function ClipsPage() {
       <DemoNote />
       <div className="flex flex-wrap items-end justify-between gap-6">
         <div className="min-w-0">
-          <div className="lower-third text-sm mb-4"><span className="tag">{open ? <><span className="rec" />Voting</> : "Round"}</span><span className="txt">{contest.status === "voting" && Date.now() < opensAt ? `Voting opens ${new Date(opensAt).toLocaleString(undefined, { weekday: "short", hour: "numeric", minute: "2-digit" })}` : left(contest.voting_closes)}</span></div>
+          <div className="lower-third text-sm mb-4"><span className="tag">{open ? <><span className="rec" />Voting</> : "Round"}</span><span className="txt">{Date.now() < opensAt ? `Voting opens ${new Date(opensAt).toLocaleString(undefined, { weekday: "short", hour: "numeric", minute: "2-digit" })}` : left(contest.voting_closes)}</span></div>
           <h1 className="display text-6xl md:text-8xl">{contest.title}</h1>
         </div>
         <div className="flex gap-6 text-right">
@@ -350,8 +365,12 @@ export default function ClipsPage() {
                       <Link href="/pricing" className="text-sm font-bold text-gulf underline-offset-4 hover:underline">Totals hidden</Link>
                     )}
                     <div className="flex gap-2">
-                      <button onClick={() => download(c)} title={paying ? "Download this clip" : "Downloads are for members"}
-                        className="btn btn-ghost !py-2 !px-3 text-sm">↓</button>
+                      <button onClick={() => download(c)}
+                        title={owned.includes(c.id) ? "Yours already — download it again for nothing"
+                          : paying ? "Download this clip" : "Downloads are for members"}
+                        className={`btn !py-2 !px-3 text-sm ${owned.includes(c.id) ? "btn-owned" : "btn-ghost"}`}>
+                        {owned.includes(c.id) ? "↓ Yours" : "↓"}
+                      </button>
                       <button disabled={Boolean(user && c.owner_id === user.id)} onClick={() => vote(c)}
                         title={user && c.owner_id === user.id ? "Your own clip" : open ? undefined : shutReason}
                         className={`btn !py-2 text-sm ${mine ? "bg-gulf text-white" : open ? "btn-hot" : "btn-ghost"} disabled:opacity-60`}>
