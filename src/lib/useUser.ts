@@ -35,7 +35,7 @@ export const DEMO_PROFILE: Profile = {
 
 const DEMO_ACCOUNT: Account = {
   tier: "kingpin", credits_remaining: 14, credits_per_month: 20,
-  votes: 6, daily_submissions: 100, submitted_today: 1,
+  votes: 6, daily_submissions: 8, submitted_today: 1,
   pending_cents: 1890, lifetime_downloads: 27,
   current_period_end: DEMO_PROFILE.current_period_end,
   streak_days: 9, best_streak: 21, freezes_left: 2, streak_freezes: 3,

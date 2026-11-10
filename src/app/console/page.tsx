@@ -364,7 +364,13 @@ function Review() {
 
 function Keys({ onKey }: { onKey: (k: string) => void }) {
   useEffect(() => {
-    const h = (e: KeyboardEvent) => { if ((e.target as HTMLElement).tagName.match(/INPUT|TEXTAREA|SELECT/)) return; onKey(e.key.toLowerCase()); };
+    const h = (e: KeyboardEvent) => {
+      const t = e.target as HTMLElement;
+      if (t.tagName.match(/INPUT|TEXTAREA|SELECT/) || t.isContentEditable) return;
+      // Space is the play/pause key here, so don't let it scroll the page too.
+      if (e.key === " ") e.preventDefault();
+      onKey(e.key.toLowerCase());
+    };
     addEventListener("keydown", h); return () => removeEventListener("keydown", h);
   }, [onKey]);
   return null;
