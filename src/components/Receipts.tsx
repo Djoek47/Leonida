@@ -21,28 +21,25 @@ export function Receipts({ always = false }: { always?: boolean }) {
   }, []);
   if (!items) return always ? <p className="text-haze">Loading receipts…</p> : null;
   if (items.length === 0) return always ? (
-    <section className="receipts"><h3 className="text-lg font-extrabold">Receipts</h3>
-      <p className="mt-2 text-haze">No payments yet. Every plan payment and paid download will show up here with its Stripe receipt.</p></section>
+    <section><h3 className="money-h">Receipts</h3>
+      <p className="text-haze">No payments yet. Every plan payment and paid download shows up here with its Stripe receipt.</p></section>
   ) : null;
   const shown = open || always ? items : items.slice(0, 3);
   return (
-    <section className="receipts mt-6">
-      <div className="flex items-baseline justify-between gap-3">
-        <h3 className="text-lg font-extrabold">Receipts</h3>
-        <span className="text-xs text-haze">from Stripe</span>
-      </div>
-      <ul>
+    <section className="receipts">
+      <h3 className="money-h">Receipts<span className="tail">from Stripe</span></h3>
+      <ul className="roll">
         {shown.map((i) => (
           <li key={i.id}>
-            <span className={`rc-ico ${i.kind}`} aria-hidden>{i.kind === "invoice" ? "★" : "↓"}</span>
-            <span className="min-w-0 flex-1">
-              <b className="block truncate">{i.what}</b>
-              <span className="text-xs text-haze">{new Date(i.at).toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" })}{i.number ? ` · ${i.number}` : ""}</span>
+            <span className="what">
+              <b className="truncate">{i.what}</b>
+              <small>
+                {new Date(i.at).toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" })}
+                {i.number ? ` · ${i.number}` : ""}
+                <span className={`rc-status ml-2 ${i.status === "paid" ? "ok" : ""}`}>{i.status}</span>
+              </small>
             </span>
-            <span className="text-right">
-              <b className="block">{exactMoney(i.cents)}</b>
-              <span className={`rc-status ${i.status === "paid" ? "ok" : ""}`}>{i.status}</span>
-            </span>
+            <span className="amt">{exactMoney(i.cents)}</span>
             <span className="rc-links">
               {i.view && <a href={i.view} target="_blank" rel="noreferrer">View</a>}
               {i.pdf && <a href={i.pdf} target="_blank" rel="noreferrer">PDF</a>}

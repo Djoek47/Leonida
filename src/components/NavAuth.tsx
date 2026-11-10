@@ -64,7 +64,6 @@ export function NavAuth() {
             <Link role="menuitem" href="/submit">Send a clip</Link>
             <Link role="menuitem" href="/settings">Settings</Link>
             {!paying && <Link role="menuitem" href="/pricing" className="acct-up">Upgrade</Link>}
-            {profile?.is_admin && <Link role="menuitem" href="/console">Console</Link>}
           </nav>
           <button role="menuitem" onClick={signOut} disabled={leaving} className="acct-out">
             {leaving ? "Signing out…" : "Sign out"}

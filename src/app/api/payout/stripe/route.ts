@@ -46,7 +46,16 @@ export async function POST(req: NextRequest) {
     });
     return Response.json({ url: link.url });
   } catch (e) {
+    // Stripe's own wording is the only thing that says which setting is
+    // missing, and the member must never see it. It goes to the runtime log,
+    // where staff can read it; they get a sentence they can act on.
     const m = (e as Error).message ?? "";
-    return Response.json({ error: m.includes("Connect") ? "Stripe payouts aren't switched on for this site yet." : "Stripe couldn't start the sign-up. Try again." }, { status: 502 });
+    console.error("[payout/stripe] connect failed:", m);
+    const platformOff = /Connect|client_id|platform/i.test(m);
+    return Response.json({
+      error: platformOff
+        ? "Stripe payouts aren't switched on for this site yet."
+        : "Stripe couldn't start the sign-up. Try again.",
+    }, { status: 502 });
   }
 }

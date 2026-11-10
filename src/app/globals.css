@@ -1513,3 +1513,62 @@ aside .trophy-shelf li { width: 4.1rem; }
 .q-strip button.on { border-color: var(--flamingo); box-shadow: 0 0 0 2px color-mix(in srgb, var(--flamingo) 40%, transparent); }
 .q-strip img { width: 100%; height: 100%; object-fit: cover; }
 .q-more { align-self: center; font-size: .78rem; font-weight: 800; color: var(--haze); padding-left: .2rem; }
+
+/* ——— Wallet: the balance runs wide, and an empty one explains itself ——— */
+.wallet-board { display: grid; gap: 1.1rem; align-items: stretch; }
+/* Two columns only when there's something to put in the second one. */
+@media (min-width: 900px) { .wallet-board.is-new { grid-template-columns: 1fr 1fr; } }
+.wallet-board .led-board { display: flex; flex-direction: column; justify-content: center; }
+.wallet-howto { border: 2px solid var(--line); border-radius: 12px; padding: 1.1rem 1.25rem; background: var(--ink); }
+.wallet-howto h2 { font-size: .72rem; font-weight: 900; letter-spacing: .18em; text-transform: uppercase;
+  color: var(--haze); margin-bottom: .6rem; }
+.wallet-howto ul { display: grid; gap: .5rem; }
+.wallet-howto li { font-size: .88rem; line-height: 1.5; padding-left: 1rem; position: relative; }
+.wallet-howto li::before { content: ""; position: absolute; left: 0; top: .55em; width: 6px; height: 6px;
+  border-radius: 50%; background: var(--gulf); }
+
+/* ——— Money, without boxes ———
+   Nothing on this page sits in a card. The balance is a machine, the
+   movements are a till roll, and everything else is set off by a stencilled
+   heading and a dashed rule — the language of a receipt, not a dashboard. */
+.money-h { display: flex; align-items: center; gap: .8rem; margin: 2.4rem 0 1rem;
+  font-size: .72rem; font-weight: 900; letter-spacing: .2em; text-transform: uppercase; color: var(--haze); }
+.money-h::after { content: ""; flex: 1; height: 2px;
+  background: repeating-linear-gradient(90deg, var(--line) 0 7px, transparent 7px 14px); }
+.money-h .tail { font-size: .66rem; letter-spacing: .12em; opacity: .75; }
+
+/* The till roll: rows ruled by perforation, torn at the bottom. */
+.roll { margin-top: .2rem; }
+.roll li { display: flex; align-items: baseline; gap: 1rem; padding: .7rem .2rem;
+  border-bottom: 1px dashed color-mix(in srgb, var(--line) 70%, transparent); }
+.roll li:last-child { border-bottom: 0; }
+.roll .what { min-width: 0; flex: 1; }
+.roll .what b { font-weight: 800; display: block; }
+.roll .what small { display: block; font-size: .72rem; color: var(--haze); margin-top: .1rem; }
+.roll .amt { font-family: "Doto", ui-monospace, monospace; font-weight: 900; font-size: 1.05rem;
+  font-variant-numeric: tabular-nums; letter-spacing: .04em; white-space: nowrap; }
+.roll .amt.in { color: var(--gulf); } .roll .amt.out { color: var(--haze); }
+.roll-tear { height: 10px; margin-top: .1rem;
+  background: radial-gradient(circle at 50% 0, transparent 0 5px, var(--line) 5px 6px, transparent 6px) 0 0 / 14px 10px repeat-x; }
+
+/* The plan: a medal and its name, standing on the page. */
+.plan-line { display: flex; align-items: center; gap: 1.1rem; flex-wrap: wrap; }
+.plan-line .who { min-width: 0; }
+.plan-line .who p:first-child { line-height: 1; }
+.plan-acts { display: flex; gap: .5rem; flex-wrap: wrap; margin-left: auto; }
+@media (max-width: 560px) { .plan-acts { margin-left: 0; width: 100%; } }
+
+/* Payout routes: two tabs underlined like a chooser, not two buttons in cells. */
+.pay-tabs { display: flex; gap: 1.6rem; flex-wrap: wrap; }
+.pay-tabs button { text-align: left; padding: .2rem 0 .55rem; border-bottom: 3px solid transparent; display: grid; gap: .1rem; }
+.pay-tabs button b { font-weight: 900; font-size: 1rem; }
+.pay-tabs button span { font-size: .74rem; color: var(--haze); }
+.pay-tabs button.on { border-bottom-color: var(--gulf); }
+.pay-tabs button.on b { color: var(--gulf); }
+.pay-tabs button:focus-visible { outline: 2px solid var(--gulf); outline-offset: 3px; }
+
+/* How an empty wallet fills: three lines, no container. */
+.money-howto { display: grid; gap: .55rem; max-width: 40rem; }
+.money-howto li { font-size: .9rem; line-height: 1.5; padding-left: 1.1rem; position: relative; }
+.money-howto li::before { content: ""; position: absolute; left: 0; top: .55em; width: 7px; height: 7px;
+  background: var(--gulf); transform: rotate(45deg); }

@@ -47,14 +47,15 @@ export function GetPaid({ profile, setProfile }: { profile: Profile; setProfile:
   }
 
   return (
-    <section className="rounded-xl bg-ink border border-line p-5 grid gap-3">
-      <h2 id="payout" className="text-xl font-extrabold scroll-mt-28">Get paid</h2>
-      <div className="pay-pick" role="radiogroup" aria-label="Payout method">
+    <section>
+      <h2 id="payout" className="money-h scroll-mt-28">Get paid</h2>
+      <div className="pay-tabs" role="radiogroup" aria-label="Payout method">
         <button type="button" role="radio" aria-checked={way === "stripe"} onClick={() => setWay("stripe")} className={way === "stripe" ? "on" : ""}>
           <b>Card or bank</b><span>Instant, via Stripe</span></button>
         <button type="button" role="radio" aria-checked={way === "other"} onClick={() => setWay("other")} className={way === "other" ? "on" : ""}>
           <b>PayPal & co.</b><span>Sent by staff</span></button>
       </div>
+      <div className="mt-4 grid gap-3 max-w-sm">
       {way === "stripe" ? (
         profile.stripe_connect_ready && profile.payout_method === "stripe"
           ? <p className="font-bold text-gulf">Stripe connected. Cash-outs go straight to your card or bank.</p>
@@ -66,7 +67,8 @@ export function GetPaid({ profile, setProfile }: { profile: Profile; setProfile:
           <button className="btn btn-hot w-fit !py-2">Save</button>
         </form>
       )}
-      {note && <p role="status" className="text-sm font-semibold text-gulf">{note}</p>}
+      </div>
+      {note && <p role="status" className="mt-3 text-sm font-semibold text-gulf">{note}</p>}
     </section>
   );
 }
@@ -83,13 +85,14 @@ export function Winnings({ userId }: { userId: string }) {
   if (!wins.length) return null;
   return (
     <section>
-      <h2 className="text-xl font-extrabold">Prizes</h2>
-      <ul className="mt-3 grid gap-2">{wins.map((w) => (
-        <li key={w.id} className="receipts-row">
+      <h2 className="money-h">Prizes</h2>
+      <ul className="roll">{wins.map((w) => (
+        <li key={w.id}>
           <span className={`place-chip p${w.place}`}>{["1st", "2nd", "3rd"][w.place - 1]}</span>
-          <b className="flex-1">{money(w.amount_cents)}</b>
-          <span className="text-sm text-haze">{winText[w.status] ?? w.status}</span>
+          <span className="what"><b>{winText[w.status] ?? w.status}</b></span>
+          <span className="amt in">{money(w.amount_cents)}</span>
         </li>))}</ul>
+      <div className="roll-tear" aria-hidden />
       <Link href="/rules" className="mt-2 inline-block text-xs text-haze underline">How prizes are checked</Link>
     </section>
   );

@@ -90,7 +90,6 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
               <Link href="/credits">Credits</Link>
               <Link href="/terms">Terms</Link>
               <Link href="/privacy">Privacy</Link>
-              <Link href="/console">Console</Link>
             </div>
             <div className="flex flex-col gap-2">
               {socials.map((x) => <a key={x.id} href={x.href} target="_blank" rel="noreferrer" className="flex items-center gap-2"><PlatformIcon name={x.id} />{x.label}</a>)}

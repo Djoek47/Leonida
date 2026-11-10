@@ -1,6 +1,7 @@
 "use client";
 import { useCallback, useEffect, useState } from "react";
 import { sb } from "@/lib/supabase";
+import Link from "@/components/A";
 import { exactMoney } from "@/lib/api";
 
 export type Entry = {
@@ -71,10 +72,8 @@ export function Wallet({ payoutReady }: { payoutReady: boolean }) {
   }
 
   return (
-    <section>
-      <h2 className="text-2xl font-extrabold">Your money</h2>
-
-      <div className="vault-read led-board mt-4">
+    <section className="mt-8">
+      <div className="vault-read led-board">
         <p className="led-tag text-xs">BALANCE</p>
         <p className="led-text vault-total">{exactMoney(balance)}</p>
         <p className="led-tag text-xs">
@@ -84,8 +83,8 @@ export function Wallet({ payoutReady }: { payoutReady: boolean }) {
 
       {balance > 0 && (
         payoutReady ? (
-          <form onSubmit={withdraw} className="mt-4 flex flex-wrap items-end gap-2 [&>*]:min-w-0">
-            <label className="grid gap-1.5 flex-1 min-w-[9rem]">
+          <form onSubmit={withdraw} className="mt-5 flex flex-wrap items-end gap-2 [&>*]:min-w-0">
+            <label className="grid gap-1.5 flex-1 min-w-[9rem] max-w-xs">
               <span className="text-sm font-bold">Cash out</span>
               <input value={amount} onChange={(e) => setAmount(e.target.value)} inputMode="decimal"
                 placeholder={(balance / 100).toFixed(2)} className="field" aria-label="Amount to cash out" />
@@ -95,30 +94,45 @@ export function Wallet({ payoutReady }: { payoutReady: boolean }) {
             </button>
           </form>
         ) : (
-          <p className="mt-4 text-sm text-haze">
-            Add a payout account below and we can send this out.
-          </p>
+          <p className="mt-4 text-sm text-haze">Set a payout route below and we can send this out.</p>
         )
       )}
       {msg && <p role="status" className="mt-3 font-semibold text-gulf">{msg}</p>}
       {err && <p role="alert" className="mt-3 font-semibold text-flamingo">{err}</p>}
 
-      {entries.length > 0 && (
-        <ul className="mt-6 grid gap-px overflow-hidden rounded-lg border border-line bg-line">
-          {entries.map((e) => (
-            <li key={e.id} className="bg-ink px-4 py-3 flex items-baseline justify-between gap-4">
-              <span className="min-w-0">
-                <span className="font-semibold block truncate">{KIND[e.kind] ?? e.kind}</span>
-                <span className="text-xs text-haze"><When iso={e.created_at} />{e.note ? ` · ${e.note}` : ""}</span>
-              </span>
-              <span className={`font-black tabular-nums shrink-0 ${e.amount_cents > 0 ? "text-gulf" : "text-haze"}`}>
-                {e.amount_cents > 0 ? "+" : "−"}{exactMoney(Math.abs(e.amount_cents))}
-              </span>
-            </li>
-          ))}
-        </ul>
+      {/* An empty wallet is the normal first state, so say how it fills. */}
+      {entries.length === 0 ? (
+        <>
+          <h2 className="money-h">How money lands here</h2>
+          <ul className="money-howto">
+            <li><b>Win a week.</b> Gold, silver and bronze are paid in here once staff confirm the gamertag.</li>
+            <li><b>Sell a clip.</b> Every member download pays the player who made it, for as long as people keep downloading.</li>
+            <li><b>Cash out</b> whenever you like — card, bank, or PayPal and the rest.</li>
+          </ul>
+          <div className="flex flex-wrap gap-2 mt-4">
+            <Link href="/submit" className="btn btn-hot !py-2">Send a clip</Link>
+            <Link href="/earn" className="btn btn-ghost !py-2">How earning works</Link>
+          </div>
+        </>
+      ) : (
+        <>
+          <h2 className="money-h">Movements{demo && <span className="tail">demo figures</span>}</h2>
+          <ul className="roll">
+            {entries.map((e) => (
+              <li key={e.id}>
+                <span className="what">
+                  <b>{KIND[e.kind] ?? e.kind}</b>
+                  <small><When iso={e.created_at} />{e.note ? ` · ${e.note}` : ""}</small>
+                </span>
+                <span className={`amt ${e.amount_cents > 0 ? "in" : "out"}`}>
+                  {e.amount_cents > 0 ? "+" : "−"}{exactMoney(Math.abs(e.amount_cents))}
+                </span>
+              </li>
+            ))}
+          </ul>
+          <div className="roll-tear" aria-hidden />
+        </>
       )}
-      {demo && <p className="mt-3 text-xs text-haze">Demo figures. Real balances appear once you sign in.</p>}
     </section>
   );
 }

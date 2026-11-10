@@ -5,6 +5,7 @@ import { useUser } from "@/lib/useUser";
 import { DEMO_CLIPS, DEMO_CONTEST, exactMoney, money, platformName, poolNow, type Clip, type Contest, type Pool } from "@/lib/api";
 import { BRACKETS } from "@/lib/tiers";
 import { DemoNote } from "@/components/DemoNote";
+import NotFound from "@/app/not-found";
 
 type Tab = "overview" | "review" | "gamertags" | "contest" | "payouts" | "creators" | "wallets" | "people" | "claims" | "drops" | "staff";
 type Row = Record<string, unknown> & { id: string };
@@ -13,7 +14,9 @@ export default function Admin() {
   const { profile, loading } = useUser();
   const [tab, setTab] = useState<Tab>("overview");
   if (loading) return <div className="mx-auto max-w-xl px-4 py-24 text-haze font-semibold" role="status">Loading your account…</div>;
-  if (!profile?.is_admin) return <div className="mx-auto max-w-xl px-4 py-24"><h1 className="display text-6xl">Staff only</h1><p className="text-haze mt-3">Ask an admin to set <code>is_admin</code> on your profile.</p></div>;
+  // Anyone who isn't staff gets the ordinary not-found page. Saying "staff
+  // only" would confirm there's a console here to anyone who guessed the URL.
+  if (!profile?.is_admin) return <NotFound />;
   const tabs: [Tab, string][] = [["overview", "Overview"], ["review", "Clip queue"], ["gamertags", "Gamertags"], ["contest", "Weekly round"], ["people", "People"], ["payouts", "Prize payouts"], ["creators", "Creator payouts"], ["wallets", "Member money"], ["claims", "Claims"], ["drops", "Daily Drops"], ["staff", "Staff and settings"]];
   return (
     <div className="mx-auto max-w-7xl px-4 py-10">
