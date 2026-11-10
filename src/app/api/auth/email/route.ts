@@ -21,8 +21,17 @@ export async function POST(req: NextRequest) {
   const { user, email_data: e } = JSON.parse(body) as Hook;
   const base = process.env.NEXT_PUBLIC_SUPABASE_URL!;
   const name = user.user_metadata?.name || user.email.split("@")[0];
-  const link = (hash: string, type: string) =>
-    `${base}/auth/v1/verify?token=${encodeURIComponent(hash)}&type=${encodeURIComponent(type)}&redirect_to=${encodeURIComponent(e.redirect_to || e.site_url)}`;
+  // Links land on our own /auth/confirm page, which verifies the token_hash and
+  // signs the member in on whatever device they open the email on.
+  const site = (process.env.NEXT_PUBLIC_SITE_URL || "https://www.livefromleonida.com").replace(/\/$/, "");
+  const nextPath = (() => {
+    try { const u = new URL(e.redirect_to || ""); return u.origin === new URL(site).origin ? u.pathname.replace(/^\/auth\/confirm$/, "") + u.search : ""; } catch { return ""; }
+  })();
+  const link = (hash: string, type: string) => {
+    const nx = type === "recovery" ? "/login/reset" : (new URLSearchParams(nextPath.split("?")[1] || "").get("next") || (nextPath.split("?")[0] || "/dashboard"));
+    return `${site}/auth/confirm?token_hash=${encodeURIComponent(hash)}&type=${encodeURIComponent(type)}&next=${encodeURIComponent(nx)}`;
+  };
+  void base;
 
   const jobs: Array<{ to: string; kind: string; link?: string; token?: string }> = [];
   const t = e.email_action_type;

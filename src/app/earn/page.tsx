@@ -78,8 +78,18 @@ export default function Earn() {
           </div>
           <div className="panel-enamel text-center">
             <p className="k">Every download</p>
-            <p className="v">{usd(DOWNLOAD.creatorCents / 100)}</p>
-            <p className="s">straight to the creator</p>
+            <p className="v">{usd(DOWNLOAD.priceCents / 100)}</p>
+            <p className="s">
+              most of it straight to the creator
+              <span className="ast">
+                <button type="button" aria-label="What most of it means" aria-describedby="dl-ast">*</button>
+                <span role="tooltip" id="dl-ast" className="ast-note">
+                  The creator&apos;s share is the large majority of each download. It isn&apos;t a fixed
+                  figure: card fees and the platform&apos;s cut come off first, so it can land a little
+                  under that. The exact amount shows on every sale.
+                </span>
+              </span>
+            </p>
           </div>
         </div>
       </section>

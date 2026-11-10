@@ -23,6 +23,10 @@ export default function Terms() {
       <S h="Memberships and payments">
         <p>Plans renew automatically until you cancel in settings. Cancelling keeps your perks until the end of the period you paid for. Download credits reset each cycle and don&apos;t carry over. Paid downloads are final once the file is delivered.</p>
       </S>
+      <S h="What a download pays the creator">
+        <p>When someone downloads your clip, the large majority of what they paid goes to you and the rest keeps the site running. That share is not a fixed, guaranteed figure: card and processing fees come off each sale first, and those vary by payment method, currency and country, so what reaches your wallet can be a little under the headline share. Any figure we show before a sale is an indication, not a promise.</p>
+        <p>What is fixed is the record: every sale writes the exact amount into your wallet, down to the cent, and you can see it per clip on your dashboard and per sale in your receipts. If we ever change the split itself, we&apos;ll email you before it takes effect.</p>
+      </S>
       <S h="Wallet and payouts">
         <p>Money you win or earn goes to your wallet. Withdrawals are sent by staff to the payout handle you set. You&apos;re responsible for any taxes on what you receive.</p>
       </S>

@@ -49,12 +49,12 @@ export function PrizeLadder({ payers, variant = "slope" }: { payers: number; var
           const surface = i === liveIdx;
           const next = i === liveIdx + 1;
           const toGo = next && b.upTo !== Infinity ? BRACKETS[i - 1].upTo - payers + 1 : 0;
-          const width = 100 - (i / (BRACKETS.length - 1)) * 50;   // base 100%, capstone 50%
+          const width = 50 + (i / (BRACKETS.length - 1)) * 50;    // inverted: the biggest pool is the widest course, on top
           const apex = i === BRACKETS.length - 1;
 
           return (
             <li key={b.label}
-                className={`tank-step ${i >= BRACKETS.length - 3 ? "is-narrow" : ""} ${filled ? "is-filled" : ""} ${surface ? "is-surface" : ""} ${next ? "is-next" : ""} ${apex ? "is-apex" : ""}`}
+                className={`tank-step ${i < 3 ? "is-narrow" : ""} ${filled ? "is-filled" : ""} ${surface ? "is-surface" : ""} ${next ? "is-next" : ""} ${apex ? "is-apex" : ""}`}
                 style={{ width: `${width}%`, "--m1": METAL[i][0], "--m2": METAL[i][1], "--m3": METAL[i][2] } as React.CSSProperties}>
               <span className="tank-members">{b.label}</span>
 

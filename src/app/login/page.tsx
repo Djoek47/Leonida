@@ -6,11 +6,11 @@ import { plainAuthError } from "@/lib/authErrors";
 
 type Mode = "in" | "up" | "link" | "forgot";
 
-const TITLE: Record<Mode, string> = {
-  in: "Sign in",
-  up: "Make an account",
-  link: "Email me a link",
-  forgot: "Reset your password",
+const HEAD: Record<Mode, { kicker: string; title: string; blurb: string }> = {
+  in:     { kicker: "Leonida ID", title: "Sign in", blurb: "Welcome back. Your clips, votes and winnings are where you left them." },
+  up:     { kicker: "New resident", title: "Make an account", blurb: "One account to send clips, vote on the week, and collect what you win." },
+  link:   { kicker: "No password", title: "Email me a link", blurb: "We'll send a one-time link. Opening it signs you straight in." },
+  forgot: { kicker: "Lost password", title: "Set a new one", blurb: "We'll email you a link to pick a new password." },
 };
 
 export default function Login() {
@@ -23,13 +23,37 @@ export default function Login() {
   const [done, setDone] = useState<string | null>(null);
   const [err, setErr] = useState<string | null>(null);
   const [next, setNext] = useState("/dashboard");
+  const [waiting, setWaiting] = useState(false);
 
   useEffect(() => {
-    setNext(new URLSearchParams(location.search).get("next") ?? "/dashboard");
+    const q = new URLSearchParams(location.search);
+    setNext(q.get("next") ?? "/dashboard");
+    if (q.get("confirmed")) { setDone("Email confirmed. Sign in and you're away."); setMode("in"); }
+    if (q.get("email")) setEmail(q.get("email")!);
   }, []);
-  const redirectTo = typeof window !== "undefined" ? `${location.origin}${next}` : undefined;
+  const redirectTo = typeof window !== "undefined"
+    ? `${location.origin}/auth/confirm?next=${encodeURIComponent(next)}` : undefined;
 
-  function go(m: Mode) { setMode(m); setErr(null); setDone(null); }
+  // While this tab waits on a confirmation, it watches for the session the
+  // confirm page creates — in another tab, or anywhere in this browser — and
+  // carries the member through without a second sign-in.
+  useEffect(() => {
+    if (!waiting) return;
+    const c = sb();
+    if (!c) return;
+    let dead = false;
+    const land = () => { if (!dead) { dead = true; location.href = next; } };
+    const check = async () => { const { data } = await c.auth.getSession(); if (data.session) land(); };
+    const { data: sub } = c.auth.onAuthStateChange((_e, session) => { if (session) land(); });
+    const ch = typeof BroadcastChannel !== "undefined" ? new BroadcastChannel("lfl-auth") : null;
+    if (ch) ch.onmessage = (m) => { if (m.data?.type === "signed-in") check(); };
+    const id = setInterval(check, 2500);
+    const vis = () => { if (document.visibilityState === "visible") check(); };
+    document.addEventListener("visibilitychange", vis);
+    return () => { dead = true; clearInterval(id); sub.subscription.unsubscribe(); ch?.close(); document.removeEventListener("visibilitychange", vis); };
+  }, [waiting, next]);
+
+  function go(m: Mode) { setMode(m); setErr(null); setDone(null); setWaiting(false); }
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
@@ -50,18 +74,19 @@ export default function Login() {
         });
         if (error) throw error;
         if (data.session) { location.href = next; return; }
-        setDone(`Account made. We've sent a confirmation to ${email} — open it, then sign in.`);
-        setMode("in");
+        setDone(`Account made. Open the confirmation we sent to ${email} — leave this tab open and it signs you in by itself.`);
+        setMode("in"); setWaiting(true);
         return;
       }
       if (mode === "link") {
         const { error } = await c.auth.signInWithOtp({ email, options: { emailRedirectTo: redirectTo } });
         if (error) throw error;
-        setDone(`Sign-in link sent to ${email}. It's good for one hour.`);
+        setDone(`Link sent to ${email}. Leave this tab open — opening the link signs you in right here.`);
+        setWaiting(true);
         return;
       }
       const { error } = await c.auth.resetPasswordForEmail(email, {
-        redirectTo: `${location.origin}/login/reset`,
+        redirectTo: `${location.origin}/auth/confirm?next=/login/reset`,
       });
       if (error) throw error;
       setDone(`If there's an account on ${email}, a reset link is on its way.`);
@@ -70,126 +95,116 @@ export default function Login() {
     } finally { setBusy(false); }
   }
 
-  async function oauth(provider: "discord" | "twitch" | "google") {
-    const c = sb();
-    if (!c) return;
-    setErr(null);
-    const { error } = await c.auth.signInWithOAuth({ provider, options: { redirectTo } });
-    if (error) setErr(plainAuthError(error.message));
-  }
-
   const wantsPassword = mode === "in" || mode === "up";
+  const h = HEAD[mode];
 
   return (
-    <div className="relative min-h-[80vh] grid lg:grid-cols-2">
-      {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img src="/media/art/jason_lucia_motel_portrait.webp" alt=""
-           className="hidden lg:block h-full w-full object-cover" />
+    <div className="login-wrap">
+      <div className="login-art" aria-hidden>
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img src="/media/art/jason_lucia_motel_portrait.webp" alt="" />
+        <div className="login-art-ink" />
+        <figcaption className="login-art-words">
+          <p className="login-art-k">In clips we trust</p>
+          <p className="login-art-t">Film the mayhem.<br />The state votes.<br /><b>You get paid.</b></p>
+        </figcaption>
+      </div>
 
-      <div className="px-4 py-14 sm:px-10 lg:px-16 flex flex-col justify-center [&>*]:min-w-0">
-        <div className="w-full max-w-md">
-          <p className="inline-flex rounded-full bg-mango px-3 py-1 text-xs font-black text-[#1c1710]">
-            FREE TO JOIN · FREE TO WIN
-          </p>
-          <h1 className="display mt-4 text-[clamp(2.4rem,7vw,4rem)] leading-[0.95]">{TITLE[mode]}</h1>
-          <p className="text-haze mt-3">
-            {mode === "up" ? "One account to send clips, vote and collect winnings."
-              : mode === "forgot" ? "We'll email you a link to set a new one."
-              : mode === "link" ? "No password needed — we'll email you a one-time link."
-              : "Welcome back."}
-          </p>
+      <div className="login-col">
+        <div className="set-card login-panel">
+          <h2>{h.kicker}</h2>
 
-          {!isLive && (
-            <p className="mt-5 rounded-lg border-2 border-line bg-ink px-4 py-2.5 text-sm font-semibold">
-              Demo build: accounts aren&apos;t connected here.
-            </p>
-          )}
+          <div className="px-1">
+            <h1 className="display text-[clamp(2.1rem,6vw,3.2rem)] leading-[0.95]">{h.title}</h1>
+            <p className="text-haze mt-2.5">{h.blurb}</p>
 
-          <form onSubmit={submit} className="mt-7 grid gap-4">
-            {mode === "up" && (
-              <label className="grid gap-1.5">
-                <span className="text-sm font-bold">Display name</span>
-                <input value={name} onChange={(e) => setName(e.target.value)} autoComplete="nickname"
-                  maxLength={40} placeholder="What people see on your clips" className="field" />
-              </label>
-            )}
-
-            <label className="grid gap-1.5">
-              <span className="text-sm font-bold">Email</span>
-              <input value={email} onChange={(e) => setEmail(e.target.value)} type="email" required
-                autoComplete="email" inputMode="email" placeholder="you@example.com" className="field" />
-            </label>
-
-            {wantsPassword && (
-              <label className="grid gap-1.5">
-                <span className="flex items-baseline justify-between gap-3">
-                  <span className="text-sm font-bold">Password</span>
-                  {mode === "in" && (
-                    <button type="button" onClick={() => go("forgot")}
-                      className="text-xs font-bold text-gulf underline underline-offset-4">
-                      Forgotten it?
-                    </button>
-                  )}
-                </span>
-                <span className="relative block">
-                  <input value={password} onChange={(e) => setPassword(e.target.value)}
-                    type={show ? "text" : "password"} required minLength={8}
-                    autoComplete={mode === "up" ? "new-password" : "current-password"}
-                    placeholder={mode === "up" ? "At least 8 characters" : ""}
-                    className="field pr-16" />
-                  <button type="button" onClick={() => setShow(!show)}
-                    className="absolute right-2 top-1/2 -translate-y-1/2 rounded px-2 py-1 text-xs font-bold text-haze hover:text-foam"
-                    aria-label={show ? "Hide password" : "Show password"}>
-                    {show ? "Hide" : "Show"}
-                  </button>
-                </span>
-              </label>
-            )}
-
-            <button disabled={busy} className="btn btn-hot justify-center disabled:opacity-70">
-              {busy ? "One moment…"
-                : mode === "up" ? "Create my account"
-                : mode === "in" ? "Sign in"
-                : mode === "link" ? "Send me a link"
-                : "Send the reset link"}
-            </button>
-          </form>
-
-          <div aria-live="polite">
-            {done && <p className="mt-4 rounded-lg border-2 border-gulf bg-gulf/10 px-4 py-2.5 font-semibold text-gulf">{done}</p>}
-            {err && <p role="alert" className="mt-4 rounded-lg border-2 border-flamingo bg-flamingo/10 px-4 py-2.5 font-semibold text-flamingo">{err}</p>}
-          </div>
-
-          <p className="mt-6 text-sm">
-            {mode === "in" && <>New here? <button onClick={() => go("up")} className="font-bold text-gulf underline underline-offset-4">Make an account</button></>}
-            {mode === "up" && <>Already have one? <button onClick={() => go("in")} className="font-bold text-gulf underline underline-offset-4">Sign in</button></>}
-            {(mode === "link" || mode === "forgot") && <button onClick={() => go("in")} className="font-bold text-gulf underline underline-offset-4">← Back to sign in</button>}
-          </p>
-
-          {mode !== "forgot" && (
-            <>
-              <p className="my-6 flex items-center gap-3 text-xs font-bold uppercase tracking-widest text-haze">
-                <span className="h-px flex-1 bg-line" />or<span className="h-px flex-1 bg-line" />
+            {!isLive && (
+              <p className="mt-5 rounded-lg border-2 border-line bg-ink px-4 py-2.5 text-sm font-semibold">
+                Demo build: accounts aren&apos;t connected here.
               </p>
-              <div className="grid gap-2.5">
-                {mode !== "link" && (
-                  <button onClick={() => go("link")} className="btn btn-ghost justify-center">
-                    Email me a sign-in link
-                  </button>
-                )}
-                <button onClick={() => oauth("discord")} className="btn justify-center bg-[#5865F2] text-white hover:brightness-110">Continue with Discord</button>
-                <button onClick={() => oauth("twitch")} className="btn justify-center bg-[#9146FF] text-white hover:brightness-110">Continue with Twitch</button>
-                <button onClick={() => oauth("google")} className="btn btn-ghost justify-center">Continue with Google</button>
-              </div>
-            </>
-          )}
+            )}
 
-          <p className="mt-8 text-xs text-haze">
-            By making an account you agree to the{" "}
-            <Link href="/rules" className="underline underline-offset-4">contest rules</Link>.
-            You must be 18 or over.
-          </p>
+            <form onSubmit={submit} className="mt-6 grid gap-4">
+              {mode === "up" && (
+                <label className="grid gap-1.5">
+                  <span className="text-sm font-bold">Display name</span>
+                  <input value={name} onChange={(e) => setName(e.target.value)} autoComplete="nickname"
+                    maxLength={40} placeholder="What people see on your clips" className="field" />
+                </label>
+              )}
+
+              <label className="grid gap-1.5">
+                <span className="text-sm font-bold">Email</span>
+                <input value={email} onChange={(e) => setEmail(e.target.value)} type="email" required
+                  autoComplete="email" inputMode="email" placeholder="you@example.com" className="field" />
+              </label>
+
+              {wantsPassword && (
+                <label className="grid gap-1.5">
+                  <span className="flex items-baseline justify-between gap-3">
+                    <span className="text-sm font-bold">Password</span>
+                    {mode === "in" && (
+                      <button type="button" onClick={() => go("forgot")}
+                        className="text-xs font-bold text-gulf underline underline-offset-4">
+                        Forgotten it?
+                      </button>
+                    )}
+                  </span>
+                  <span className="relative block">
+                    <input value={password} onChange={(e) => setPassword(e.target.value)}
+                      type={show ? "text" : "password"} required minLength={8}
+                      autoComplete={mode === "up" ? "new-password" : "current-password"}
+                      placeholder={mode === "up" ? "At least 8 characters" : ""}
+                      className="field pr-16" />
+                    <button type="button" onClick={() => setShow(!show)}
+                      className="absolute right-2 top-1/2 -translate-y-1/2 rounded px-2 py-1 text-xs font-bold text-haze hover:text-foam"
+                      aria-label={show ? "Hide password" : "Show password"}>
+                      {show ? "Hide" : "Show"}
+                    </button>
+                  </span>
+                </label>
+              )}
+
+              <button disabled={busy} className="btn btn-hot justify-center disabled:opacity-70">
+                {busy ? "One moment…"
+                  : mode === "up" ? "Create my account"
+                  : mode === "in" ? "Sign in"
+                  : mode === "link" ? "Send me a link"
+                  : "Send the reset link"}
+              </button>
+            </form>
+
+            <div aria-live="polite">
+              {done && (
+                <div className="login-note">
+                  <p className="font-semibold">{done}</p>
+                  {waiting && <p className="login-wait"><i /><i /><i /> Waiting on that link…</p>}
+                </div>
+              )}
+              {err && <p role="alert" className="mt-4 rounded-lg border-2 border-flamingo bg-flamingo/10 px-4 py-2.5 font-semibold text-flamingo">{err}</p>}
+            </div>
+
+            {mode !== "forgot" && (
+              <>
+                <p className="login-or"><span className="h-px flex-1 bg-line" />or<span className="h-px flex-1 bg-line" /></p>
+                {mode === "link"
+                  ? <button onClick={() => go("in")} className="btn btn-ghost w-full justify-center">Use my password instead</button>
+                  : <button onClick={() => go("link")} className="btn btn-ghost w-full justify-center">Email me a sign-in link</button>}
+              </>
+            )}
+
+            <p className="mt-6 text-sm">
+              {mode === "in" && <>New here? <button onClick={() => go("up")} className="font-bold text-gulf underline underline-offset-4">Make an account</button></>}
+              {mode === "up" && <>Already have one? <button onClick={() => go("in")} className="font-bold text-gulf underline underline-offset-4">Sign in</button></>}
+              {(mode === "link" || mode === "forgot") && <button onClick={() => go("in")} className="font-bold text-gulf underline underline-offset-4">← Back to sign in</button>}
+            </p>
+          </div>
         </div>
+
+        <p className="login-fine">
+          Free to join, free to win. You must be 18 or over, and the{" "}
+          <Link href="/rules" className="underline underline-offset-4">contest rules</Link> apply.
+        </p>
       </div>
     </div>
   );

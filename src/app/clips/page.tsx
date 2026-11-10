@@ -153,13 +153,13 @@ export default function ClipsPage() {
       if (fresh) setCredits((n) => Math.max(0, n - 1));
       const j = await fetchFile(c.id);
       if (!deliver(j)) { setMsg(j.error ?? "Could not start the download."); return; }
-      setMsg(fresh && c.owner_id !== user.id ? `Downloading. ${exactMoney(DOWNLOAD.creatorCents)} went to ${c.gamertag}.` : "Downloading.");
+      setMsg(fresh && c.owner_id !== user.id ? `Downloading. ${c.gamertag} gets their share — it lands in their wallet.` : "Downloading.");
       return;
     }
     const j = await fetchFile(c.id);
     if (j.checkout) { location.href = j.checkout; return; }
     if (!deliver(j)) { setMsg(j.error ?? "Could not start the download."); return; }
-    setMsg(c.owner_id !== user.id ? `Downloading. ${exactMoney(DOWNLOAD.creatorCents)} went to ${c.gamertag}.` : "Downloading.");
+    setMsg(c.owner_id !== user.id ? `Downloading. ${c.gamertag} gets their share — it lands in their wallet.` : "Downloading.");
   }, [user, paying, credits, demo, fetchFile]);
 
   // Back from Stripe: the webhook records the sale a moment later, so wait for it, then hand over the file.
@@ -429,7 +429,7 @@ export default function ClipsPage() {
             <p className="mt-3 text-haze">
               Free accounts stream everything. Members get free download credits every month, and once
               those run out a download is {exactMoney(DOWNLOAD.priceCents)} —{" "}
-              <strong className="text-foam">{exactMoney(DOWNLOAD.creatorCents)} of which goes to {ask.gamertag}</strong>,
+              <strong className="text-foam">most of which goes to {ask.gamertag}</strong>,
               the player who made the clip.
             </p>
             <p className="mt-2 text-sm text-haze">Credit the player when you post it. On the site, every clip plays with their tag and our seal on it.</p>

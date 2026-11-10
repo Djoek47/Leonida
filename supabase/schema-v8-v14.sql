@@ -103,3 +103,4 @@ drop policy if exists "winnings request" on public.winnings;
 --    cash-outs mail payout_sent instead of withdrawal_requested. See migrations
 --    v17_starter_bonus_and_stripe_payouts, v18_gamertag_check_request, v19_withdraw_for_server.
 -- v20: my_clip_sales() — per-clip downloads and earnings for the dashboard sales board (excludes self-downloads).
+-- v21: daily clip limits Free 2 / Street 4 / Hustler 6 / Kingpin 8 (update tiers set daily_submissions …).

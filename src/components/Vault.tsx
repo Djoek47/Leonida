@@ -1,4 +1,5 @@
 "use client";
+import { BRACKETS as LADDER } from "@/lib/tiers";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { BRACKETS, bracketFor } from "@/lib/tiers";
 
@@ -93,7 +94,7 @@ export function Vault({ payers, pool, compact = false, cycle = false }:
         const next = n === null ? liveIdx + 1 : n + 1;
         return next >= BRACKETS.length ? null : next;   // null = back to live
       });
-    }, 2600);
+    }, 1800);
     return () => clearInterval(id);
   }, [cycle, held, liveIdx]);
 
@@ -111,7 +112,11 @@ function VaultBody({ payers, pool, compact, previewing, onHold }:
     onHold: (v: boolean) => void }) {
   const bracket = bracketFor(payers);
   const strap = strapFor(pool);
-  const straps = Math.max(1, Math.min(MAX, Math.round(pool / strap)));
+  // Height tracks the pool against the top prize, so a bigger pool always
+  // means a taller pile: never fewer straps as the money goes up.
+  const top = Math.max(...LADDER.map((b) => b.pool));
+  const straps = Math.max(1, Math.min(MAX, Math.ceil(MAX * Math.sqrt(Math.max(0, pool) / top))));
+  void strap;
 
   const idx = BRACKETS.indexOf(bracket);
   const next = BRACKETS[idx + 1];
@@ -143,7 +148,7 @@ function VaultBody({ payers, pool, compact, previewing, onHold }:
       </div></div>
 
       <p className="sr-only">
-        This week&apos;s prize pool is {money(pool)}: {straps} strap{straps === 1 ? "" : "s"} of {money(strap)}.
+        This week&apos;s prize pool is {money(pool)}.
         {next && ` ${toNext} more paying members takes it to ${money(next.pool)}.`}
       </p>
 
@@ -158,7 +163,7 @@ function VaultBody({ payers, pool, compact, previewing, onHold }:
           {Array.from({ length: 11 }, (_, i) => <i key={i} style={{ left: `${i * 10}%` }} />)}
         </div>
         <p className="led-tag vault-next flex flex-wrap justify-between gap-x-4">
-          <span>{straps} &times; {money(strap)} STRAP{straps === 1 ? "" : "S"}</span>
+          <span>{Math.round((straps / MAX) * 100)}% TO THE TOP PRIZE</span>
           <span>{next ? <>+{toNext.toLocaleString("en-US")} MEMBERS &rarr; {money(next.pool)}</> : <>TOP OF THE LADDER</>}</span>
         </p>
       </div>

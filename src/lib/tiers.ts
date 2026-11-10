@@ -36,11 +36,11 @@ export const TIERS: Tier[] = [
   {
     id: "street", label: "Street", rank: 1,
     monthlyCents: 800, annualCents: 7500, votes: 2, creditsPerMonth: 3,
-    dailySubmissions: 10, streakFreezes: 0, adFree: true,
+    dailySubmissions: 4, streakFreezes: 0, adFree: true,
     pitch: "For the regular. More shots on goal, more say in who wins.",
     perks: [
       "2 votes",
-      "10 clips a day",
+      "4 clips a day",
       "3 clip downloads a month",
       "See every vote total and the live ranking",
       "No ads",
@@ -50,11 +50,11 @@ export const TIERS: Tier[] = [
   {
     id: "hustler", label: "Hustler", rank: 2,
     monthlyCents: 2000, annualCents: 19200, votes: 4, creditsPerMonth: 8,
-    dailySubmissions: 25, streakFreezes: 1, adFree: true,
+    dailySubmissions: 6, streakFreezes: 1, adFree: true,
     pitch: "The working creator's plan. Know what's about to trend.",
     perks: [
       "4 votes",
-      "25 clips a day",
+      "6 clips a day",
       "8 clip downloads a month",
       "Leonida Economist: live trends and money-making methods",
       "Weekly Meta Brief",
@@ -65,11 +65,11 @@ export const TIERS: Tier[] = [
   {
     id: "kingpin", label: "Kingpin", rank: 3,
     monthlyCents: 2500, annualCents: 24000, votes: 6, creditsPerMonth: 20,
-    dailySubmissions: 100, streakFreezes: 3, adFree: true,
+    dailySubmissions: 8, streakFreezes: 3, adFree: true,
     pitch: "Top of the food chain. The heaviest say on the site.",
     perks: [
       "6 votes",
-      "100 clips a day",
+      "8 clips a day",
       "20 clip downloads a month",
       "Clip Performance Lab: deep analytics on every clip you post",
       "3 streak freezes a month",

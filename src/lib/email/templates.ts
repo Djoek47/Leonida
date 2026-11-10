@@ -19,9 +19,9 @@ const s = (v: unknown, fallback = "") => (v === null || v === undefined || v ===
 const tierName = (t: unknown) => ({ free: "Free", street: "Street", hustler: "Hustler", kingpin: "Kingpin" } as Record<string, string>)[s(t)] ?? s(t, "your plan");
 const RANK: Record<string, number> = { free: 0, street: 1, hustler: 2, kingpin: 3 };
 const PERKS: Record<string, string[]> = {
-  street: ["2 votes in every contest", "10 clips a day", "3 clip downloads a month", "Every vote total and the live ranking", "No ads"],
-  hustler: ["4 votes in every contest", "25 clips a day", "8 clip downloads a month", "Leonida Economist and the weekly Meta Brief", "1 streak freeze a month"],
-  kingpin: ["6 votes in every contest", "100 clips a day", "20 clip downloads a month", "Clip Performance Lab on every clip", "3 streak freezes a month and priority review"],
+  street: ["2 votes in every contest", "4 clips a day", "3 clip downloads a month", "Every vote total and the live ranking", "No ads"],
+  hustler: ["4 votes in every contest", "6 clips a day", "8 clip downloads a month", "Leonida Economist and the weekly Meta Brief", "1 streak freeze a month"],
+  kingpin: ["6 votes in every contest", "8 clips a day", "20 clip downloads a month", "Clip Performance Lab on every clip", "3 streak freezes a month and priority review"],
 };
 const PLACE = ["", "1st", "2nd", "3rd"];
 const PERIOD: Record<string, string> = { week: "Clip of the Week", month: "Clip of the Month", year: "Clip of the Year" };
@@ -150,6 +150,18 @@ export function eventEmail(kind: string, d: D, name: string): Email | null {
         button("See your badges", `${SITE}/dashboard`, L),
       ], [`${name}, badge unlocked: ${s(d.label)}. ${s(d.blurb)}`, `${SITE}/dashboard`]);
 
+    case "gamertag_approved":
+      return sign("Your gamertag is verified", "Proof checked and approved.", [
+        heading("Verified.", L),
+        para(`${hi(name)} your proof checked out — your gamertag is confirmed as yours. Prize money for clips under that tag can now be paid to you.`, L),
+        button("Open your dashboard", `${SITE}/dashboard`, L),
+      ], [`${name}, your gamertag is verified.`, `${SITE}/dashboard`]);
+    case "gamertag_rejected":
+      return sign("We couldn't verify your gamertag", "One more try needed.", [
+        heading("Not quite.", L),
+        para(`${hi(name)} we couldn't verify your gamertag from what you sent.${d.note ? ` The reviewer said: &ldquo;${esc(String(d.note))}&rdquo;.` : ""} Try again from your dashboard — a clearer photo, or the profile-code route, usually settles it.`, L),
+        button("Try again", `${SITE}/dashboard`, L),
+      ], [`${name}, we couldn't verify your gamertag${d.note ? ` — ${s(d.note)}` : ""}. Try again: ${SITE}/dashboard`]);
     case "gamertag_verified":
       return sign("Your gamertag is verified", `${s(d.gamertag)} is confirmed as yours.`, [
         heading("Verified.", L),

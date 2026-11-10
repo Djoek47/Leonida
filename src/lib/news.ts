@@ -16,6 +16,15 @@ export const NEWS_UPDATED = "2026-11-09";
 
 export const NEWS: NewsItem[] = ([
   {
+    date: "2026-11-09",
+    title: "West Coast Customs builds six GTA VI cars for real",
+    body: "Rockstar had the LA shop West Coast Customs build six in-game cars one-to-one and put them on Miami streets: a Grotti Cheetah in Vice City fade, an Albany Buccaneer lowrider with candy green flake and a zebra interior, a candy orange Progen Emerus, a camo Coquette with pink calipers, an Albany Manana donk on gold rims, and a Pegassi Tempesta in Vice Beach police livery with light bar and underglow. It's the clearest look yet at how deep the mod shop goes: candy paint, air ride, rims, calipers, interiors and trim.",
+    source: "Rockstar",
+    links: [
+      { label: "GamesRadar on the Miami builds", href: "https://www.gamesradar.com/games/grand-theft-auto/rockstars-figured-out-the-perfect-gta-6-advertisement-a-bunch-of-supercars-from-vice-city-speeding-along-the-streets-of-miami/" },
+    ],
+  },
+  {
     date: "2026-11-08",
     title: "Clear some space: reports put the install past 200 GB",
     body: "Retail listings and press reports put the console download at roughly 200 to 230 GB, and the boxed version is a download code rather than a full disc. Rockstar hasn't published an official size yet, so treat the exact number as reported, not confirmed.",

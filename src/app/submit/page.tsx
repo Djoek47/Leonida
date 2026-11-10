@@ -135,7 +135,7 @@ function SendForm({ userId, cap, usedToday, gamertag, platform }: { userId: stri
   if (state === "sent") return (
     <div className="mt-10 rounded-lg border border-gulf border-2 bg-ink p-6">
       <p className="display text-4xl">Clip received</p>
-      <p className="mt-2 text-haze">Staff review every clip before it goes in the weekly video. You&apos;ll see its status and vote count on your dashboard.</p>
+      <p className="mt-2 text-haze">It&apos;s in the review queue now. Staff watch every clip before it goes live — usually within a day, and you&apos;ll get an email either way. Until then it shows as <b className="text-foam">under review</b> on your dashboard.</p>
       <div className="mt-5 flex gap-3"><Link href="/dashboard" className="btn btn-hot">Open my dashboard</Link><button className="btn btn-ghost" onClick={() => setState("idle")}>Send another</button></div>
     </div>
   );

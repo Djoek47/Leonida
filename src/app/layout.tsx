@@ -65,13 +65,13 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             </Link>
             <nav className="hidden lg:flex gap-5 text-sm font-semibold text-haze">
               {nav.map((n) => (
-                <Link key={n.href} href={n.href} className="hover:text-foam">{n.label}</Link>
+                <Link key={n.href} href={n.href} className="sky-link">{n.label}</Link>
               ))}
             </nav>
             <div className="ml-auto flex items-center gap-2"><ThemeToggle /><NavAuth /></div>
           </div>
           <nav className="lg:hidden flex gap-4 overflow-x-auto px-4 pb-2 text-sm font-semibold text-haze">
-            {nav.map((n) => <Link key={n.href} href={n.href} className="shrink-0">{n.label}</Link>)}
+            {nav.map((n) => <Link key={n.href} href={n.href} className="shrink-0 sky-link">{n.label}</Link>)}
           </nav>
           <Ticker />
         </header>
@@ -81,7 +81,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           <div className="mx-auto max-w-7xl px-4 py-12 grid gap-8 md:grid-cols-[2fr_1fr_1fr_1fr] text-sm">
             <div>
               <div className="flex items-center gap-3">{/* eslint-disable-next-line @next/next/no-img-element */}<img src="/brand/live-from-leonida-avatar-180.png" alt="Live From Leonida logo" className="size-16 rounded-full" /><p className="sign-sm !text-lg !px-4 !py-2.5">Live From Leonida</p></div>
-              <p className="mt-3 max-w-md">Free to enter. Votes can&apos;t be bought. Winners are paid by PayPal, Venmo, Cash App, Interac or Wise after we confirm the gamertag is theirs.</p>
+              <p className="mt-3 max-w-md">Free to enter. Winners are paid by PayPal, Venmo, Cash App, Interac or Wise after we confirm the gamertag is theirs.</p>
               <p className="mt-4 max-w-md text-xs opacity-70">Live From Leonida is a fan-run community and is not affiliated with, endorsed or sponsored by Rockstar Games or Take-Two Interactive. Grand Theft Auto, GTA VI and related logos and artwork are trademarks and copyright of Take-Two Interactive Software, Inc.</p>
             </div>
             <div className="flex flex-col gap-2">
@@ -90,7 +90,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
               <Link href="/credits">Credits</Link>
               <Link href="/terms">Terms</Link>
               <Link href="/privacy">Privacy</Link>
-              <Link href="/admin">Staff</Link>
+              <Link href="/console">Console</Link>
             </div>
             <div className="flex flex-col gap-2">
               {socials.map((x) => <a key={x.id} href={x.href} target="_blank" rel="noreferrer" className="flex items-center gap-2"><PlatformIcon name={x.id} />{x.label}</a>)}

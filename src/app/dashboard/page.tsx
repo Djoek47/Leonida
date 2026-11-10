@@ -13,7 +13,7 @@ import { GamertagDialog } from "@/components/GamertagDialog";
 import { TierMedal } from "@/components/TierMedal";
 
 const clipState: Record<string, [string, string]> = {
-  pending: ["In review", "wait"], approved: ["In the vote", "live"], featured: ["Featured", "gold"], rejected: ["Not selected", "off"],
+  pending: ["Under review", "wait"], approved: ["In the vote", "live"], featured: ["Featured", "gold"], rejected: ["Not selected", "off"],
 };
 type Sale = { clip_id: string; downloads: number; earned_cents: number; last_sale: string | null };
 
@@ -108,14 +108,14 @@ export default function Dashboard() {
         <ol className="deal-lanes">
           <li><span className="deal-n">1</span><b>Send it</b><small>Up to {account?.daily_submissions ?? 2} a day. Staff approve it into the weekly vote.</small></li>
           <li><span className="deal-n">2</span><b>Win it</b><small>Top three each week, month and year split the prize pool.</small></li>
-          <li><span className="deal-n">3</span><b>Sell it</b><small>Every member download pays you {exactMoney(DOWNLOAD.creatorCents)}, straight into your wallet.</small></li>
+          <li><span className="deal-n">3</span><b>Sell it</b><small>Every member download pays you most of the price, straight into your wallet.</small></li>
           <li><span className="deal-n">4</span><b>Cash out</b><small>To your card or bank through Stripe, or by PayPal & co.</small></li>
         </ol>
         <p className="deal-foot">
           <b>Downloading other players&apos; clips:</b>{" "}
           {paying ? <>you have {credits} free download{credits === 1 ? "" : "s"} this month, then {exactMoney(DOWNLOAD.priceCents)} each.</>
             : <>members get free downloads every month, then {exactMoney(DOWNLOAD.priceCents)} each. Free accounts stream everything.</>}{" "}
-          Either way, {exactMoney(DOWNLOAD.creatorCents)} goes to the player. <Link href="/clips" className="underline">Browse clips</Link>
+          Either way, the player who made the clip takes most of it. <Link href="/clips" className="underline">Browse clips</Link>
         </p>
       </section>
 
@@ -125,6 +125,14 @@ export default function Dashboard() {
             <h2 className="display text-3xl">Your clips</h2>
             <Link href="/submit" className="btn btn-hot !py-2 !px-4 text-sm">Send a clip</Link>
           </div>
+          {clips.some((c) => c.status === "pending") && (
+            <p className="review-note">
+              <i aria-hidden /> {clips.filter((c) => c.status === "pending").length === 1
+                ? "One of your clips is in the review queue."
+                : `${clips.filter((c) => c.status === "pending").length} of your clips are in the review queue.`}{" "}
+              Staff watch every clip before it goes live — usually within a day. You&apos;ll get an email either way.
+            </p>
+          )}
           {clips.length === 0 ? (
             <p className="mt-4 text-haze">Nothing yet. Your first clip starts the streak, the badges and the sales.</p>
           ) : (

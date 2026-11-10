@@ -66,17 +66,29 @@ export function skyAt(hour: number) {
 
 export function SkyBar() {
   useEffect(() => {
+    let lastInk = "";
     const paint = () => {
       const now = new Date();
       const { a, b, c, ink, scrim } = skyAt(now.getHours() + now.getMinutes() / 60);
-      const r = document.documentElement.style;
+      const el = document.documentElement;
+      const r = el.style;
+      // The ink flips in one step while the sky eases over eight seconds. If we
+      // let them run apart, there's a window where pale ink sits on a sky that
+      // hasn't darkened yet and the nav disappears. So on a flip the sky jumps
+      // with it: the two are never out of step, whatever the hour or theme.
+      const flipped = lastInk !== "" && ink !== lastInk;
+      if (flipped) { el.classList.remove("sky-ready"); void el.offsetHeight; }
       r.setProperty("--sky-a", a); r.setProperty("--sky-b", b);
       r.setProperty("--sky-c", c); r.setProperty("--sky-ink", ink);
       r.setProperty("--sky-scrim", scrim);
+      if (flipped) requestAnimationFrame(() => requestAnimationFrame(() => el.classList.add("sky-ready")));
+      lastInk = ink;
     };
     paint();
-    // The first paint lands instantly; only later changes of hour ease across.
-    requestAnimationFrame(() => document.documentElement.classList.add("sky-ready"));
+    // The first values must land before easing is switched on, or the bar
+    // animates up from the stylesheet's daylight default while the ink is
+    // already set for night. Two frames guarantees they're committed.
+    requestAnimationFrame(() => requestAnimationFrame(() => document.documentElement.classList.add("sky-ready")));
     const id = setInterval(paint, 60_000);          // keep up with the clock
     const wake = () => !document.hidden && paint();  // and catch up after a sleep
     document.addEventListener("visibilitychange", wake);
