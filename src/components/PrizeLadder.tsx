@@ -28,14 +28,14 @@ const usd = (n: number) =>
  *  Courses step in evenly so the silhouette is a true pyramid; the pool
  *  figures carry the real proportions.
  */
-export function PrizeLadder({ payers, variant = "slope" }: { payers: number; variant?: "slope" | "steps" }) {
+export function PrizeLadder({ payers, variant = "slope", onPick }: { payers: number; variant?: "slope" | "steps"; onPick?: (i: number | null) => void }) {
   const live = bracketFor(payers);
   const liveIdx = BRACKETS.indexOf(live);
   const top = BRACKETS[BRACKETS.length - 1].pool;
   const steps = [...BRACKETS].reverse();          // biggest at the top
 
   return (
-    <div className={`tank tank-v-${variant}`} role="img"
+    <div className={`tank tank-v-${variant}${onPick ? " is-pickable" : ""}`} role={onPick ? "group" : "img"} onPointerLeave={() => onPick?.(null)}
          aria-label={`Prize pool ladder. Currently ${live.label} paying members, ${usd(live.pool)} a week.`}>
       <p className="tank-cap">
         <span className="tank-cap-k">THE CAPSTONE</span>
@@ -53,7 +53,8 @@ export function PrizeLadder({ payers, variant = "slope" }: { payers: number; var
           const apex = i === BRACKETS.length - 1;
 
           return (
-            <li key={b.label}
+            <li key={b.label} tabIndex={onPick ? 0 : undefined}
+                onPointerEnter={() => onPick?.(i)} onFocus={() => onPick?.(i)} onBlur={() => onPick?.(null)} onClick={() => onPick?.(i)}
                 className={`tank-step ${i < 3 ? "is-narrow" : ""} ${filled ? "is-filled" : ""} ${surface ? "is-surface" : ""} ${next ? "is-next" : ""} ${apex ? "is-apex" : ""}`}
                 style={{ width: `${width}%`, "--m1": METAL[i][0], "--m2": METAL[i][1], "--m3": METAL[i][2] } as React.CSSProperties}>
               <span className="tank-members">{b.label}</span>

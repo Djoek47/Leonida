@@ -21,7 +21,7 @@ const RANK: Record<string, number> = { free: 0, street: 1, hustler: 2, kingpin: 
 const PERKS: Record<string, string[]> = {
   street: ["Upload up to 4 clips a day.", "3 clip downloads a month", "No ads", "Members chat access."],
   hustler: ["Upload up to 6 clips a day.", "8 clip downloads a month", "Leonida Economist and the weekly Meta Brief", "Feature 1 clip."],
-  kingpin: ["8 clips a day", "20 clip downloads a month", "Deep Analytics and 3 featured per month."],
+  kingpin: ["Upload up to 8 clips a day.", "20 clip downloads a month", "Feature 3 clips a month, 24 hours each", "Clip Performance Lab", "Kingpin flair on your profile and clips"],
 };
 const PLACE = ["", "1st", "2nd", "3rd"];
 const PERIOD: Record<string, string> = { week: "Clip of the Week", month: "Clip of the Month", year: "Clip of the Year" };

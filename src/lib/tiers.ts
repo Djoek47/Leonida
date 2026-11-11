@@ -63,9 +63,11 @@ export const TIERS: Tier[] = [
     dailySubmissions: 8, adFree: true,
     pitch: "Top of the food chain.",
     perks: [
-      "8 clips a day",
+      "Upload up to 8 clips a day.",
       "20 clip downloads a month",
-      "Deep Analytics and 3 featured per month.",
+      "Feature 3 clips a month, 24 hours each",
+      "Clip Performance Lab: views, watch-through and downloads, clip by clip",
+      "Kingpin flair on your profile and clips",
       "Everything in Hustler",
     ],
   },

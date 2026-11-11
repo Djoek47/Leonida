@@ -15,6 +15,7 @@ const price = (cents: number) => `$${(cents / 100).toLocaleString("en-US", { max
 export default function Pricing() {
   const { user, profile, paying } = useUser();
   const [annual, setAnnual] = useState(false);
+  const [aim, setAim] = useState<number | null>(null);
   const [pool, setPool] = useState<Pool | null>(null);
   const [busy, setBusy] = useState<string | null>(null);
   const [err, setErr] = useState("");
@@ -175,7 +176,7 @@ export default function Pricing() {
             The weekly pool grows with the number of paying members. Whatever it is when a round
             opens is locked in, so it can&apos;t shrink under you.
           </p>
-          <div className="mt-6"><PrizeLadder payers={pool?.paying_users ?? 0} /></div>
+          <div className="mt-6"><PrizeLadder payers={pool?.paying_users ?? 0} onPick={setAim} /></div>
           <p className="mt-4 text-sm">
             <Link href="/earn" className="text-gulf font-bold underline underline-offset-4">
               See all three ways to earn →
@@ -185,7 +186,7 @@ export default function Pricing() {
 
         <div className="grid gap-5 content-start">
           <div>
-            <Vault payers={pool?.paying_users ?? 0} pool={Math.round((pool?.weekly_cents ?? 2500) / 100)} />
+            <Vault payers={pool?.paying_users ?? 0} pool={Math.round((pool?.weekly_cents ?? 2500) / 100)} aim={aim} />
             <p className="mt-3 text-sm text-haze">
               Each strap is a real bundle — the straps get fatter as the site grows. Clip of the Month pays {pool ? money(pool.monthly_cents) : "—"}.
             </p>

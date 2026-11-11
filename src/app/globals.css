@@ -263,7 +263,8 @@ html { transition: background-color .4s; }
 .vault-strap {
   width: 76px; height: 33px; margin: -16.5px 0 0 -38px;
   transform: rotateX(52deg) rotateZ(45deg) translate3d(var(--x), var(--y), var(--z)) rotate(var(--spin));
-  animation: vault-drop .5s cubic-bezier(.3, 1.4, .5, 1) backwards;
+  animation: vault-drop .78s cubic-bezier(.22, .9, .3, 1) backwards;
+  transition: opacity .5s ease, filter .5s ease;
 }
 .vault-strap > * { position: absolute; display: block; transform-origin: 0 0; }
 
@@ -327,20 +328,22 @@ html { transition: background-color .4s; }
 /* Dropped, not teleported: it falls, overshoots a little into the pile and
    settles, with the whole strap tilting on the way down. */
 @keyframes vault-drop {
-  0% {
-    opacity: 0;
-    transform: rotateX(52deg) rotateZ(45deg)
-               translate3d(var(--x), var(--y), calc(var(--z) + 260px))
-               rotate(calc(var(--spin) * 4));
-  }
-  40% { opacity: 1; }
-  100% {
-    opacity: 1;
-    transform: rotateX(52deg) rotateZ(45deg)
-               translate3d(var(--x), var(--y), var(--z)) rotate(var(--spin));
-  }
+  0% { opacity: 0; filter: brightness(1.5);
+       transform: rotateX(52deg) rotateZ(45deg) translate3d(var(--x), var(--y), calc(var(--z) + 300px)) rotate(calc(var(--spin) * 6 + 14deg)); }
+  18% { opacity: 1; }
+  62% { transform: rotateX(52deg) rotateZ(45deg) translate3d(var(--x), var(--y), calc(var(--z) - 3px)) rotate(calc(var(--spin) - 2deg)) scale(1.03, .97); }
+  78% { transform: rotateX(52deg) rotateZ(45deg) translate3d(var(--x), var(--y), calc(var(--z) + 4px)) rotate(calc(var(--spin) + 1deg)); }
+  100% { opacity: 1; filter: brightness(1);
+         transform: rotateX(52deg) rotateZ(45deg) translate3d(var(--x), var(--y), var(--z)) rotate(var(--spin)); }
 }
-
+/* The floor shadow darkens as weight lands; a gold sweep when the top is reached. */
+.vault-floor { transition: width .6s ease, height .6s ease, margin .6s ease, opacity .6s ease; }
+.vault-shine { inset: 0; left: 0 !important; top: 0 !important; width: 100%; height: 100%; pointer-events: none; opacity: 0;
+  background: radial-gradient(ellipse 40% 50% at 50% 45%, rgba(255,214,90,.35), transparent 70%); transition: opacity .8s ease; }
+.vault-full .vault-shine { opacity: 1; animation: vault-glow 2.4s ease-in-out infinite; }
+@keyframes vault-glow { 50% { opacity: .45; } }
+/* Clearing back to the live figure: the pile lifts and fades instead of vanishing. */
+.vault-clearing .vault-strap { opacity: 0; filter: blur(2px); transition-delay: calc(var(--i, 0) * 1ms); }
 .vault-read { border-radius: .75rem; padding: .9rem 1rem 1rem; border: 2px solid #c99a3a; }
 .vault-total { font-size: clamp(2.5rem, 7vw, 3.75rem); line-height: 1; margin: .15rem 0 .6rem; }
 .vault-gauge {
@@ -348,10 +351,10 @@ html { transition: background-color .4s; }
   background: #1a1510; box-shadow: inset 0 0 0 1px rgba(255,162,26,.35);
 }
 .vault-gauge-fill {
-  position: absolute; inset: 0 auto 0 0;
+  position: absolute; inset: 0; transform-origin: 0 50%; will-change: transform;
   background: linear-gradient(90deg, #b24a00, #ffa21a);
   box-shadow: 0 0 10px rgba(255,140,0,.6);
-  transition: width .9s cubic-bezier(.2, .8, .2, 1);
+  transition: transform .25s linear;
 }
 .vault-gauge i { position: absolute; top: 0; bottom: 0; width: 1px; background: rgba(10,8,6,.75); }
 .vault-next { font-size: .8rem; margin-top: .5rem; }
@@ -1780,3 +1783,9 @@ aside .trophy-shelf li { width: 4.1rem; }
 .deal-fold[open] .deal-tog::before { content: "–"; }
 .deal-fold:not([open]) { padding-block: 1rem; }
 .btn-dl-done { background: #1f9d55; color: #fff; border-color: #1f9d55; }
+.vault-paying { font-size: .9rem; display: inline-flex; align-items: baseline; gap: .35rem; }
+.vault-paying b { font-size: 1.6rem; line-height: 1; display: inline-block; animation: paying-pulse 2.4s ease-in-out infinite; text-shadow: 0 0 10px rgba(255,162,26,.7); }
+@keyframes paying-pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.18); } }
+@media (prefers-reduced-motion: reduce) { .vault-paying b { animation: none; } }
+.tank.is-pickable .tank-step { cursor: pointer; transition: transform .2s ease, filter .2s ease; }
+.tank.is-pickable .tank-step:hover, .tank.is-pickable .tank-step:focus-visible { transform: scale(1.03); filter: brightness(1.15); outline: none; }
