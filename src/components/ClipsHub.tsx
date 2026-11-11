@@ -5,7 +5,8 @@ import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { sb } from "@/lib/supabase";
 import { useUser } from "@/lib/useUser";
 import { castVote, exactMoney, myVotes, platformName, type Clip } from "@/lib/api";
-import { DOWNLOAD } from "@/lib/tiers";
+import { DOWNLOAD, type TierId } from "@/lib/tiers";
+import { TierMedal } from "@/components/TierMedal";
 import { ALL_TAGS, TAG_LABEL, FLAGGED_SLUGS, slugTag } from "@/lib/tags";
 import { DEMO_CLIPS } from "@/lib/api";
 
@@ -26,6 +27,7 @@ type Row = {
   duration_seconds: number | null; view_count: number; published_at: string; created_at: string;
   trending_until: string | null; tags: string[]; winner: boolean; votable: boolean;
   featured_until: string | null; total: number; thumb?: string;
+  owner_tier?: string | null; owner_avatar?: string | null;
 };
 type Stats = { clips: number; views: number; views_24h: number; new_today: number; creators: number; timezone: string; tags: { tag: string; n: number }[] };
 type Round = { id: string; title: string; state: string; timezone: string; starts_at: string; submissions_close_at: string; voting_closes_at: string };
@@ -371,13 +373,21 @@ function ClipCard({ r, wide, fav, voted, mine, showVote, onOpen, onFav, onVote }
   onOpen: () => void; onFav: () => void; onVote: () => void;
 }) {
   const [img, setImg] = useState(true);
+  const [frame, setFrame] = useState<string | null>(null);
   const t = thumbOf(r);
+  // No saved cover (older clips): show the video's own first frame, like a
+  // YouTube poster. Only the browser reads metadata, nothing is downloaded in full.
+  useEffect(() => {
+    if (t && img) return;
+    let off = false; signFor(r).then((u) => { if (!off && u) setFrame(u); }).catch(() => {});
+    return () => { off = true; };
+  }, [t, img, r]);
   const hot = r.trending_until && new Date(r.trending_until) > new Date();
   return (
     <article className={`hub-card${wide ? " wide" : ""}`} onPointerEnter={() => warm(r)} onFocus={() => warm(r)}>
       <button className="hub-thumb" onClick={onOpen} aria-label={`Play ${r.title}`}>
         {/* eslint-disable-next-line @next/next/no-img-element */}
-        {t && img ? <img src={t} alt="" loading="lazy" onError={() => setImg(false)} /> : <span className="hub-noimg">{r.gamertag.slice(0, 2).toUpperCase()}</span>}
+        {t && img ? <img src={t} alt="" loading="lazy" onError={() => setImg(false)} /> : frame ? <video className="hub-frame" src={`${frame}#t=0.6`} preload="metadata" muted playsInline /> : <span className="hub-noimg">{r.gamertag.slice(0, 2).toUpperCase()}</span>}
         <span className="hub-play" aria-hidden><svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z" /></svg></span>
         {r.duration_seconds != null && <span className="hub-dur">{dur(r.duration_seconds)}</span>}
         {r.winner && <span className="hub-badge gold">★ Winner</span>}
@@ -385,7 +395,12 @@ function ClipCard({ r, wide, fav, voted, mine, showVote, onOpen, onFav, onVote }
         {!r.winner && !r.featured_until && hot && <span className="hub-badge hot">Trending · Daily Drop</span>}
       </button>
       <div className="hub-meta">
-        <span className="hub-av" aria-hidden>{r.gamertag.slice(0, 1).toUpperCase()}</span>
+        <span className="hub-av" aria-hidden>
+          {r.owner_avatar && SUPA
+            // eslint-disable-next-line @next/next/no-img-element
+            ? <img src={`${SUPA}/storage/v1/object/public/avatars/${r.owner_avatar}`} alt="" />
+            : <TierMedal tier={((r.owner_tier ?? "free") as TierId)} className="size-full" />}
+        </span>
         <div className="min-w-0 flex-1">
           <button onClick={onOpen} className="hub-title">{r.title}</button>
           <p className="hub-by">{r.gamertag} · {platformName[r.platform]}</p>

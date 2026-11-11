@@ -85,6 +85,34 @@ export default function Settings() {
     setPNote({ kind: "ok", text: retag && patch.gamertag ? "Saved. Verify the new gamertag on your dashboard before a win can pay out." : "Saved." });
   }
 
+  async function setPhoto(file: File | null) {
+    if (!c || !user) return;
+    setBusy("photo"); setPNote(null);
+    try {
+      let path: string | null = null;
+      if (file) {
+        const bmp = await createImageBitmap(file);
+        const side = Math.min(bmp.width, bmp.height), cv = document.createElement("canvas");
+        cv.width = cv.height = 256;
+        cv.getContext("2d")!.drawImage(bmp, (bmp.width - side) / 2, (bmp.height - side) / 2, side, side, 0, 0, 256, 256);
+        const blob: Blob | null = await new Promise((r) => cv.toBlob(r, "image/jpeg", 0.85));
+        if (!blob) throw new Error("That image couldn't be read.");
+        path = `${user.id}/${Date.now()}.jpg`;
+        const up = await c.storage.from("avatars").upload(path, blob, { contentType: "image/jpeg" });
+        if (up.error) throw up.error;
+      }
+      const old = profile!.avatar_path;
+      const { error } = await c.from("profiles").update({ avatar_path: path }).eq("id", user.id);
+      if (error) throw error;
+      if (old) c.storage.from("avatars").remove([old]).catch(() => {});
+      setProfile({ ...profile!, avatar_path: path });
+      setPNote({ kind: "ok", text: path ? "Profile picture saved." : "Picture removed. Your plan badge shows instead." });
+    } catch (e) {
+      setPNote({ kind: "err", text: e instanceof Error ? e.message : "That didn't go through." });
+    }
+    setBusy(null);
+  }
+
   async function savePayout(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     const f = new FormData(e.currentTarget);
@@ -173,6 +201,24 @@ export default function Settings() {
 
       <section className="set-card">
         <h2>Profile</h2>
+        <div className="mb-4 flex items-center gap-4">
+          {profile.avatar_path && process.env.NEXT_PUBLIC_SUPABASE_URL
+            // eslint-disable-next-line @next/next/no-img-element
+            ? <img className="set-avatar" alt="" src={`${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/avatars/${profile.avatar_path}`} />
+            : <TierMedal tier={tier} className="size-16 shrink-0" />}
+          <div className="grid gap-1.5">
+            <span className="text-sm font-bold">Profile picture</span>
+            <span className="text-xs text-haze">Shown next to your clips. Without one, your plan badge shows.</span>
+            <div className="flex flex-wrap gap-2">
+              <label className="btn btn-ghost !py-1.5 !px-4 text-sm cursor-pointer">
+                {busy === "photo" ? "Saving…" : "Upload"}
+                <input type="file" accept="image/jpeg,image/png,image/webp" className="sr-only" disabled={busy === "photo"}
+                  onChange={(e) => { const f = e.target.files?.[0]; e.target.value = ""; if (f) setPhoto(f); }} />
+              </label>
+              {profile.avatar_path && <button type="button" className="btn btn-ghost !py-1.5 !px-4 text-sm" onClick={() => setPhoto(null)}>Remove</button>}
+            </div>
+          </div>
+        </div>
         <form onSubmit={saveProfile} className="grid gap-3 sm:grid-cols-2 [&>*]:min-w-0">
           <label className="grid gap-1.5 sm:col-span-2">
             <span className="text-sm font-bold">Display name</span>

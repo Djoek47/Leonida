@@ -56,7 +56,6 @@ export default function Rules() {
 
       <p className="mt-12 text-sm text-haze">
         Last updated {UPDATED}. Questions about a round or a payout: contact@livefromleonida.com.
-        Have a lawyer review before the first paid round.
       </p>
     </div>
   );

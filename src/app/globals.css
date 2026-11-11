@@ -1744,7 +1744,10 @@ aside .trophy-shelf li { width: 4.1rem; }
 .hub-badge { position:absolute; left:.5rem; top:.5rem; border-radius:999px; padding:.2rem .6rem; font-size:.66rem; font-weight:900; letter-spacing:.06em; text-transform:uppercase; color:#fff; }
 .hub-badge.gold { background:#f2c12e; color:#1c1710; } .hub-badge.feat { background:#8a2be2; } .hub-badge.hot { background:#ff3d8b; }
 .hub-meta { display:flex; gap:.7rem; padding:.75rem .1rem 0; align-items:flex-start; }
-.hub-av { flex:none; width:2.2rem; height:2.2rem; border-radius:999px; display:grid; place-items:center; font-weight:900; background:var(--foam); color:var(--ink); }
+.hub-av { flex:none; width:2.4rem; height:2.4rem; border-radius:999px; display:grid; place-items:center; overflow:hidden; background:transparent; }
+.hub-av img { width:100%; height:100%; object-fit:cover; border-radius:999px; }
+.hub-frame { position:absolute; inset:0; width:100%; height:100%; object-fit:cover; background:#0b0b1e; }
+.set-avatar { width:4rem; height:4rem; border-radius:999px; object-fit:cover; }
 .hub-title { display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; text-align:left; font-weight:800; line-height:1.3; color:var(--foam); }
 .hub-by { font-size:.8rem; color:var(--haze); margin-top:.15rem; }
 .hub-tags { display:flex; flex-wrap:wrap; gap:.3rem; margin-top:.4rem; }
