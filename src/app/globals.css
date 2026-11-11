@@ -1725,7 +1725,7 @@ aside .trophy-shelf li { width: 4.1rem; }
 .hub-round { margin-top:1.25rem; display:flex; flex-wrap:wrap; align-items:center; gap:.6rem 1.4rem; font-size:.9rem; color:var(--haze); }
 .hub-round b { color:var(--foam); }
 .hub-bal { margin-left:auto; font-weight:700; color:var(--foam); }
-.hub-bar { margin-top:1.5rem; display:flex; flex-wrap:wrap; align-items:center; gap:.5rem; position:sticky; top:4.2rem; z-index:5; padding:.6rem 0; background:linear-gradient(var(--dusk, var(--ink)) 70%, transparent); }
+.hub-bar { margin-top:1.5rem; display:flex; flex-wrap:wrap; align-items:center; gap:.5rem; padding:.6rem 0; }
 .hub-bar .btn { display:inline-flex; align-items:center; gap:.45rem; }
 .hub-chip { display:inline-flex; align-items:center; gap:.35rem; border-radius:999px; background:var(--gulf); color:#fff; padding:.25rem .35rem .25rem .8rem; font-size:.8rem; font-weight:800; }
 .hub-chip button { width:1.3rem; height:1.3rem; border-radius:999px; background:rgba(0,0,0,.25); line-height:1; }
@@ -1941,3 +1941,8 @@ aside .trophy-shelf li { width: 4.1rem; }
 @media (hover:none) { .map-wake-pill { opacity:.95; transform:none; position:absolute; bottom:.9rem; } }
 @keyframes map-sway { 0%,100% { transform:rotate(-8deg); } 50% { transform:rotate(8deg); } }
 @media (prefers-reduced-motion: reduce) { .map-wake-pill i { animation:none; } }
+
+/* Messages (sign in to vote, votes left...) stay on screen wherever you are on the page */
+.hub-toast { position:fixed; left:50%; bottom:1.2rem; transform:translateX(-50%); z-index:80; display:flex; align-items:center; gap:.8rem; max-width:min(34rem,calc(100vw - 1.5rem)); padding:.75rem .9rem .75rem 1.1rem; border-radius:.9rem; background:#10131c; color:#fff; font-weight:700; box-shadow:0 14px 40px rgba(0,0,0,.5); border:1px solid rgba(255,255,255,.14); animation:tip-in .3s cubic-bezier(.2,.8,.2,1); }
+.hub-toast-go { flex:none; padding:.4rem .9rem; border-radius:.6rem; background:#c8102e; color:#fff; font-weight:900; text-decoration:none; }
+.hub-toast button { flex:none; width:1.8rem; height:1.8rem; border-radius:999px; background:rgba(255,255,255,.12); color:#fff; }

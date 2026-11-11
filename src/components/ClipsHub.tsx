@@ -111,6 +111,8 @@ export function ClipsHub({ cat }: { cat: Cat }) {
   const [favs, setFavs] = useState<Set<string>>(new Set());
   const [voted, setVoted] = useState<string[]>([]);
   const [msg, setMsg] = useState<string | null>(null);
+  // Messages are a toast pinned to the screen; they clear on their own.
+  useEffect(() => { if (!msg) return; const t = setTimeout(() => setMsg(null), 7000); return () => clearTimeout(t); }, [msg]);
   const [open, setOpen] = useState<Row | null>(null);
   const [filterOpen, setFilterOpen] = useState(false);
   const seq = useRef(0);
@@ -308,7 +310,14 @@ export function ClipsHub({ cat }: { cat: Cat }) {
           {filtered && grid[0] && <span className="ml-auto text-sm font-bold text-haze">{grid[0].total} result{grid[0].total === 1 ? "" : "s"}{tags.length > 1 ? " · match any selected tag" : ""}</span>}
         </div>
 
-        {msg && <p role="status" className="mt-4 inline-block rounded bg-ink-2 px-4 py-2 font-semibold">{msg}{!user && <> <Link className="text-gulf underline" href="/login?next=/clips">Sign in</Link></>}{user && !paying && msg.includes("Favorites") && <> <Link className="text-gulf underline" href="/pricing">See plans</Link></>}</p>}
+        {msg && (
+          <div role="status" className="hub-toast">
+            <span>{msg}</span>
+            {!user && <Link className="hub-toast-go" href="/login?next=/clips">Sign in</Link>}
+            {user && !paying && msg.includes("Favorites") && <Link className="hub-toast-go" href="/pricing">See plans</Link>}
+            <button type="button" aria-label="Dismiss" onClick={() => setMsg(null)}>×</button>
+          </div>
+        )}
 
         {state === "loading" && <div className="hub-grid mt-8" aria-busy>{Array.from({ length: 8 }, (_, i) => <div key={i} className="hub-skel" />)}</div>}
         {state === "error" && (
