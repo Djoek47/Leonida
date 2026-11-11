@@ -1,9 +1,10 @@
-import { garage, guides, people, regions } from "@/lib/content";
+import { guides, people, regions } from "@/lib/content";
 import { PortraitClip } from "@/components/PortraitClip";
 import Link from "@/components/A";
 import { PlaceReel } from "@/components/PlaceReel";
 import { LeonidaMap } from "@/components/LeonidaMap";
-import { GuideNews, SHOPS } from "@/components/GuideNews";
+import { GuideNews } from "@/components/GuideNews";
+import { EditionCarousel } from "@/components/EditionCarousel";
 import { Arsenal } from "@/components/Arsenal";
 import { Gallery } from "@/components/Gallery";
 import { GuideNav } from "@/components/GuideNav";
@@ -86,29 +87,8 @@ export default function Guide() {
         <div className="mt-8"><Arsenal /></div>
 
         <h3 className="display text-4xl mt-16">Edition extras</h3>
-        <p className="text-haze mt-2 max-w-2xl">What the Ultimate Edition adds at launch, as shown in Rockstar&apos;s screenshots. Rockstar hasn&apos;t said yet what the standard game gets.</p>
-        <ul className="mt-6 grid gap-4 grid-cols-2 lg:grid-cols-3">
-          {SHOPS.map((x) => (
-            <li key={x.img} className="rounded-lg overflow-hidden border border-line bg-ink">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={`/media/ultimate/${x.img}.webp`} alt={x.name} loading="lazy" className="aspect-video w-full object-cover" />
-              <div className="p-3"><p className="font-extrabold leading-tight">{x.name}</p><p className="text-sm text-haze mt-0.5">{x.what}</p></div>
-            </li>
-          ))}
-        </ul>
-        <div className="mt-6 grid gap-x-6 gap-y-10 sm:grid-cols-2 lg:grid-cols-3">
-          {garage.filter((g) => !["Vehicle", "Boat"].includes(g.kind) && !g.name.includes("revolvers")).map((g) => (
-            <article key={g.img}>
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={`/media/${g.img}.webp`} alt={g.name} loading="lazy" className="aspect-video w-full object-cover rounded-md" />
-              <div className="mt-3 flex items-baseline justify-between gap-4">
-                <h4 className="text-lg font-extrabold">{g.name}</h4>
-                <span className="text-sm text-haze shrink-0">{g.kind}</span>
-              </div>
-              <p className="text-sm text-gulf font-semibold">{g.from}</p>
-            </article>
-          ))}
-        </div>
+        <p className="text-haze mt-2 mb-6 max-w-2xl">What the Ultimate Edition and the Vintage Vice City Pack add at launch, from Rockstar&apos;s own screenshots. Swipe sideways. Rockstar hasn&apos;t said yet what the standard game gets.</p>
+        <EditionCarousel />
       </section>
 
       <section id="screenshots" className="mx-auto max-w-7xl px-4 py-16 scroll-mt-40">
