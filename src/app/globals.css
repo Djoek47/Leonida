@@ -1870,3 +1870,42 @@ aside .trophy-shelf li { width: 4.1rem; }
 .enter-round { flex:none; border:2px solid var(--gulf,#16c2b5); color:var(--gulf,#16c2b5); font-weight:800; font-size:.8rem; border-radius:999px; padding:.3rem .8rem; transition:background .2s,color .2s; }
 .enter-round:hover:not(:disabled) { background:var(--gulf,#16c2b5); color:#fff; }
 .enter-round:disabled { opacity:.6; }
+
+/* Coin avatars: the member's picture in their plan's metal */
+.coin-av { --m1:#9aa0a6; --m2:#5e636a; --m3:#2e3237; --glow:154,160,166;
+  position:relative; display:inline-block; aspect-ratio:1; border-radius:50%; flex:none;
+  background:conic-gradient(from 210deg, var(--m1), var(--m2) 22%, var(--m3) 40%, var(--m1) 58%, var(--m2) 78%, var(--m1));
+  box-shadow:0 0 0 1px rgba(0,0,0,.35), 0 4px 14px rgba(var(--glow),.35), inset 0 0 0 2px rgba(255,255,255,.25); }
+.coin-av { min-width:0; min-height:0; }
+.coin-av > img { position:absolute; inset:7%; width:86%; height:86%; object-fit:cover; border-radius:50%; display:block; box-shadow:0 0 0 2px rgba(0,0,0,.45); }
+.coin-kingpin { --m1:#fff0b8; --m2:#e3b84e; --m3:#8a6413; --glow:227,184,78; }
+.coin-hustler { --m1:#ffffff; --m2:#c2c9d1; --m3:#6e7881; --glow:194,201,209; }
+.coin-street  { --m1:#ffd2b0; --m2:#c9743f; --m3:#6e3512; --glow:201,116,63; }
+.has-glint::after { content:""; position:absolute; inset:0; border-radius:50%; pointer-events:none;
+  background:conic-gradient(from 0deg, transparent 0 82%, rgba(255,255,255,.95) 90%, transparent 96%);
+  -webkit-mask:radial-gradient(circle, transparent 66%, #000 68%); mask:radial-gradient(circle, transparent 66%, #000 68%);
+  animation:coin-glint 4.5s linear infinite; }
+@keyframes coin-glint { to { transform:rotate(360deg); } }
+@media (prefers-reduced-motion:reduce){ .has-glint::after { animation:none; opacity:0; } }
+
+/* Sign-in reveal */
+.reveal { position:fixed; inset:0; z-index:200; display:grid; place-content:center; justify-items:center; gap:1.4rem;
+  background:radial-gradient(circle at 50% 45%, rgba(var(--glow,255,255,255),.22), rgba(6,8,14,.92) 62%); backdrop-filter:blur(6px);
+  animation:reveal-in .35s ease-out, reveal-out .5s ease-in 2.8s forwards; cursor:pointer; }
+.reveal.coin-kingpin { --glow:227,184,78; } .reveal.coin-hustler { --glow:194,201,209; } .reveal.coin-street { --glow:201,116,63; } .reveal.coin-free { --glow:154,160,166; }
+.reveal-coin { position:relative; width:min(60vw,15rem); aspect-ratio:1; perspective:900px;
+  animation:reveal-spin 1.5s cubic-bezier(.2,.8,.2,1) both; filter:drop-shadow(0 0 28px rgba(var(--glow),.55)); }
+.reveal-flip { position:absolute; inset:0; transform-style:preserve-3d; transition:transform .9s cubic-bezier(.3,1.2,.4,1); }
+.reveal-flip.is-face { transform:rotateY(180deg); }
+.reveal-side { position:absolute; inset:0; backface-visibility:hidden; -webkit-backface-visibility:hidden; display:grid; place-items:center; }
+.reveal-back { transform:rotateY(180deg); }
+.reveal-img { width:100%; height:100%; }
+.reveal-light { position:absolute; inset:-6%; border-radius:50%; pointer-events:none;
+  background:conic-gradient(from 0deg, transparent 0 78%, rgba(255,255,255,.9) 90%, transparent 97%);
+  -webkit-mask:radial-gradient(circle, transparent 69%, #000 71%); mask:radial-gradient(circle, transparent 69%, #000 71%);
+  animation:coin-glint 1.6s linear infinite; }
+.reveal-name { color:#fff; font-size:1.15rem; letter-spacing:.01em; animation:reveal-rise .6s ease-out .5s both; }
+@keyframes reveal-in { from { opacity:0; } }
+@keyframes reveal-out { to { opacity:0; visibility:hidden; } }
+@keyframes reveal-spin { from { transform:rotateY(-540deg) scale(.4); opacity:0; } 60% { opacity:1; } to { transform:rotateY(0) scale(1); } }
+@keyframes reveal-rise { from { transform:translateY(10px); opacity:0; } }

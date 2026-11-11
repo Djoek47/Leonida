@@ -6,6 +6,7 @@ import { sb } from "@/lib/supabase";
 import { useUser } from "@/lib/useUser";
 import { castVote, exactMoney, myVotes, platformName, type Clip } from "@/lib/api";
 import { DOWNLOAD, type TierId } from "@/lib/tiers";
+import { CoinAvatar } from "@/components/CoinAvatar";
 import { TierMedal } from "@/components/TierMedal";
 import { ALL_TAGS, TAG_LABEL, FLAGGED_SLUGS, slugTag } from "@/lib/tags";
 import { DEMO_CLIPS } from "@/lib/api";
@@ -396,10 +397,7 @@ function ClipCard({ r, wide, fav, voted, mine, showVote, onOpen, onFav, onVote }
       </button>
       <div className="hub-meta">
         <span className="hub-av" aria-hidden>
-          {r.owner_avatar && SUPA
-            // eslint-disable-next-line @next/next/no-img-element
-            ? <img src={`${SUPA}/storage/v1/object/public/avatars/${r.owner_avatar}`} alt="" />
-            : <TierMedal tier={((r.owner_tier ?? "free") as TierId)} className="size-full" />}
+          <CoinAvatar tier={((r.owner_tier ?? "free") as TierId)} path={r.owner_avatar} className="size-full" />
         </span>
         <div className="min-w-0 flex-1">
           <button onClick={onOpen} className="hub-title">{r.title}</button>

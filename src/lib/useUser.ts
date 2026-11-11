@@ -92,6 +92,17 @@ export function useUser() {
     return () => { alive = false; clearTimeout(stop); sub.subscription.unsubscribe(); };
   }, []);
 
+  // A photo change anywhere (Settings) is announced here so every mounted
+  // component, the top bar included, switches at once.
+  useEffect(() => {
+    const on = (e: Event) => {
+      const path = (e as CustomEvent<{ avatar_path: string | null }>).detail?.avatar_path ?? null;
+      setProfile((p) => (p ? { ...p, avatar_path: path } : p));
+    };
+    addEventListener("lfl:avatar", on);
+    return () => removeEventListener("lfl:avatar", on);
+  }, []);
+
   const paying = isPaying(profile);
   return { user, profile, account, setProfile, setAccount, loading, demo: !isLive, paying, tier: tierById(profile?.tier) };
 }

@@ -3,7 +3,8 @@ import { useEffect, useRef, useState } from "react";
 import Link from "@/components/A";
 import { useUser } from "@/lib/useUser";
 import { sb } from "@/lib/supabase";
-import { TierMedal } from "@/components/TierMedal";
+import { CoinAvatar } from "@/components/CoinAvatar";
+import { LoginReveal } from "@/components/LoginReveal";
 import type { TierId } from "@/lib/tiers";
 
 /** The account control in the top bar.
@@ -42,9 +43,10 @@ export function NavAuth() {
 
   return (
     <div ref={box} className="relative">
+      <LoginReveal userId={user.id} name={name} tier={tier} path={profile?.avatar_path} />
       <button onClick={() => setOpen(!open)} aria-haspopup="menu" aria-expanded={open}
         className="acct-btn" aria-label={`Account menu for ${name}`}>
-        <TierMedal tier={tier} className="size-9" />
+        <CoinAvatar tier={tier} path={profile?.avatar_path} name={name} className="size-9" />
         <span className="acct-name">{name}</span>
         <svg viewBox="0 0 12 12" className={`size-3 transition-transform ${open ? "rotate-180" : ""}`} aria-hidden>
           <path d="M2 4l4 4 4-4" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
@@ -54,7 +56,7 @@ export function NavAuth() {
       {open && (
         <div role="menu" className="acct-menu">
           <div className="acct-head">
-            <TierMedal tier={tier} className="size-12 shrink-0" />
+            <CoinAvatar tier={tier} path={profile?.avatar_path} name={name} className="size-12 shrink-0" />
             <div className="min-w-0">
               <p className="font-extrabold truncate">{name}</p>
               <p className="text-xs opacity-75 capitalize">{tier === "free" ? "Free account" : `${tier} member`}</p>

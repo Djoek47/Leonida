@@ -5,6 +5,7 @@ import { sb } from "@/lib/supabase";
 import { useUser } from "@/lib/useUser";
 import { plainAuthError } from "@/lib/authErrors";
 import { TierMedal } from "@/components/TierMedal";
+import { CoinAvatar } from "@/components/CoinAvatar";
 import { NotificationCenter } from "@/components/NotificationCenter";
 import type { TierId } from "@/lib/tiers";
 
@@ -107,6 +108,7 @@ export default function Settings() {
       if (error) throw error;
       if (old) c.storage.from("avatars").remove([old]).catch(() => {});
       setProfile({ ...profile!, avatar_path: path });
+      dispatchEvent(new CustomEvent("lfl:avatar", { detail: { avatar_path: path } }));
       setPNote({ kind: "ok", text: path ? "Profile picture saved." : "Picture removed. Your plan badge shows instead." });
     } catch (e) {
       setPNote({ kind: "err", text: e instanceof Error ? e.message : "That didn't go through." });
@@ -203,10 +205,7 @@ export default function Settings() {
       <section className="set-card">
         <h2>Profile</h2>
         <div className="mb-4 flex items-center gap-4">
-          {profile.avatar_path && process.env.NEXT_PUBLIC_SUPABASE_URL
-            // eslint-disable-next-line @next/next/no-img-element
-            ? <img className="set-avatar" alt="" src={`${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/avatars/${profile.avatar_path}`} />
-            : <TierMedal tier={tier} className="size-16 shrink-0" />}
+          <CoinAvatar tier={tier} path={profile.avatar_path} name={profile.display_name} className="size-20 shrink-0" />
           <div className="grid gap-1.5">
             <span className="text-sm font-bold">Profile picture</span>
             <span className="text-xs text-haze">Shown next to your clips. Without one, your plan badge shows.</span>
