@@ -45,7 +45,7 @@ export default function Admin() {
         {tab === "drops" && <Drops />}
         {tab === "support" && <SupportDesk />}
         {tab === "rounds" && <RoundResults />}
-        {tab === "wallets" && <Wallets />}
+        {tab === "wallets" && <><LedgerCheck /><Wallets /></>}
       </div>
     </div>
   );
@@ -848,6 +848,34 @@ function Drops() {
  *  they can't drift from it. */
 type Member = { id: string; display_name: string; tier: string; balance_cents: number };
 type Move = { id: number; player_id: string; amount_cents: number; kind: string; note: string | null; created_at: string };
+
+function LedgerCheck() {
+  const [out, setOut] = useState<Record<string, unknown> | null>(null);
+  const [busy, setBusy] = useState(false);
+  const [bad, setBad] = useState("");
+  async function run() {
+    setBusy(true); setBad("");
+    const c = sb();
+    if (!c) { setOut({ entries: 0, note: "Demo mode" }); setBusy(false); return; }
+    const { data, error } = await c.rpc("console_ledger_check");
+    setBusy(false);
+    if (error) { setBad("Couldn't run the check."); return; }
+    setOut(data as Record<string, unknown>);
+  }
+  const arr = (k: string) => (Array.isArray(out?.[k]) ? (out![k] as unknown[]).length : 0);
+  const clean = out && arr("negative_balances") === 0 && arr("earning_on_wrong_account") === 0 && arr("withdrawn_more_than_earned") === 0 && !out.orphans && !out.earning_not_70;
+  return (
+    <div className="mb-6 rounded-xl border border-white/10 p-4">
+      <div className="flex flex-wrap items-center gap-3">
+        <button onClick={run} disabled={busy} className="btn btn-ghost !py-1.5 !px-4 text-sm">{busy ? "Checking…" : "Check the books"}</button>
+        {out && <span className={`text-sm font-bold ${clean ? "text-[#2fd27a]" : "text-flamingo"}`}>
+          {clean ? `All clear: ${String(out.entries)} entries, every cent on the right account.` : "Something needs a look. Details below."}</span>}
+        {bad && <span className="text-sm text-flamingo">{bad}</span>}
+      </div>
+      {out && !clean && <pre className="mt-3 overflow-x-auto text-xs text-haze">{JSON.stringify(out, null, 2)}</pre>}
+    </div>
+  );
+}
 
 function Wallets() {
   const [q, setQ] = useState("");
