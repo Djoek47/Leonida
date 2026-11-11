@@ -19,9 +19,9 @@ const s = (v: unknown, fallback = "") => (v === null || v === undefined || v ===
 const tierName = (t: unknown) => ({ free: "Free", street: "Street", hustler: "Hustler", kingpin: "Kingpin" } as Record<string, string>)[s(t)] ?? s(t, "your plan");
 const RANK: Record<string, number> = { free: 0, street: 1, hustler: 2, kingpin: 3 };
 const PERKS: Record<string, string[]> = {
-  street: ["2 votes in every contest", "4 clips a day", "3 clip downloads a month", "Every vote total and the live ranking", "No ads"],
-  hustler: ["4 votes in every contest", "6 clips a day", "8 clip downloads a month", "Leonida Economist and the weekly Meta Brief", "1 streak freeze a month"],
-  kingpin: ["6 votes in every contest", "8 clips a day", "20 clip downloads a month", "Clip Performance Lab on every clip", "3 streak freezes a month and priority review"],
+  street: ["Upload up to 4 clips a day.", "3 clip downloads a month", "No ads", "Members chat access."],
+  hustler: ["Upload up to 6 clips a day.", "8 clip downloads a month", "Leonida Economist and the weekly Meta Brief", "Feature 1 clip."],
+  kingpin: ["8 clips a day", "20 clip downloads a month", "Deep Analytics and 3 featured per month."],
 };
 const PLACE = ["", "1st", "2nd", "3rd"];
 const PERIOD: Record<string, string> = { week: "Clip of the Week", month: "Clip of the Month", year: "Clip of the Year" };
@@ -255,6 +255,22 @@ export function eventEmail(kind: string, d: D, name: string): Email | null {
         button("See your wallet", `${SITE}/wallet`, N),
         small("Every member download pays the player. Keep sending clips: the good ones sell over and over.", N),
       ], [`${name}, "${s(d.title)}" was downloaded. +${money(d.amount)} in your wallet. Balance: ${money(d.balance)}.`], "You're getting this because one of your clips earned money.");
+
+    case "clip_approved":
+      return sign("Your clip has been approved", "Your clip has been approved and is now live.", [
+        heading("Approved.", L),
+        para(`${hi(name)} your clip has been approved and is now live.`, L),
+        rows([["Clip", esc(s(d.title, "Your clip"))], ["Status", "Approved"]], L),
+        button("See it on your dashboard", `${SITE}/dashboard`, L),
+      ], [`${name}, your clip has been approved and is now live.`, `${SITE}/dashboard`]);
+
+    case "clip_disapproved":
+      return sign("Your clip has been disapproved", "Your clip has been disapproved.", [
+        heading("Disapproved.", L),
+        para(`${hi(name)} your clip has been disapproved.`, L),
+        rows([["Clip", esc(s(d.title, "Your clip"))], ["Status", "Disapproved"]], L),
+        button("See your dashboard", `${SITE}/dashboard`, L),
+      ], [`${name}, your clip has been disapproved.`, `${SITE}/dashboard`]);
 
     case "prize_won": {
       const place = Number(d.place ?? 1);

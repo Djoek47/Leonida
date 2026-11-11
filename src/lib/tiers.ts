@@ -9,10 +9,9 @@ export type Tier = {
   rank: number;
   monthlyCents: number;
   annualCents: number;
-  votes: number;              // votes this tier gets in a contest
+  votes: number;              // private weekly allowance; never shown on pricing
   creditsPerMonth: number;    // free download credits each cycle, they don't roll over
   dailySubmissions: number;
-  streakFreezes: number;      // saves a streak when a day is missed
   adFree: boolean;
   pitch: string;
   perks: string[];
@@ -22,10 +21,9 @@ export const TIERS: Tier[] = [
   {
     id: "free", label: "Free", rank: 0,
     monthlyCents: 0, annualCents: 0, votes: 1, creditsPerMonth: 0,
-    dailySubmissions: 2, streakFreezes: 0, adFree: false,
+    dailySubmissions: 2, adFree: false,
     pitch: "Upload, compete and win. No card needed.",
     perks: [
-      "1 vote",
       "Send 2 clips a day",
       "Eligible for every prize: Week, Month and Year",
       "Stream every clip",
@@ -36,44 +34,38 @@ export const TIERS: Tier[] = [
   {
     id: "street", label: "Street", rank: 1,
     monthlyCents: 800, annualCents: 7500, votes: 2, creditsPerMonth: 3,
-    dailySubmissions: 4, streakFreezes: 0, adFree: true,
-    pitch: "For the regular. More shots on goal, more say in who wins.",
+    dailySubmissions: 4, adFree: true,
+    pitch: "For the regular. More shots on goal.",
     perks: [
-      "2 votes",
-      "4 clips a day",
+      "Upload up to 4 clips a day.",
       "3 clip downloads a month",
-      "See every vote total and the live ranking",
       "No ads",
-      "Members chat and tier flair",
+      "Members chat access.",
     ],
   },
   {
     id: "hustler", label: "Hustler", rank: 2,
     monthlyCents: 2000, annualCents: 19200, votes: 4, creditsPerMonth: 8,
-    dailySubmissions: 6, streakFreezes: 1, adFree: true,
+    dailySubmissions: 6, adFree: true,
     pitch: "The working creator's plan. Know what's about to trend.",
     perks: [
-      "4 votes",
-      "6 clips a day",
+      "Upload up to 6 clips a day.",
       "8 clip downloads a month",
       "Leonida Economist: live trends and money-making methods",
       "Weekly Meta Brief",
-      "1 streak freeze a month",
+      "Feature 1 clip.",
       "Everything in Street",
     ],
   },
   {
     id: "kingpin", label: "Kingpin", rank: 3,
     monthlyCents: 2500, annualCents: 24000, votes: 6, creditsPerMonth: 20,
-    dailySubmissions: 8, streakFreezes: 3, adFree: true,
-    pitch: "Top of the food chain. The heaviest say on the site.",
+    dailySubmissions: 8, adFree: true,
+    pitch: "Top of the food chain.",
     perks: [
-      "6 votes",
       "8 clips a day",
       "20 clip downloads a month",
-      "Clip Performance Lab: deep analytics on every clip you post",
-      "3 streak freezes a month",
-      "Priority in the staff review queue",
+      "Deep Analytics and 3 featured per month.",
       "Everything in Hustler",
     ],
   },

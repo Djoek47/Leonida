@@ -121,7 +121,7 @@ export default function Earn() {
         <div className="sign flex flex-col md:flex-row md:items-center justify-between gap-5">
           <div>
             <p className="display text-4xl md:text-5xl">Free to enter. Always.</p>
-            <p className="font-semibold mt-1">Send a clip, keep a streak, win the week.</p>
+            <p className="font-semibold mt-1">Send a clip, win the week.</p>
           </div>
           <div className="flex flex-wrap gap-3 shrink-0">
             <Link href="/submit" className="btn btn-hot">Send a clip</Link>

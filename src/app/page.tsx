@@ -5,7 +5,7 @@ import { regions } from "@/lib/content";
 const steps = [
   { t: "Send your clip", d: "Upload it with your gamertag." },
   { t: "We cut the video", d: "The best clips go in one compilation." },
-  { t: "Leonida votes", d: "One vote per account." },
+  { t: "Leonida votes", d: "Members pick the week's best." },
   { t: "Top three get paid", d: "PayPal, Venmo and more." },
 ];
 

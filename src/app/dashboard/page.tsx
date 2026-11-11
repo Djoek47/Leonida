@@ -5,7 +5,8 @@ import { sb } from "@/lib/supabase";
 import { useUser, type Profile } from "@/lib/useUser";
 import { DEMO_CLIPS, exactMoney, type Clip } from "@/lib/api";
 import { tierById, DOWNLOAD } from "@/lib/tiers";
-import { StatusStrip, BadgeWall, StreakBoard, type Badge, type StreakRow } from "@/components/Gamification";
+import { StatusStrip, BadgeWall, type Badge } from "@/components/Gamification";
+import { FeaturedClips } from "@/components/FeaturedClips";
 import { DemoNote } from "@/components/DemoNote";
 import { GetStarted } from "@/components/GetStarted";
 import { Welcome } from "@/components/Welcome";
@@ -13,8 +14,8 @@ import { GamertagDialog } from "@/components/GamertagDialog";
 import { TierMedal } from "@/components/TierMedal";
 
 const clipState: Record<string, [string, string]> = {
-  pending: ["Under review", "wait"], approved: ["In the vote", "live"], featured: ["Featured", "gold"],
-  rejected: ["Not selected", "off"], suspended: ["Suspended", "off"], withdrawn: ["Out of the running", "off"],
+  pending: ["Pending", "wait"], approved: ["Approved", "live"], featured: ["Approved · Featured", "gold"],
+  rejected: ["Disapproved", "off"], suspended: ["Suspended", "off"], withdrawn: ["Withdrawn", "off"],
 };
 type Sale = { clip_id: string; downloads: number; earned_cents: number; last_sale: string | null };
 
@@ -27,7 +28,6 @@ export default function Dashboard() {
   const [balance, setBalance] = useState(0);
   const [prizes, setPrizes] = useState(0);
   const [badges, setBadges] = useState<Badge[]>([]);
-  const [board, setBoard] = useState<StreakRow[]>([]);
   const [gt, setGt] = useState(false);
 
   const reloadProfile = useCallback(async () => {
@@ -54,7 +54,6 @@ export default function Dashboard() {
       const got = new Set((mine.data ?? []).map((b: { badge: string }) => b.badge));
       setBadges(((all.data ?? []) as { id: string; label: string; blurb: string }[]).map((b) => ({ ...b, earned: got.has(b.id) })));
     });
-    c.from("streak_board").select("*").limit(10).then(({ data }) => setBoard((data as StreakRow[]) ?? []));
   }, [user]);
 
   // Taking a clip out of the running. The clip and its file stay with us —
@@ -83,7 +82,6 @@ export default function Dashboard() {
   const look = paying ? plan.id : "free";
   const sold = Object.values(sales).reduce((n, x) => n + x.downloads, 0);
   const earned = Object.values(sales).reduce((n, x) => n + x.earned_cents, 0);
-  const votes = clips.reduce((n, c) => n + (c.votes ?? 0), 0);
   const best = Object.values(sales).sort((a, b) => b.earned_cents - a.earned_cents)[0]?.clip_id;
   const credits = account?.credits_remaining ?? 0;
 
@@ -108,7 +106,7 @@ export default function Dashboard() {
       </header>
 
       <dl className="dash-stats">
-        {([["Clips", String(clips.length)], ["Votes", paying ? votes.toLocaleString() : "—"], ["Sold", String(sold)], ["Earned", exactMoney(earned + prizes)]] as const).map(([k, v]) => (
+        {([["Clips", String(clips.length)], ["Approved", String(clips.filter((c) => ["approved", "featured"].includes(c.status)).length)], ["Sold", String(sold)], ["Earned", exactMoney(earned + prizes)]] as const).map(([k, v]) => (
           <div key={k} className="dash-stat"><dt>{k}</dt><dd className="text-[clamp(1.5rem,6vw,2.4rem)]">{v}</dd></div>
         ))}
       </dl>
@@ -147,7 +145,7 @@ export default function Dashboard() {
             </p>
           )}
           {clips.length === 0 ? (
-            <p className="mt-4 text-haze">Nothing yet. Your first clip starts the streak, the badges and the sales.</p>
+            <p className="mt-4 text-haze">Nothing yet. Your first clip starts the badges and the sales.</p>
           ) : (
             <ul className="sales mt-4">
               {clips.map((c) => {
@@ -158,7 +156,6 @@ export default function Dashboard() {
                       <p className="font-extrabold truncate">{c.id === best && <span className="best-tag">Best seller</span>}{c.title}</p>
                       <span className={`clip-state ${kind}`}>{label}</span>
                     </div>
-                    <div className="sales-n" title="Votes"><b>{c.votes ?? "—"}</b><small>votes</small></div>
                     <div className="sales-n" title="Downloads"><b>{s?.downloads ?? 0}</b><small>sold</small></div>
                     <div className="sales-n money" title="Earned from downloads"><b>{exactMoney(s?.earned_cents ?? 0)}</b><small>earned</small></div>
                     {["approved", "featured", "pending"].includes(c.status) && (
@@ -187,7 +184,6 @@ export default function Dashboard() {
               </button>
             )}
           </section>
-          {board.length > 0 && <StreakBoard rows={board} />}
         </aside>
       </div>
 
@@ -195,6 +191,8 @@ export default function Dashboard() {
           ladder beside a short list of clips, which left the page half
           empty for anyone who hasn't filled it yet; across the page the
           shelves lay out as shelves. */}
+      <FeaturedClips clips={clips} />
+
       {badges.length > 0 && <div className="mt-10"><BadgeWall badges={badges} /></div>}
     </div>
     </div>

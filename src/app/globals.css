@@ -1680,3 +1680,28 @@ aside .trophy-shelf li { width: 4.1rem; }
 .pull-out { font-size: .68rem; font-weight: 900; letter-spacing: .06em; text-transform: uppercase;
   color: var(--haze); border: 1.5px solid var(--line); border-radius: 999px; padding: .15rem .6rem; }
 .pull-out:hover { color: var(--flamingo); border-color: var(--flamingo); }
+.token-line { flex-basis: 100%; font-size: .82rem; font-weight: 800; }
+.feat-chip { font-size: .62rem; font-weight: 900; letter-spacing: .14em; text-transform: uppercase;
+  border-radius: 999px; padding: .15rem .55rem; border: 1.5px solid var(--line); color: var(--haze); }
+.feat-chip.active { border-color: var(--gulf); color: var(--gulf); }
+.feat-chip.scheduled { border-color: var(--mango); color: var(--mango); }
+.vote-pips { display: grid; grid-template-columns: repeat(3, 10px); gap: 4px; }
+.vote-pips i { width: 10px; height: 16px; border-radius: 3px; background: var(--gulf);
+  box-shadow: 0 0 8px color-mix(in srgb, var(--gulf) 60%, transparent); }
+.vote-pips i.spent { background: var(--line); box-shadow: none; }
+
+/* Wallet: pending, available and paid out, side by side, no boxes. */
+.money-split { display: grid; gap: 1rem 2rem; margin-top: 1.4rem; grid-template-columns: repeat(auto-fit, minmax(11rem, 1fr)); }
+.money-split > div { border-top: 3px solid var(--line); padding-top: .55rem; }
+.money-split > div:nth-child(2) { border-top-color: var(--gulf); }
+.money-split dt { font-size: .66rem; font-weight: 900; letter-spacing: .16em; text-transform: uppercase; color: var(--haze); }
+.money-split dd { font-family: "Doto", ui-monospace, monospace; font-weight: 900; font-size: 1.5rem; margin-top: .15rem; }
+.money-split dd.sub { font-family: inherit; font-size: .74rem; font-weight: 600; color: var(--haze); }
+.featured-scroll { display: flex; gap: .8rem; overflow-x: auto; padding-bottom: .4rem; scroll-snap-type: x mandatory; }
+.featured-scroll li { flex: 0 0 min(16rem, 78vw); scroll-snap-align: start; }
+.featured-card { display: grid; gap: .25rem; height: 100%; padding: .9rem 1rem; border-radius: 12px;
+  background: linear-gradient(135deg, color-mix(in srgb, var(--mango) 22%, var(--ink)), var(--ink));
+  border: 2px solid color-mix(in srgb, var(--mango) 55%, transparent); }
+.featured-card b { font-weight: 900; line-height: 1.25; }
+.featured-card small { font-size: .74rem; color: var(--haze); }
+.featured-tag { font-size: .6rem; font-weight: 900; letter-spacing: .18em; text-transform: uppercase; color: var(--mango); }

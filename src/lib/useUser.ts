@@ -19,7 +19,6 @@ export type Account = {
   tier: TierId; credits_remaining: number; credits_per_month: number;
   votes: number; daily_submissions: number; submitted_today: number;
   pending_cents: number; lifetime_downloads: number; current_period_end: string | null;
-  streak_days: number; best_streak: number; freezes_left: number; streak_freezes: number;
   stars: number; badges: number;
 };
 
@@ -38,7 +37,7 @@ const DEMO_ACCOUNT: Account = {
   votes: 6, daily_submissions: 8, submitted_today: 1,
   pending_cents: 1890, lifetime_downloads: 27,
   current_period_end: DEMO_PROFILE.current_period_end,
-  streak_days: 9, best_streak: 21, freezes_left: 2, streak_freezes: 3,
+  
   stars: 2, badges: 5,
 };
 

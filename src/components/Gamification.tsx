@@ -21,34 +21,6 @@ export function StarRank({ stars, className = "" }: { stars: number; className?:
 }
 
 /** Upload every day. Two clear days and the run is gone. */
-export function StreakCard({ account }: { account: Account }) {
-  const hot = account.streak_days >= 7;
-  const atRisk = account.submitted_today === 0;
-  return (
-    <div className={`rounded-xl border-2 p-5 ${hot ? "border-flamingo" : "border-line"} bg-ink`}>
-      <div className="flex items-start justify-between gap-4">
-        <div>
-          <p className="text-sm font-bold text-haze">Upload streak</p>
-          <p className="display text-6xl leading-none">
-            {account.streak_days}<span className="text-2xl text-haze"> day{account.streak_days === 1 ? "" : "s"}</span>
-          </p>
-          <p className="text-sm text-haze mt-1">Best run: {account.best_streak}</p>
-        </div>
-        {hot && <span className="shrink-0 rounded-full bg-flamingo px-3 py-1 text-xs font-black text-white">Hot Creator</span>}
-      </div>
-      <p className={`mt-4 text-sm font-semibold ${atRisk ? "text-flamingo" : "text-gulf"}`}>
-        {atRisk ? "Nothing sent today — send one to keep the run alive." : "Today is counted. See you tomorrow."}
-      </p>
-      {account.streak_freezes > 0 && (
-        <p className="mt-2 text-sm text-haze">
-          {account.freezes_left} of {account.streak_freezes} streak freeze{account.streak_freezes === 1 ? "" : "s"} left.
-          A freeze covers one missed day automatically.
-        </p>
-      )}
-      <p className="mt-2 text-xs text-haze">Miss two days in a row and the streak resets to zero.</p>
-    </div>
-  );
-}
 
 type Progress = { clips: number; next_at: number | null; next_label: string | null };
 
@@ -186,33 +158,6 @@ export function DailyDrop({ drop, look = "free" }: { drop: Drop; look?: string }
   );
 }
 
-export type StreakRow = { id: string; display_name: string; tier: string; streak_days: number; hot_creator: boolean };
-
-export function StreakBoard({ rows }: { rows: StreakRow[] }) {
-  return (
-    <div>
-      <h3 className="text-xl font-extrabold">Longest streaks</h3>
-      <ol className="mt-4 divide-y divide-line border-y border-line">
-        {rows.map((r, i) => (
-          <li key={r.id} className="py-2.5 flex items-center gap-3">
-            <span className="display text-2xl w-8 shrink-0 text-haze">{i + 1}</span>
-            <span className="flex-1 min-w-0">
-              <span className="font-bold truncate">{r.display_name}</span>
-              {r.tier !== "free" && (
-                <span className="ml-2 rounded-full bg-gulf px-1.5 py-0.5 text-[10px] font-black uppercase text-white align-middle">
-                  {tierById(r.tier).label}
-                </span>
-              )}
-            </span>
-            {r.hot_creator && <span className="shrink-0 text-xs font-black text-flamingo">HOT</span>}
-            <span className="shrink-0 display text-2xl">{r.streak_days}</span>
-          </li>
-        ))}
-      </ol>
-      <p className="mt-3 text-xs text-haze">One upload a day keeps a streak going. Updated live.</p>
-    </div>
-  );
-}
 
 export function StarTracker({ stars, months }: { stars: number; months: number }) {
   const next = Math.min(MAX_STARS, stars + 1);
@@ -230,7 +175,31 @@ export function StarTracker({ stars, months }: { stars: number; months: number }
   );
 }
 
-/** Streak, Clipper progress and the six stars as one strip of gauges,
+/** Your private vote balance for this weekly round, in the brief's words. */
+function VoteGauge() {
+  const [b, setB] = useState<{ allowed: number; remaining: number; resets_at: string | null } | null>(null);
+  useEffect(() => {
+    const c = sb(); if (!c) { setB({ allowed: 6, remaining: 4, resets_at: null }); return; }
+    c.rpc("my_vote_balance").then(({ data }) => setB(((data ?? [])[0] as typeof b) ?? null));
+  }, []);
+  if (!b) return null;
+  const reset = b.resets_at ? new Date(b.resets_at).toLocaleDateString(undefined, { weekday: "long", month: "long", day: "numeric" }) : "";
+  return (
+    <div className="gauge" title="Only you can see this.">
+      <span className="vote-pips" aria-hidden>
+        {Array.from({ length: b.allowed }, (_, i) => <i key={i} className={i < b.remaining ? "" : "spent"} />)}
+      </span>
+      <div>
+        <p className="gauge-v">{b.remaining}<small> votes left</small></p>
+        <p className="gauge-s">{b.remaining > 0
+          ? `You have ${b.remaining} vote${b.remaining === 1 ? "" : "s"} left this weekly round.`
+          : `You have 0 votes left this weekly round. Your votes reset on ${reset}.`}</p>
+      </div>
+    </div>
+  );
+}
+
+/** Your votes, Clipper progress and the six stars as one strip of gauges,
  *  instead of three boxes of text. Details live in each gauge's tooltip. */
 export function StatusStrip({ account, paying, fallbackClips }: { account: Account; paying: boolean; fallbackClips: number }) {
   const [p, setP] = useState<Progress>({ clips: fallbackClips, next_at: 1, next_label: "First Clip" });
@@ -240,20 +209,9 @@ export function StatusStrip({ account, paying, fallbackClips }: { account: Accou
   }, []);
   const pct = p.next_at ? Math.min(1, p.clips / p.next_at) : 1;
   const r = 26, len = 2 * Math.PI * r;
-  const hot = account.streak_days >= 7;
-  const today = account.submitted_today > 0;
   return (
     <section className="status-strip" aria-label="Your progress">
-      <div className={`gauge ${hot ? "is-hot" : ""}`} title={`Best run: ${account.best_streak} days. Miss two days and it resets.${account.streak_freezes ? ` ${account.freezes_left} freeze${account.freezes_left === 1 ? "" : "s"} left.` : ""}`}>
-        <svg viewBox="0 0 40 48" className="flame" aria-hidden>
-          <path d="M20 2c3 9 14 14 14 28a14 14 0 0 1-28 0c0-7 4-11 7-14 0 5 2 8 5 9-2-8 0-16 2-23z" />
-          <path d="M20 26c2 4 6 6 6 11a6 6 0 0 1-12 0c0-3 2-5 3-6 0 2 1 3 2 3-1-3 0-6 1-8z" className="core" />
-        </svg>
-        <div>
-          <p className="gauge-v">{account.streak_days}<small> day streak</small></p>
-          <p className={`gauge-s ${today ? "ok" : "warn"}`}>{today ? "Today counted" : "Send one today"}</p>
-        </div>
-      </div>
+      <VoteGauge />
 
       <div className="gauge" title={p.next_at ? `${p.next_at - p.clips} more clips for ${p.next_label}. Only uploads count.` : "Every Clipper badge earned."}>
         <svg viewBox="0 0 64 64" className="ring" aria-hidden>

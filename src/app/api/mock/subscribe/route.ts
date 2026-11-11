@@ -9,7 +9,7 @@ type Body = { tier: "street" | "hustler" | "kingpin"; period: "monthly" | "annua
 /** Test-mode subscriptions.
  *
  *  Applies exactly what the Stripe webhook would apply — tier, status, period
- *  end, the cycle's credits and streak freezes — so everything downstream of
+ *  end, the cycle's download credits — so everything downstream of
  *  paying (vote allowance, daily cap, download credits, the six-star tracker,
  *  the prize pool's member count) can be exercised without a card.
  *
@@ -28,7 +28,7 @@ export async function POST(req: NextRequest) {
   if (cancel) {
     await db.from("profiles").update({
       tier: "free", subscription_status: "canceled",
-      billing_period: null, credits_remaining: 0, freezes_left: 0,
+      billing_period: null, credits_remaining: 0,
     }).eq("id", me.id);
     await db.from("money_events").insert({
       kind: "subscription_ended", player_id: me.id, amount_cents: 0, note: "test mode",
@@ -55,7 +55,7 @@ export async function POST(req: NextRequest) {
   }).eq("id", me.id);
   if (error) return Response.json({ error: error.message }, { status: 500 });
 
-  // Same call the webhook makes: credits and freezes for the new cycle, and
+  // Same call the webhook makes: credits for the new cycle, and
   // subscribed_since set the first time so the star tracker starts counting.
   await db.rpc("grant_cycle_credits", { p_user: me.id, p_period_end: periodEnd });
 

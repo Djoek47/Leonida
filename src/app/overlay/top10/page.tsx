@@ -2,7 +2,8 @@
 import { useCallback } from "react";
 import { useFeed, useToken, dollars, DEMO_TOP, DEMO_ROUND, type TopRow, type Round } from "@/lib/overlay";
 
-/** Top 10 standings for the stream.
+/** This round's newest approved clips, for the stream. No scores or
+ *  vote ranking — totals stay private until winners are announced.
  *  OBS → Sources → Browser → 1920 x 1080, URL:
  *    https://livefromleonida.com/overlay/top10?key=YOUR_TOKEN
  *  Optional: &side=left  &count=5  &title=0 */
@@ -64,7 +65,6 @@ export default function Top10() {
               {c.trending && (
                 <span className="rounded-full bg-flamingo px-2 py-0.5 text-[11px] font-black text-white">HOT</span>
               )}
-              <span className="led-text text-[26px] leading-none tabular-nums">{c.votes}</span>
             </li>
           ))}
         </ol>

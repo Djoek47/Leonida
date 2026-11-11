@@ -75,10 +75,8 @@ export default function Pricing() {
               <>
                 <p className="mt-3">{ask.id === "free" ? <>Your plan ends at the close of this billing period. After that you lose:</> : <>This takes effect <b>right away</b>. You&apos;re leaving {from.label}, so you lose:</>}</p>
                 <ul className="chg-list">
-                  {from.votes > ask.votes && <li>{from.votes - ask.votes} vote{from.votes - ask.votes === 1 ? "" : "s"} per round ({from.votes} → {ask.votes})</li>}
                   {from.dailySubmissions > ask.dailySubmissions && <li>Daily uploads: {from.dailySubmissions} → {ask.dailySubmissions}</li>}
                   {from.creditsPerMonth > ask.creditsPerMonth && <li>Free downloads a month: {from.creditsPerMonth} → {ask.creditsPerMonth}</li>}
-                  {from.streakFreezes > ask.streakFreezes && <li>Streak freezes: {from.streakFreezes} → {ask.streakFreezes}</li>}
                 </ul>
                 <p className="text-sm opacity-80">No refund for the rest of this period; the lower price starts at your next renewal. Your clips, badges, stars and wallet stay.</p>
               </>
@@ -106,9 +104,9 @@ export default function Pricing() {
         <div className="mx-auto max-w-7xl px-4 py-14 md:py-20">
           <DemoNote />
           <p className="inline-flex items-center gap-2 rounded-full bg-mango text-[#1c1710] px-3 py-1 text-sm font-black">Memberships</p>
-          <h1 className="display mt-5 text-[clamp(2.6rem,8vw,6rem)] leading-[0.95]">Back the channel.<br />Get a louder vote.</h1>
+          <h1 className="display mt-5 text-[clamp(2.6rem,8vw,6rem)] leading-[0.95]">Back the channel.<br />Send more. Keep more.</h1>
           <p className="mt-5 max-w-2xl text-lg text-white/85">
-            You never have to pay to enter or to win. Members get more votes, more clips a day,
+            You never have to pay to enter or to win. Members get more clips a day,
             clip downloads and no ads — and their subscriptions are what grow the prize pool.
           </p>
 
@@ -148,8 +146,6 @@ export default function Pricing() {
                   : annual ? `${annualSaving(t)}% off the monthly price`
                   : `${price(t.annualCents)} a year saves ${annualSaving(t)}%`}
               </p>
-
-              <p className="plan-votes"><strong>{t.votes}</strong> {t.votes === 1 ? "vote" : "votes"}</p>
 
               <ul className="plan-perks">
                 {t.perks.map((p) => (
