@@ -176,9 +176,10 @@ export function eventEmail(kind: string, d: D, name: string): Email | null {
         rows([
           ["Amount", money(d.amount)],
           ["Send to", esc(`${s(d.method, "payout method")}${d.handle ? ` · ${s(d.handle)}` : ""}`)],
-          ["Left in your wallet", money(d.balance)],
+          ...(d.balance != null ? [["Left in your wallet", money(d.balance)] as [string, string]] : []),
         ], L),
         small("Staff send withdrawals by hand, usually within a few days. You'll get another email when it's sent. Wrong payout details? Fix them in settings.", L),
+        small("How we pay you, so you can spot a fake: we only ever send money to the payout details saved in your account. We will never ask for a password, a card number, a login code, or for you to send us money first. If a message asks for any of that, it isn't us — reply to this email instead.", L),
         button("See your wallet", `${SITE}/wallet`, L),
       ], [`${name}, you asked to withdraw ${money(d.amount)} to ${s(d.method)} ${s(d.handle)}.`, `Left in wallet: ${money(d.balance)}`]);
 
@@ -289,6 +290,7 @@ export function eventEmail(kind: string, d: D, name: string): Email | null {
         ], N),
         button("See your wallet", `${SITE}/wallet`, N),
         small("Nothing after a few days? Check the payout details in settings and tell staff in the chat.", N),
+        small("We only ever pay to the details saved in your account, and we never ask for a password, a card number, a login code, or money up front. Anything asking for those isn't from us.", N),
       ], [`${name}, we sent you ${money(d.amount)} via ${s(d.method)} ${s(d.handle)}.`, d.reference ? `Reference: ${s(d.reference)}` : null], "You're getting this because money was sent to you.");
   }
   return null;

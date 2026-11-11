@@ -7,7 +7,7 @@ import { BRACKETS } from "@/lib/tiers";
 import { DemoNote } from "@/components/DemoNote";
 import NotFound from "@/app/not-found";
 
-type Tab = "overview" | "review" | "gamertags" | "contest" | "payouts" | "creators" | "wallets" | "people" | "claims" | "drops" | "staff";
+type Tab = "overview" | "cashouts" | "review" | "gamertags" | "contest" | "payouts" | "creators" | "wallets" | "people" | "claims" | "drops" | "staff";
 type Row = Record<string, unknown> & { id: string };
 
 export default function Admin() {
@@ -17,7 +17,7 @@ export default function Admin() {
   // Anyone who isn't staff gets the ordinary not-found page. Saying "staff
   // only" would confirm there's a console here to anyone who guessed the URL.
   if (!profile?.is_admin) return <NotFound />;
-  const tabs: [Tab, string][] = [["overview", "Overview"], ["review", "Clip queue"], ["gamertags", "Gamertags"], ["contest", "Weekly round"], ["people", "People"], ["payouts", "Prize payouts"], ["creators", "Creator payouts"], ["wallets", "Member money"], ["claims", "Claims"], ["drops", "Daily Drops"], ["staff", "Staff and settings"]];
+  const tabs: [Tab, string][] = [["overview", "Overview"], ["cashouts", "Cash-out requests"], ["review", "Clip queue"], ["gamertags", "Gamertags"], ["contest", "Weekly round"], ["people", "People"], ["payouts", "Prize payouts"], ["creators", "Creator payouts"], ["wallets", "Member money"], ["claims", "Claims"], ["drops", "Daily Drops"], ["staff", "Staff and settings"]];
   return (
     <div className="mx-auto max-w-7xl px-4 py-10">
       <DemoNote />
@@ -27,6 +27,7 @@ export default function Admin() {
       </div>
       <div className="mt-8">
         {tab === "overview" && <Overview go={setTab} />}
+        {tab === "cashouts" && <Cashouts />}
         {tab === "review" && <Review />}
         {tab === "gamertags" && <Gamertags />}
         {tab === "people" && <People />}
@@ -62,6 +63,7 @@ function Overview({ go }: { go: (t: Tab) => void }) {
   const queues: [string, number, Tab][] = [
     ["Clips waiting on review", n("clips_pending"), "review"],
     ["Gamertags to check", n("gamertags_pending"), "gamertags"],
+    ["Cash-outs to send", n("cashouts_waiting"), "cashouts"],
     ["Prizes waiting to pay", n("prizes_waiting"), "payouts"],
     ["Open claims", n("claims_open"), "claims"],
   ];
@@ -77,7 +79,7 @@ function Overview({ go }: { go: (t: Tab) => void }) {
   ];
   return (
     <div>
-      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
         {queues.map(([label, count, t]) => (
           <button key={label} onClick={() => go(t)}
             className={`set-card !mt-0 text-left transition hover:-translate-y-0.5 ${count > 0 ? "!border-flamingo" : ""}`}>
@@ -229,6 +231,66 @@ function People() {
         </div>
       )}
       <p className="mt-3 text-xs text-haze">Votes are for the current round. Clips reset at midnight; downloads with the plan month. Money moves live in Member money.</p>
+    </div>
+  );
+}
+
+/** Members asking to be paid by PayPal, Venmo, Cash App, Interac or Wise.
+ *  Send it outside the site, then mark it here with the reference — that
+ *  sends them the receipt. If it can't go, return it to their wallet. */
+type Cashout = { id: string; creator_id: string; amount_cents: number; method: string; handle: string | null;
+  status: string; note: string | null; created_at: string };
+function Cashouts() {
+  const [rows, setRows] = useState<Cashout[] | null>(null);
+  const [names, setNames] = useState<Record<string, string>>({});
+  const [note, setNote] = useState("");
+  const load = useCallback(async () => {
+    const c = sb();
+    if (!c) { setRows([]); return; }
+    const { data } = await c.from("payouts").select("*").eq("status", "requested").order("created_at");
+    const rs = (data ?? []) as Cashout[];
+    setRows(rs);
+    const ids = [...new Set(rs.map((r) => r.creator_id))];
+    if (ids.length) {
+      const { data: ps } = await c.from("profiles").select("id, display_name, gamertag").in("id", ids);
+      setNames(Object.fromEntries((ps ?? []).map((p: { id: string; display_name: string; gamertag: string | null }) =>
+        [p.id, p.gamertag ? `${p.display_name} (${p.gamertag})` : p.display_name])));
+    }
+  }, []);
+  useEffect(() => { load(); }, [load]);
+  async function settle(r: Cashout, action: "sent" | "returned") {
+    const ref = action === "sent"
+      ? prompt(`Sent ${money(r.amount_cents)} to ${r.handle} on ${r.method}? Paste the transaction reference:`)
+      : prompt("Why couldn't it go? (they'll see the money back in their wallet)");
+    if (ref === null) return;
+    const c = sb();
+    if (c) { const { error } = await c.rpc("settle_payout", { p_payout: r.id, p_action: action, p_reference: ref || null });
+      if (error) { setNote(error.message); return; } }
+    setRows((xs) => (xs ?? []).filter((x) => x.id !== r.id));
+    setNote(action === "sent" ? `Marked sent. They get the receipt by email.` : `Returned to their wallet.`);
+  }
+  if (!rows) return <p className="text-haze">Loading…</p>;
+  return (
+    <div>
+      {note && <p role="status" className="mb-4 font-semibold text-gulf">{note}</p>}
+      {!rows.length ? <p className="text-haze">No cash-outs waiting. Stripe-connected members are paid automatically.</p> : (
+        <ul className="roll">
+          {rows.map((r) => (
+            <li key={r.id}>
+              <span className="what">
+                <b>{names[r.creator_id] ?? r.creator_id.slice(0, 8)}</b>
+                <small>{r.method} · {r.handle ?? "no handle saved"} · asked {new Date(r.created_at).toLocaleString()}</small>
+              </span>
+              <span className="amt in">{money(r.amount_cents)}</span>
+              <span className="flex gap-1.5">
+                <button onClick={() => settle(r, "sent")} className="btn btn-hot !py-1.5 !px-3 text-sm">Mark sent</button>
+                <button onClick={() => settle(r, "returned")} className="btn btn-ghost !py-1.5 !px-3 text-sm">Return</button>
+              </span>
+            </li>
+          ))}
+        </ul>
+      )}
+      <p className="mt-4 text-xs text-haze">Send only to the handle shown here — it is the one saved on their account. Never pay to details given in chat or by email.</p>
     </div>
   );
 }
