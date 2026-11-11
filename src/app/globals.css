@@ -1339,6 +1339,9 @@ aside .trophy-shelf li { width: 4.1rem; }
     linear-gradient(170deg, var(--ink-2), var(--ink)) !important;
   box-shadow: inset 0 2px 0 rgba(255,255,255,.1), inset 0 -3px 0 rgba(0,0,0,.18), 0 18px 32px -22px rgba(0,0,0,.7) !important; }
 .set-card { padding-top: 0 !important; overflow: hidden; }
+/* Cards that don't open with a header band need breathing room under the top edge. */
+.set-card:not(:has(> h2:first-child)) { padding-top: 1.35rem !important; }
+.set-card.\!p-4:not(:has(> h2:first-child)), .set-card.\!p-3:not(:has(> h2:first-child)) { padding-top: 1.1rem !important; }
 .set-card > h2:first-child { margin: 0 -1.5rem 1.1rem; padding: .7rem 1.5rem; font-size: 1.05rem !important; letter-spacing: .14em !important; text-transform: uppercase; color: #fff !important;
   background: repeating-linear-gradient(135deg, rgba(255,255,255,.07) 0 8px, transparent 8px 16px), linear-gradient(120deg, var(--gulf), color-mix(in srgb, var(--gulf) 60%, #000));
   border-bottom: 3px solid color-mix(in srgb, var(--gulf) 50%, #000); }
