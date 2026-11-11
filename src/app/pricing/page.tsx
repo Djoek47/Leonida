@@ -28,7 +28,7 @@ export default function Pricing() {
     subscribe(t);
   }
 
-  useEffect(() => { poolNow().then(setPool); }, []);
+  useEffect(() => { poolNow().then(setPool); const id = setInterval(() => poolNow().then(setPool).catch(() => {}), 15000); return () => clearInterval(id); }, []);
 
   async function subscribe(t: Tier) {
     if (!user) { location.href = "/login?next=/pricing"; return; }
@@ -192,7 +192,7 @@ export default function Pricing() {
 
         <div className="grid gap-5 content-start">
           <div>
-            <Vault payers={pool?.paying_users ?? 0} pool={Math.round((pool?.weekly_cents ?? 2500) / 100)} aim={aim} />
+            <Vault sign payers={pool?.paying_users ?? 0} pool={Math.round((pool?.weekly_cents ?? 2500) / 100)} aim={aim} />
             <p className="mt-3 text-sm text-haze">
               Each strap is a real bundle — the straps get fatter as the site grows. Clip of the Month pays {pool ? money(pool.monthly_cents) : "—"}.
             </p>

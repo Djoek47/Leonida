@@ -97,8 +97,8 @@ function payersAt(pos: number): number {
 }
 const ease = (k: number) => (k < .5 ? 4 * k * k * k : 1 - Math.pow(-2 * k + 2, 3) / 2);
 
-export function Vault({ payers, pool, compact = false, cycle = false, aim = null }:
-  { payers: number; pool: number; compact?: boolean; cycle?: boolean; aim?: number | null }) {
+export function Vault({ payers, pool, compact = false, cycle = false, aim = null, sign = false }:
+  { payers: number; pool: number; compact?: boolean; cycle?: boolean; aim?: number | null; sign?: boolean }) {
   // Cycling sweeps smoothly from the live figure up the whole ladder, holds at
   // the top, then the stack clears and settles back on the live figure.
   const live = ladderPos(payers);
@@ -155,13 +155,20 @@ export function Vault({ payers, pool, compact = false, cycle = false, aim = null
   const shownPayers = previewing ? payersAt(pos) : payers;
   const shownPool = previewing ? bracketFor(shownPayers).pool : pool;
 
-  return <VaultBody payers={shownPayers} pool={shownPool} pos={pos} compact={compact}
+  return <VaultBody sign={sign} payers={shownPayers} pool={shownPool} pos={pos} compact={compact}
     previewing={previewing} clearing={phase === "clear"} onHold={setHold} />;
 }
 
-function VaultBody({ payers, pool, pos, compact, previewing, clearing, onHold }:
-  { payers: number; pool: number; pos: number; compact: boolean; previewing: boolean; clearing: boolean;
+function VaultBody({ sign, payers, pool, pos, compact, previewing, clearing, onHold }:
+  { sign: boolean; payers: number; pool: number; pos: number; compact: boolean; previewing: boolean; clearing: boolean;
     onHold: (v: boolean) => void }) {
+  // A new subscriber turns the count green for a few seconds.
+  const lastPayers = useRef(payers);
+  const [up, setUp] = useState(false);
+  useEffect(() => {
+    if (!previewing && payers > lastPayers.current) { setUp(true); const t = setTimeout(() => setUp(false), 8000); lastPayers.current = payers; return () => clearTimeout(t); }
+    if (!previewing) lastPayers.current = payers;
+  }, [payers, previewing]);
   const bracket = bracketFor(payers);
   // One strap per 1/24th of the ladder: they arrive one at a time, never in clumps.
   const straps = Math.max(1, Math.min(MAX, Math.ceil(MAX * Math.max(0.001, pos))));
@@ -201,7 +208,7 @@ function VaultBody({ payers, pool, pos, compact, previewing, clearing, onHold }:
       <div className="vault-read led-board" role="group" aria-label="Prize pool">
         <div className="flex items-baseline justify-between gap-3">
           <span className="led-tag text-xs">{previewing ? "IF WE REACH" : "ON THE STACK"}</span>
-          <span key={payers > 0 ? "p" : "z"} className="led-tag vault-paying tabular-nums"><b>{payers.toLocaleString("en-US")}</b> PAYING</span>
+          <span key={payers > 0 ? "p" : "z"} className={`led-tag vault-paying tabular-nums${sign && !previewing ? " is-sign" : ""}${up && !previewing ? " is-up" : ""}`}><b>{payers.toLocaleString("en-US")}</b> PAYING</span>
         </div>
         <p className="led-text vault-total"><Odometer value={pool} /></p>
         <div className="vault-gauge">
