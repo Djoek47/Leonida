@@ -45,6 +45,7 @@ function night(subject: string, preheader: string, body: string[], text: (string
 
 export function authEmail(kind: string, d: { name: string; link?: string; token?: string; newEmail?: string }): Email | null {
   const { name, link, token, newEmail } = d;
+  setRank("free");
   // The site signs in by link, so links carry the whole flow; only reauthentication uses a typed code.
   const codeLine: string[] = [];
   const codeText = null;
@@ -265,6 +266,15 @@ export function eventEmail(kind: string, d: D, name: string): Email | null {
         rows([["Clip", esc(s(d.title, "Your clip"))], ["Status", "Approved"]], L),
         button("See it on your dashboard", `${SITE}/dashboard`, L),
       ], [`${name}, your clip has been approved and is now live.`, `${SITE}/dashboard`]);
+
+    case "account_deleted":
+      return sign("Your account has been deleted", "Your Live From Leonida account is closed.", [
+        heading("Account closed.", L),
+        para(`${hi(name)} your Live From Leonida account has been deleted, as you asked. Your sign-in, wallet history, votes and chat are gone.`, L),
+        list(["Clips you entered stay in the contest record, without your name on the account.", "Nothing more will be charged.", "You can make a new account any time with the same email."], L),
+        button("Visit Live From Leonida", SITE, L),
+        small("If you didn't ask for this, reply through our support page straight away.", L),
+      ], [`${name}, your Live From Leonida account has been deleted.`, "Nothing more will be charged.", `${SITE}/support`], "You're getting this because your account was deleted.");
 
     case "admin_new_clip":
       setRank("kingpin");

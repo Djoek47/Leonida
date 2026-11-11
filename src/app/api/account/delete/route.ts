@@ -1,5 +1,7 @@
 import { NextRequest } from "next/server";
 import { admin, env, userFromRequest } from "@/lib/server";
+import { eventEmail } from "@/lib/email/templates";
+import { sendEmail } from "@/lib/email/send";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -34,8 +36,13 @@ export async function POST(req: NextRequest) {
 
   await db.from("money_events").insert({ kind: "account_deleted", player_id: null, amount_cents: 0, note: me.id });
 
+  const { data: p } = await db.from("profiles").select("display_name").eq("id", me.id).maybeSingle();
   const { error } = await db.auth.admin.deleteUser(me.id);
   if (error) return Response.json({ error: error.message }, { status: 500 });
+
+  // A last word, sent after the account is really gone. Best effort.
+  const mail = eventEmail("account_deleted", {}, p?.display_name ?? "there");
+  if (me.email && mail) await sendEmail(me.email, mail, `deleted-${me.id}`, "account_deleted").catch(() => null);
 
   return Response.json({ ok: true });
 }
