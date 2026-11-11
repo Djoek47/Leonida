@@ -1793,7 +1793,14 @@ aside .trophy-shelf li { width: 4.1rem; }
 .vault-paying b { font-size: 1.6rem; line-height: 1; display: inline-block; text-shadow: 0 0 10px rgba(255,162,26,.7); }
 /* Road-sign flasher: hard on/off, with two lamps that alternate (wig-wag). Membership page only. */
 .vault-paying.is-sign { padding: 0 1.1rem; }
-.vault-paying.is-sign b, .vault-paying.is-sign { animation: sign-flash 1.2s steps(1, end) infinite; }
+.vault-paying.is-sign { animation: sign-word 2.4s ease-in-out infinite; }
+.vault-paying.is-sign b { color: #fff3c4; animation: sign-onoff 1.2s steps(1, end) infinite; }
+@keyframes sign-word { 0%, 100% { opacity: 1; } 50% { opacity: .75; } }
+/* The number is a lit sign: fully on, fully off. */
+@keyframes sign-onoff {
+  0%, 50% { opacity: 1; text-shadow: 0 0 6px #fff, 0 0 14px #ffc23d, 0 0 28px #ff9d1a, 0 0 46px rgba(255,157,26,.95); }
+  51%, 100% { opacity: 0; text-shadow: none; }
+}
 .vault-paying.is-sign::before, .vault-paying.is-sign::after { content: ""; position: absolute; top: 50%; width: .55rem; height: .55rem; margin-top: -.28rem; border-radius: 50%; background: #ffb020; box-shadow: 0 0 8px 2px rgba(255,176,32,.9); }
 .vault-paying.is-sign::before { left: 0; animation: sign-lamp-a 1.2s steps(1, end) infinite; }
 .vault-paying.is-sign::after { right: 0; animation: sign-lamp-b 1.2s steps(1, end) infinite; }
@@ -1801,10 +1808,11 @@ aside .trophy-shelf li { width: 4.1rem; }
 @keyframes sign-lamp-a { 0%, 50% { opacity: 1; } 51%, 100% { opacity: .1; } }
 @keyframes sign-lamp-b { 0%, 50% { opacity: .1; } 51%, 100% { opacity: 1; } }
 /* Someone just subscribed: green, flashing fast. */
-.vault-paying.is-up b { color: #2fd27a; text-shadow: 0 0 12px rgba(47,210,122,.9); }
-.vault-paying.is-up.is-sign, .vault-paying.is-up.is-sign b { animation: sign-flash .45s steps(1, end) infinite; }
+.vault-paying.is-up b { color: #eafff3; text-shadow: 0 0 6px #fff, 0 0 14px #2fd27a, 0 0 30px #1fb866, 0 0 48px rgba(47,210,122,.95); }
+.vault-paying.is-up.is-sign b { animation: sign-onoff-green .5s steps(1, end) infinite; }
+@keyframes sign-onoff-green { 0%, 50% { opacity: 1; text-shadow: 0 0 6px #fff, 0 0 14px #2fd27a, 0 0 30px #1fb866, 0 0 48px rgba(47,210,122,.95); } 51%, 100% { opacity: 0; text-shadow: none; } }
 .vault-paying.is-up.is-sign::before, .vault-paying.is-up.is-sign::after { background: #2fd27a; box-shadow: 0 0 8px 2px rgba(47,210,122,.9); }
-@media (prefers-reduced-motion: reduce) { .vault-paying.is-sign, .vault-paying.is-sign b, .vault-paying.is-sign::before, .vault-paying.is-sign::after { animation: none; } }
+@media (prefers-reduced-motion: reduce) { .vault-paying.is-sign, .vault-paying.is-sign b, .vault-paying.is-sign::before, .vault-paying.is-sign::after { animation: none; } .vault-paying.is-sign b { opacity: 1; } }
 .tank.is-pickable .tank-step { cursor: pointer; transition: transform .2s ease, filter .2s ease; }
 .tank.is-pickable .tank-step:hover, .tank.is-pickable .tank-step:focus-visible { transform: scale(1.03); filter: brightness(1.15); outline: none; }
 
