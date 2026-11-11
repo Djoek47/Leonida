@@ -6,8 +6,9 @@ import { DEMO_CLIPS, DEMO_CONTEST, exactMoney, money, platformName, poolNow, typ
 import { BRACKETS } from "@/lib/tiers";
 import { DemoNote } from "@/components/DemoNote";
 import NotFound from "@/app/not-found";
+import { MoneyPanel } from "./Money";
 
-type Tab = "overview" | "cashouts" | "review" | "gamertags" | "contest" | "payouts" | "creators" | "wallets" | "people" | "claims" | "drops" | "staff" | "support" | "rounds";
+type Tab = "overview" | "cashouts" | "review" | "gamertags" | "contest" | "payouts" | "creators" | "wallets" | "people" | "claims" | "drops" | "staff" | "support" | "rounds" | "money";
 type Row = Record<string, unknown> & { id: string };
 
 export default function Admin() {
@@ -22,30 +23,78 @@ export default function Admin() {
   // Anyone who isn't staff gets the ordinary not-found page. Saying "staff
   // only" would confirm there's a console here to anyone who guessed the URL.
   if (!profile?.is_admin) return <NotFound />;
-  const tabs: [Tab, string][] = [["overview", "Overview"], ["cashouts", "Cash-out requests"], ["review", "Clip queue"], ["support", "Support"], ["rounds", "Round results"], ["gamertags", "Gamertags"], ["contest", "Weekly round"], ["people", "People"], ["payouts", "Prize payouts"], ["creators", "Creator payouts"], ["wallets", "Member money"], ["claims", "Claims"], ["drops", "Daily Drops"], ["staff", "Staff and settings"]];
+  return <Shell tab={tab} setTab={setTab} isOwner={profile.role === "owner"} />;
+}
+
+type Counts = Record<string, number>;
+/** Left rail grouped by what you're doing, with a live count on anything waiting. */
+const NAV: { group: string; items: [Tab, string, string?][] }[] = [
+  { group: "Today", items: [["overview", "Overview"], ["review", "Clip queue", "clips_pending"], ["support", "Support", "support_open"], ["gamertags", "Gamertags", "gamertags_pending"], ["claims", "Claims", "claims_open"]] },
+  { group: "Money", items: [["money", "Money"], ["cashouts", "Cash-out requests", "cashouts_waiting"], ["payouts", "Prize payouts", "prizes_waiting"], ["creators", "Creator payouts"], ["wallets", "Member money"]] },
+  { group: "Rounds", items: [["contest", "Weekly round"], ["rounds", "Round results"], ["drops", "Daily Drops"]] },
+  { group: "Community", items: [["people", "People"], ["staff", "Staff and settings"]] },
+];
+
+function Shell({ tab, setTab, isOwner }: { tab: Tab; setTab: (t: Tab) => void; isOwner: boolean }) {
+  const [counts, setCounts] = useState<Counts>({});
+  const load = useCallback(async () => {
+    const c = sb(); if (!c) { setCounts({ clips_pending: 3, support_open: 1, cashouts_waiting: 2 }); return; }
+    const [{ data: st }, { count: sup }] = await Promise.all([
+      c.rpc("console_stats"),
+      c.from("support_tickets").select("id", { count: "exact", head: true }).eq("status", "open"),
+    ]);
+    setCounts({ ...((st ?? {}) as Counts), support_open: sup ?? 0 });
+  }, []);
+  useEffect(() => { load(); const id = setInterval(load, 30000); return () => clearInterval(id); }, [load]);
+  const urgent = ["clips_pending", "support_open", "gamertags_pending", "claims_open", "cashouts_waiting", "prizes_waiting"].reduce((n, k) => n + (counts[k] ?? 0), 0);
+  useEffect(() => { document.title = urgent ? `(${urgent}) The Console` : "The Console"; }, [urgent]);
+
   return (
-    <div className="mx-auto max-w-7xl px-4 py-10">
+    <div className="mx-auto max-w-7xl px-4 py-8">
       <DemoNote />
-      <h1 className="display text-6xl">The Console</h1>
-      <div role="tablist" className="mt-6 flex gap-1 overflow-x-auto border-b border-line">
-        {tabs.map(([k, l]) => <button key={k} role="tab" aria-selected={tab === k} onClick={() => setTab(k)} className={`px-4 py-2.5 font-bold text-sm border-b-2 -mb-px ${tab === k ? "border-flamingo text-foam" : "border-transparent text-haze"}`}>{l}</button>)}
+      <div className="flex flex-wrap items-end justify-between gap-3">
+        <h1 className="display text-5xl">The Console</h1>
+        {urgent > 0 && <span className="rounded-full bg-flamingo px-3 py-1 text-sm font-black text-white" role="status">{urgent} waiting on you</span>}
       </div>
-      <div className="mt-8">
-        {tab === "overview" && <Overview go={setTab} />}
-        {tab === "cashouts" && <Cashouts />}
-        {tab === "review" && <Review />}
-        {tab === "gamertags" && <Gamertags />}
-        {tab === "people" && <People />}
-        {tab === "contest" && <ContestAdmin />}
-        {tab === "payouts" && <Table table="winnings" filter={["status", ["requested", "verifying", "held"]]} cols={["place", "amount_cents", "status", "owner_id"]}
-          actions={[["verifying", "Checking gamertag"], ["sent", "Mark paid"], ["held", "Hold"]]} refField="payout_ref" />}
-        {tab === "claims" && <Table table="claims" filter={["status", ["open"]]} cols={["clip_id", "claimant_id", "evidence"]} actions={[["approved", "Approve"], ["rejected", "Reject"]]} />}
-        {tab === "staff" && <Staff isOwner={profile.role === "owner"} />}
-        {tab === "creators" && <CreatorPayouts />}
-        {tab === "drops" && <Drops />}
-        {tab === "support" && <SupportDesk />}
-        {tab === "rounds" && <RoundResults />}
-        {tab === "wallets" && <><LedgerCheck /><Wallets /></>}
+      <div className="mt-6 grid gap-6 lg:grid-cols-[13.5rem_1fr]">
+        <nav aria-label="Console sections" className="lg:sticky lg:top-4 lg:self-start">
+          <div className="flex gap-4 overflow-x-auto pb-2 lg:grid lg:gap-5 lg:overflow-visible">
+            {NAV.map((g) => (
+              <div key={g.group} className="shrink-0 lg:shrink">
+                <p className="mb-1 text-[10px] font-black uppercase tracking-[.2em] text-haze">{g.group}</p>
+                <ul className="flex gap-1 lg:grid">
+                  {g.items.map(([k, l, c]) => {
+                    const n = c ? (counts[c] ?? 0) : 0;
+                    return (
+                      <li key={k}><button onClick={() => setTab(k)} aria-current={tab === k ? "page" : undefined}
+                        className={`flex w-full items-center justify-between gap-2 whitespace-nowrap rounded-lg px-3 py-2 text-left text-sm font-bold transition ${tab === k ? "bg-white/10 text-foam" : "text-haze hover:bg-white/5"}`}>
+                        {l}{n > 0 && <span className="rounded-full bg-flamingo px-2 text-[11px] font-black text-white">{n}</span>}
+                      </button></li>
+                    );
+                  })}
+                </ul>
+              </div>
+            ))}
+          </div>
+        </nav>
+        <main className="min-w-0">
+          {tab === "overview" && <Overview go={setTab} />}
+          {tab === "money" && <MoneyPanel />}
+          {tab === "cashouts" && <Cashouts />}
+          {tab === "review" && <Review />}
+          {tab === "gamertags" && <Gamertags />}
+          {tab === "people" && <People />}
+          {tab === "contest" && <ContestAdmin />}
+          {tab === "payouts" && <Table table="winnings" filter={["status", ["requested", "verifying", "held"]]} cols={["place", "amount_cents", "status", "owner_id"]}
+            actions={[["verifying", "Checking gamertag"], ["sent", "Mark paid"], ["held", "Hold"]]} refField="payout_ref" />}
+          {tab === "claims" && <Table table="claims" filter={["status", ["open"]]} cols={["clip_id", "claimant_id", "evidence"]} actions={[["approved", "Approve"], ["rejected", "Reject"]]} />}
+          {tab === "staff" && <Staff isOwner={isOwner} />}
+          {tab === "creators" && <CreatorPayouts />}
+          {tab === "drops" && <Drops />}
+          {tab === "support" && <SupportDesk />}
+          {tab === "rounds" && <RoundResults />}
+          {tab === "wallets" && <><LedgerCheck /><Wallets /></>}
+        </main>
       </div>
     </div>
   );
@@ -80,13 +129,11 @@ function Overview({ go }: { go: (t: Tab) => void }) {
     ["Clips in", `${n("clips_today")} today`, `${n("clips_week")} this week · ${n("clips_approved")} live`],
     ["Votes", `${n("votes_today")} today`, `${n("votes_week")} this week`],
     ["Downloads", `${n("downloads_today")} today`, `${n("downloads_week")} this week · ${money(n("sales_week_cents"))} of sales`],
-    ["Owed to creators", money(n("owed_creators_cents")), "unpaid downloads"],
-    ["Sitting in wallets", money(n("wallets_cents")), "the money you hold for members"],
-    ["This week's pool", st.pool ? money(st.pool.weekly_cents) : "—", st.pool ? `${st.pool.paying_users} payers · ${st.pool.bracket}` : ""],
   ];
   return (
     <div>
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
+        {queues.filter(([, c]) => c > 0).length === 0 && <p className="set-card !mt-0 sm:col-span-2 lg:col-span-5 font-bold text-[#2fd27a]">Nothing waiting on you. All queues are clear.</p>}
         {queues.map(([label, count, t]) => (
           <button key={label} onClick={() => go(t)}
             className={`set-card !mt-0 text-left transition hover:-translate-y-0.5 ${count > 0 ? "!border-flamingo" : ""}`}>
@@ -111,7 +158,9 @@ function Overview({ go }: { go: (t: Tab) => void }) {
           </div>
         ))}
       </dl>
-      <p className="mt-4 text-xs text-haze">Refreshes every 30 seconds{at ? ` · last at ${at.toLocaleTimeString()}` : ""}.</p>
+      <h2 className="display mt-10 text-2xl">Money</h2>
+      <div className="mt-3"><MoneyPanel compact /></div>
+      <p className="mt-6 text-xs text-haze">Refreshes every 30 seconds{at ? ` · last at ${at.toLocaleTimeString()}` : ""}.</p>
     </div>
   );
 }
@@ -188,6 +237,10 @@ type PersonRow = { id: string; display_name: string; gamertag: string | null; pl
 function People() {
   const [rows, setRows] = useState<PersonRow[] | null>(null);
   const [q, setQ] = useState("");
+  const [lim, setLim] = useState(60);
+  const [show, setShow] = useState(false);
+  const [sum, setSum] = useState<Record<string, unknown> | null>(null);
+  useEffect(() => { const c = sb(); if (!c) { setSum({ members: 412, new_week: 38, subscribers: 61, uploaders: 87, clips_in_round: 41, clips_pending: 3, by_tier: { free: 351, street: 30, hustler: 22, kingpin: 9 } }); return; } c.rpc("console_people_summary").then(({ data }) => setSum((data ?? null) as Record<string, unknown> | null)); }, []);
   useEffect(() => {
     const c = sb();
     if (!c) {
@@ -199,15 +252,31 @@ function People() {
       return;
     }
     const t = setTimeout(async () => {
-      const { data } = await c.rpc("console_people", { p_q: q || null, p_limit: 60 });
+      const { data } = await c.rpc("console_people", { p_q: q || null, p_limit: lim });
       setRows((data ?? []) as PersonRow[]);
     }, 250);
     return () => clearTimeout(t);
-  }, [q]);
+  }, [q, lim]);
+  const sn = (k: string) => Number(sum?.[k] ?? 0);
+  const bt = (sum?.by_tier ?? {}) as Record<string, number>;
+  const hide = (v: string) => (show ? v : "•••");
   return (
     <div>
-      <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Find someone by name, gamertag or id"
-        aria-label="Search people" className="field max-w-md" />
+      {sum && (
+        <dl className="mb-5 grid gap-3 sm:grid-cols-3 lg:grid-cols-6">
+          {([["Members", sn("members"), `+${sn("new_week")} this week`], ["Paying", sn("subscribers"), `${bt.street ?? 0} Street · ${bt.hustler ?? 0} Hustler · ${bt.kingpin ?? 0} Kingpin`],
+            ["Free", bt.free ?? 0, "streaming and voting"], ["Sent a clip", sn("uploaders"), "people who uploaded"],
+            ["In this round", sn("clips_in_round"), "clips competing"], ["To review", sn("clips_pending"), "clips waiting"]] as [string, number, string][]).map(([k, v, d]) => (
+            <div key={k} className="set-card !mt-0 !p-3"><dt className="text-[11px] font-black uppercase tracking-wide text-haze">{k}</dt>
+              <dd className="display text-3xl">{v.toLocaleString()}</dd><dd className="text-[11px] text-haze">{d}</dd></div>
+          ))}
+        </dl>
+      )}
+      <div className="flex flex-wrap items-center gap-3">
+        <button onClick={() => setShow((x) => !x)} aria-pressed={show} className="btn btn-ghost !py-1.5 !px-4 text-sm">{show ? "Hide money" : "Show money"}</button>
+      </div>
+      <input value={q} onChange={(e) => { setQ(e.target.value); setLim(60); }} placeholder="Find someone by name, gamertag or id"
+        aria-label="Search people" className="field mt-3 max-w-md" />
       {!rows ? <p className="text-haze mt-4">Loading…</p> : !rows.length ? <p className="text-haze mt-4">Nobody matches.</p> : (
         <div className="mt-4 overflow-x-auto">
           <table className="w-full text-sm whitespace-nowrap">
@@ -226,8 +295,8 @@ function People() {
                     <td className="py-2.5 pr-4">{votesLeft} of {r.votes_allowed}</td>
                     <td className="py-2.5 pr-4">{clipsLeft} of {r.daily_submissions}</td>
                     <td className="py-2.5 pr-4">{r.credits_remaining} of {r.credits_per_month}</td>
-                    <td className="py-2.5 pr-4">{money(r.wallet_cents)}</td>
-                    <td className="py-2.5 pr-4">{money(r.pending_cents)}</td>
+                    <td className="py-2.5 pr-4">{hide(money(r.wallet_cents))}</td>
+                    <td className="py-2.5 pr-4">{hide(money(r.pending_cents))}</td>
                     <td className="py-2.5 pr-4">{r.clips}</td>
                     <td className="py-2.5 pr-4">{new Date(r.created_at).toLocaleDateString()}</td>
                   </tr>
@@ -237,6 +306,7 @@ function People() {
           </table>
         </div>
       )}
+      {rows && rows.length >= lim && lim < 200 && <button onClick={() => setLim((l) => Math.min(200, l + 60))} className="btn btn-ghost mt-4 !py-1.5 !px-4 text-sm">Show more people</button>}
       <p className="mt-3 text-xs text-haze">Votes are for the current round. Clips reset at midnight; downloads with the plan month. Money moves live in Member money.</p>
     </div>
   );
