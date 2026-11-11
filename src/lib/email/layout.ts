@@ -129,7 +129,7 @@ export function shell(o: { look: Look; preheader: string; body: Block[]; reason:
   const top = night
     ? `<tr><td align="center" style="padding:30px 24px 8px;">
 <img src="${asset(WELCOME ? "logo.png" : RANK === "free" ? "logo-night.png" : `logo-${RANK}.png`)}" width="64" height="64" alt="Live From Leonida" style="display:block;width:64px;height:64px;border:0;border-radius:50%;margin:0 auto 10px;">
-<p style="margin:0;font-family:${HEAVY};font-size:13px;font-weight:900;letter-spacing:4px;color:#ff3d8b;">LIVE FROM LEONIDA</p>
+<p style="margin:0;font-family:${HEAVY};font-size:13px;font-weight:900;letter-spacing:4px;color:#ff3d8b;">LIVE FROM LEONIDA${RANK !== "free" && !WELCOME ? `<img src="${asset(`medal-${RANK}.png`)}" width="28" height="28" alt="${RANKS[RANK].label}" style="display:inline-block;width:28px;height:28px;border:0;vertical-align:middle;margin-left:8px;">` : ""}</p>
 </td></tr>
 <tr><td align="center" style="padding:6px 24px 18px;font-family:${HEAVY};font-size:12px;letter-spacing:8px;color:#ffc23d;">&#9733;&#9733;&#9733;&#9733;&#9733;&#9733;</td></tr>`
     : `<tr><td style="padding:28px 24px 0;">
@@ -138,7 +138,7 @@ export function shell(o: { look: Look; preheader: string; body: Block[]; reason:
 <td style="padding:12px 16px 12px 12px;">
 <p style="margin:0;font-family:${LED};font-size:20px;font-weight:900;letter-spacing:2px;color:${RANKS[RANK].led};text-shadow:0 0 8px ${RANKS[RANK].led};">LIVE FROM LEONIDA</p>
 <p style="margin:3px 0 0;font-family:${HEAVY};font-size:10px;letter-spacing:2.5px;color:#8f93b8;">GTA VI CLIPS &middot; PRIZES &middot; ${RANKS[RANK].label}</p>
-</td></tr></table></td></tr>`;
+</td>${RANK !== "free" && !WELCOME ? `<td width="44" style="padding:12px 14px 12px 0;"><img src="${asset(`medal-${RANK}.png`)}" width="30" height="30" alt="${RANKS[RANK].label}" style="display:block;width:30px;height:30px;border:0;"></td>` : ""}</tr></table></td></tr>`;
 
   return `<!doctype html>
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">

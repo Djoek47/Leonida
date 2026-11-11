@@ -32,6 +32,17 @@ function When({ iso }: { iso: string }) {
   return <span suppressHydrationWarning>{t}</span>;
 }
 
+type Prize = { id: string; place: number; amount_cents: number; status: string; sent_at: string | null };
+/** Where a prize stands, in plain words. */
+const PRIZE_STATUS: Record<string, [string, string]> = {
+  unclaimed: ["Won", "We're confirming the result. It lands in your wallet once confirmed."],
+  requested: ["Being processed", "Staff are processing this prize."],
+  verifying: ["Checking your gamertag", "Verify your gamertag on your dashboard so we can release it."],
+  held: ["On hold", "Something needs a look. Contact support and we'll sort it out."],
+  sent: ["In your wallet", "Paid into your wallet. You can cash it out."],
+};
+const PLACE = ["", "1st place", "2nd place", "3rd place"];
+
 export function Wallet({ payoutReady }: { payoutReady: boolean }) {
   const [entries, setEntries] = useState<Entry[]>([]);
   const [demo, setDemo] = useState(false);
@@ -39,6 +50,7 @@ export function Wallet({ payoutReady }: { payoutReady: boolean }) {
   const [busy, setBusy] = useState(false);
   const [msg, setMsg] = useState("");
   const [err, setErr] = useState("");
+  const [prizes, setPrizes] = useState<Prize[]>([]);
   // Split from the server: this month's download earnings are pending until
   // month-end; everything else (prizes included) is available now.
   const [split, setSplit] = useState<{ pending_cents: number; available_cents: number; releases_at: string } | null>(null);
@@ -52,6 +64,8 @@ export function Wallet({ payoutReady }: { payoutReady: boolean }) {
     }
     const me = (await c.auth.getUser()).data.user?.id;
     if (!me) return;
+    c.from("winnings").select("id,place,amount_cents,status,sent_at").eq("owner_id", me).order("requested_at", { ascending: false, nullsFirst: true }).limit(20)
+      .then(({ data: w }) => setPrizes((w as Prize[]) ?? []));
     const [{ data }, { data: sp }] = await Promise.all([
       c.from("wallet_entries").select("id,amount_cents,kind,note,created_at").eq("player_id", me).order("created_at", { ascending: false }).limit(50),
       c.rpc("wallet_split"),
@@ -100,6 +114,20 @@ export function Wallet({ payoutReady }: { payoutReady: boolean }) {
         <div><dt>Available to withdraw</dt><dd>{exactMoney(balance)}</dd><dd className="sub">Prizes land here straight away</dd></div>
         <div><dt>Paid out so far</dt><dd>{exactMoney(-payouts.reduce((n, e) => n + e.amount_cents, 0))}</dd><dd className="sub">{payouts.length} payout{payouts.length === 1 ? "" : "s"}</dd></div>
       </dl>
+      {prizes.length > 0 && (
+        <ul className="mt-4 grid gap-2">
+          {prizes.map((p) => {
+            const [label, hint] = PRIZE_STATUS[p.status] ?? [p.status, ""];
+            return (
+              <li key={p.id} className="set-card !mt-0 flex flex-wrap items-center justify-between gap-2 !py-3">
+                <span className="font-black">{PLACE[p.place] ?? "Prize"} · {exactMoney(p.amount_cents)}</span>
+                <span className={`text-sm font-bold ${p.status === "sent" ? "text-[#2fd27a]" : p.status === "held" ? "text-flamingo" : "text-haze"}`} title={hint}>{label}</span>
+                <span className="w-full text-xs text-haze">{hint}</span>
+              </li>
+            );
+          })}
+        </ul>
+      )}
       <p className="mt-3 text-sm text-haze">
         Your download earnings accumulate throughout the month and become available to withdraw at the end of the month.
       </p>
