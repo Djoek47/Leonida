@@ -7,17 +7,22 @@ import { BRACKETS } from "@/lib/tiers";
 import { DemoNote } from "@/components/DemoNote";
 import NotFound from "@/app/not-found";
 
-type Tab = "overview" | "cashouts" | "review" | "gamertags" | "contest" | "payouts" | "creators" | "wallets" | "people" | "claims" | "drops" | "staff";
+type Tab = "overview" | "cashouts" | "review" | "gamertags" | "contest" | "payouts" | "creators" | "wallets" | "people" | "claims" | "drops" | "staff" | "support" | "rounds";
 type Row = Record<string, unknown> & { id: string };
 
 export default function Admin() {
   const { profile, loading } = useUser();
   const [tab, setTab] = useState<Tab>("overview");
+  useEffect(() => {
+    const t = new URLSearchParams(location.search).get("tab");
+    const alias: Record<string, Tab> = { clips: "review" };
+    if (t) setTab((alias[t] ?? t) as Tab);
+  }, []);
   if (loading) return <div className="mx-auto max-w-xl px-4 py-24 text-haze font-semibold" role="status">Loading your account…</div>;
   // Anyone who isn't staff gets the ordinary not-found page. Saying "staff
   // only" would confirm there's a console here to anyone who guessed the URL.
   if (!profile?.is_admin) return <NotFound />;
-  const tabs: [Tab, string][] = [["overview", "Overview"], ["cashouts", "Cash-out requests"], ["review", "Clip queue"], ["gamertags", "Gamertags"], ["contest", "Weekly round"], ["people", "People"], ["payouts", "Prize payouts"], ["creators", "Creator payouts"], ["wallets", "Member money"], ["claims", "Claims"], ["drops", "Daily Drops"], ["staff", "Staff and settings"]];
+  const tabs: [Tab, string][] = [["overview", "Overview"], ["cashouts", "Cash-out requests"], ["review", "Clip queue"], ["support", "Support"], ["rounds", "Round results"], ["gamertags", "Gamertags"], ["contest", "Weekly round"], ["people", "People"], ["payouts", "Prize payouts"], ["creators", "Creator payouts"], ["wallets", "Member money"], ["claims", "Claims"], ["drops", "Daily Drops"], ["staff", "Staff and settings"]];
   return (
     <div className="mx-auto max-w-7xl px-4 py-10">
       <DemoNote />
@@ -38,6 +43,8 @@ export default function Admin() {
         {tab === "staff" && <Staff isOwner={profile.role === "owner"} />}
         {tab === "creators" && <CreatorPayouts />}
         {tab === "drops" && <Drops />}
+        {tab === "support" && <SupportDesk />}
+        {tab === "rounds" && <RoundResults />}
         {tab === "wallets" && <Wallets />}
       </div>
     </div>
@@ -1009,5 +1016,60 @@ function OverlayPanel() {
         {busy ? "Rotating…" : "Rotate key"}
       </button>
     </div>
+  );
+}
+
+type Ticket = { id: string; ref: string; email: string; topic: string; subject: string; message: string; status: string; reply: string | null; context: Record<string, unknown>; created_at: string };
+/** Every support request, newest open first. A reply emails the member. */
+function SupportDesk() {
+  const [rows, setRows] = useState<Ticket[] | null>(null);
+  const [draft, setDraft] = useState<Record<string, string>>({});
+  const [busy, setBusy] = useState<string | null>(null);
+  const load = useCallback(async () => { const c = sb(); if (!c) { setRows([]); return; } const { data } = await c.rpc("console_support"); setRows((data ?? []) as Ticket[]); }, []);
+  useEffect(() => { load(); }, [load]);
+  async function answer(t: Ticket, status: string) {
+    setBusy(t.id);
+    await sb()!.rpc("console_support_reply", { p_id: t.id, p_reply: draft[t.id] ?? "", p_status: status });
+    setBusy(null); load();
+  }
+  if (!rows) return <p className="text-haze">Loading…</p>;
+  if (!rows.length) return <p className="text-haze">No support requests yet.</p>;
+  return (
+    <ul className="grid gap-4">
+      {rows.map((t) => (
+        <li key={t.id} className="rounded-lg border-2 border-line bg-ink p-4">
+          <div className="flex flex-wrap items-baseline justify-between gap-2">
+            <p className="font-extrabold">{t.subject} <span className="text-xs text-haze">#{t.ref} · {t.topic}</span></p>
+            <span className={`feat-chip ${t.status === "open" ? "scheduled" : "active"}`}>{t.status}</span>
+          </div>
+          <p className="text-sm text-haze">{t.email} · {new Date(t.created_at).toLocaleString()}{t.context?.tier ? ` · ${String(t.context.tier)}` : ""}{t.context?.gamertag ? ` · ${String(t.context.gamertag)}` : ""}</p>
+          <p className="mt-2 whitespace-pre-wrap">{t.message}</p>
+          {t.reply && <p className="mt-2 rounded bg-ink-2 p-2 text-sm"><b>Reply sent:</b> {t.reply}</p>}
+          <textarea className="field mt-3 min-h-[5rem]" placeholder="Reply (emails the member)…" value={draft[t.id] ?? ""} onChange={(e) => setDraft({ ...draft, [t.id]: e.target.value })} />
+          <div className="mt-2 flex gap-2">
+            <button disabled={busy === t.id || !(draft[t.id] ?? "").trim()} onClick={() => answer(t, "answered")} className="btn btn-hot !py-2 text-sm disabled:opacity-60">Send reply</button>
+            <button disabled={busy === t.id} onClick={() => answer(t, "closed")} className="btn btn-ghost !py-2 text-sm">Close</button>
+          </div>
+        </li>
+      ))}
+    </ul>
+  );
+}
+
+type Result = { contest_id: string; result_version: number; outcome: string; winning_clip: string | null; tally: { clip: string; votes: number }[]; finalized_at: string };
+/** Finalized weekly rounds. Ties and all-zero rounds wait here for a staff decision. */
+function RoundResults() {
+  const [rows, setRows] = useState<Result[] | null>(null);
+  useEffect(() => { const c = sb(); if (!c) { setRows([]); return; } c.rpc("console_round_results").then(({ data }) => setRows((data ?? []) as Result[])); }, []);
+  if (!rows) return <p className="text-haze">Loading…</p>;
+  if (!rows.length) return <p className="text-haze">No weekly round has been finalized yet. The first new-schedule round closes Thursday at noon.</p>;
+  return (
+    <ul className="grid gap-3">{rows.map((r) => (
+      <li key={r.contest_id + r.result_version} className="rounded-lg border-2 border-line bg-ink p-4">
+        <p className="font-extrabold">{r.outcome === "winner" ? "Winner decided" : r.outcome === "no_entries" ? "No entries — no winner" : "Needs review: " + r.outcome.replace("review_", "").replace("_", " ")}</p>
+        <p className="text-sm text-haze">Round {r.contest_id.slice(0, 8)} · finalized {new Date(r.finalized_at).toLocaleString()}</p>
+        <ol className="mt-2 text-sm">{r.tally.slice(0, 5).map((t, i) => <li key={t.clip}>{i + 1}. {t.clip.slice(0, 8)} — {t.votes} votes</li>)}</ol>
+      </li>
+    ))}</ul>
   );
 }

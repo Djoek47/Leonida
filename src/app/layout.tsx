@@ -38,12 +38,12 @@ const jsonLd = {
 };
 
 const nav = [
-  { href: "/clips", label: "This week's clips" },
+  { href: "/clips", label: "Clips from Leonida" },
   { href: "/submit", label: "Send a clip" },
   { href: "/earn", label: "How to earn" },
   { href: "/edge", label: "The edge" },
   { href: "/leonida", label: "Leonida guide" },
-  { href: "/pricing", label: "Go Pro" },
+  { href: "/pricing", label: "Join" },
   { href: "/chat", label: "Chat" },
 ];
 
@@ -86,6 +86,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             </div>
             <div className="flex flex-col gap-2">
               <Link href="/rules">Contest rules</Link>
+              <Link href="/support">Support</Link>
               <Link href="/dashboard">My clips and winnings</Link>
               <Link href="/credits">Credits</Link>
               <Link href="/terms">Terms</Link>

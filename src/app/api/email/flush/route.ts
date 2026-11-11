@@ -35,10 +35,10 @@ async function flush() {
   for (const row of (batch ?? []) as Array<{ id: string; user_id: string; kind: string; data: Record<string, unknown> }>) {
     const [{ data: u }, { data: p }] = await Promise.all([
       db.auth.admin.getUserById(row.user_id),
-      db.from("profiles").select("display_name").eq("id", row.user_id).maybeSingle(),
+      db.from("profiles").select("display_name, tier, subscription_status").eq("id", row.user_id).maybeSingle(),
     ]);
     const to = u?.user?.email;
-    const mail = eventEmail(row.kind, row.data ?? {}, p?.display_name ?? "there");
+    const mail = eventEmail(row.kind, { tier: p && ["active", "trialing"].includes(p.subscription_status) ? p.tier : "free", ...(row.data ?? {}) }, p?.display_name ?? "there");
     if (!to || !mail) {
       await db.from("email_outbox").update({ status: "skipped", error: !to ? "no email address" : "unknown kind" }).eq("id", row.id);
       continue;

@@ -16,7 +16,7 @@ const PLAIN: [string, string][] = [
 
 /** The terms. Kept to what actually has to be said. */
 const TERMS: [string, string][] = [
-  ["Who runs it", "Mytikas 73 Inc. Live From Leonida is a fan community, not affiliated with or endorsed by Rockstar Games or Take-Two Interactive."],
+  ["Who runs it", "Organized by Live From Leonida. Live From Leonida is a fan community, not affiliated with or endorsed by Rockstar Games or Take-Two Interactive."],
   ["Entering", "A free account, that's it. Void where prohibited. Canadian winners answer a skill-testing question; Quebec residents may take disputes to the Régie des alcools, des courses et des jeux."],
   ["What we won't take", "Other people's footage, mods, cheats, code glitches, anything breaking Rockstar's terms, hate, harassment, sexual content, personal information, or music laid over the top."],
   ["Review", "Staff review every clip and pick what goes in the weekly compilation, trimming or captioning as needed. A clip we don't select can't win that round."],

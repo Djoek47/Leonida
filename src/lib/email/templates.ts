@@ -1,6 +1,6 @@
 import "server-only";
 
-import { asset, button, code, esc, hero, heading, list, para, plain, rows, shell, SITE, small } from "./layout";
+import { led, setRank, asset, button, code, esc, hero, heading, list, para, plain, rows, shell, SITE, small } from "./layout";
 
 /** Every email the site sends, in one place.
  *
@@ -110,6 +110,7 @@ export function authEmail(kind: string, d: { name: string; link?: string; token?
 /* ─────────────────────────── Everything else ─────────────────────────── */
 
 export function eventEmail(kind: string, d: D, name: string): Email | null {
+  setRank(d.tier ?? d.new_tier);
   switch (kind) {
     /* ── Everyday ── */
     case "plan_changed": {
@@ -259,10 +260,46 @@ export function eventEmail(kind: string, d: D, name: string): Email | null {
     case "clip_approved":
       return sign("Your clip has been approved", "Your clip has been approved and is now live.", [
         heading("Approved.", L),
+        led([["Status", "LIVE"], ["Views", "0"], ["Round", esc(s(d.round, "WEEK"))]]),
         para(`${hi(name)} your clip has been approved and is now live.`, L),
         rows([["Clip", esc(s(d.title, "Your clip"))], ["Status", "Approved"]], L),
         button("See it on your dashboard", `${SITE}/dashboard`, L),
       ], [`${name}, your clip has been approved and is now live.`, `${SITE}/dashboard`]);
+
+    case "admin_new_clip":
+      setRank("kingpin");
+      return sign(`New clip to review: ${s(d.title, "Untitled")}`, `${s(d.gamertag)} just sent a clip.`, [
+        heading("New clip in the queue.", L),
+        led([["Waiting", esc(s(d.waiting, "1"))], ["Length", `${esc(s(d.duration, "?"))}s`], ["Round", esc(s(d.round, "WEEK"))]]),
+        rows([["Title", esc(s(d.title, "Untitled"))], ["Gamertag", esc(s(d.gamertag))], ["Platform", esc(s(d.platform).toUpperCase())]], L),
+        button("Review it in the console", `${SITE}/console?tab=clips`, L),
+        small("Approve puts it live and into its weekly round. Disapprove tells the creator.", L),
+      ], [`New clip to review: ${s(d.title)} by ${s(d.gamertag)}.`, `${SITE}/console?tab=clips`], "You're getting this because you're staff on Live From Leonida.");
+
+    case "admin_support":
+      setRank("kingpin");
+      return sign(`Support: ${s(d.subject, "New request")}`, `${s(d.topic)} · ${s(d.email)}`, [
+        heading("New support request.", L),
+        rows([["Topic", esc(s(d.topic))], ["From", esc(s(d.email))], ["Subject", esc(s(d.subject))]], L),
+        para(esc(s(d.message)).replace(/\n/g, "<br>"), L),
+        button("Open it in the console", `${SITE}/console?tab=support`, L),
+      ], [`Support request from ${s(d.email)}: ${s(d.subject)}`, s(d.message), `${SITE}/console?tab=support`], "You're getting this because you're staff on Live From Leonida.");
+
+    case "support_received":
+      return sign("We got your message", "A real person reads every request.", [
+        heading("Message received.", L),
+        led([["Ticket", esc(s(d.ref))], ["Status", "OPEN"]]),
+        para(`${hi(name)} thanks for writing in about <strong>${esc(s(d.subject))}</strong>. We read every request and reply from the console, usually within a day.`, L),
+        button("See your requests", `${SITE}/support`, L),
+      ], [`${name}, we got your message (${s(d.ref)}).`, `${SITE}/support`]);
+
+    case "support_reply":
+      return sign(`Reply to: ${s(d.subject)}`, "Support answered your request.", [
+        heading("We answered.", L),
+        para(esc(s(d.reply)).replace(/\n/g, "<br>"), L),
+        rows([["Ticket", esc(s(d.ref))], ["Status", esc(s(d.status, "answered").toUpperCase())]], L),
+        button("Open your requests", `${SITE}/support`, L),
+      ], [`Support replied to ${s(d.subject)}:`, s(d.reply), `${SITE}/support`]);
 
     case "clip_disapproved":
       return sign("Your clip has been disapproved", "Your clip has been disapproved.", [
@@ -281,10 +318,11 @@ export function eventEmail(kind: string, d: D, name: string): Email | null {
         heading(place === 1 ? "The whole state voted. You won." : `On the podium. ${PLACE[place]} place.`, N),
         para(`${hi(name)} your clip <strong>${esc(s(d.title, "your clip"))}</strong> finished <strong>${PLACE[place]}</strong> in ${esc(s(d.contest, award))}. The ${place === 1 ? "gold" : place === 2 ? "silver" : "bronze"} badge is on your profile.`, N),
         rows([["Place", PLACE[place]], ["Prize", money(d.amount)], ["Round", esc(s(d.contest, award))]], N),
-        para("Staff move prizes into your wallet once the round is checked. You'll get one more email when it lands.", N),
+        led([["Place", PLACE[place].toUpperCase()], ["Prize", money(d.amount)]]),
+        para("Weekly prizes are processed after the winner is announced and valid payment details are provided. You'll get one more email when it's paid.", N),
         button("See the results", `${SITE}/clips`, N),
         small("Make sure your gamertag is verified and your payout details are set, so nothing holds the money up.", N),
-      ], [`${name}, "${s(d.title)}" placed ${PLACE[place]} in ${s(d.contest, award)}. Prize: ${money(d.amount)}.`, "It goes to your wallet once staff check the round."], "You're getting this because your clip won a prize.");
+      ], [`${name}, "${s(d.title)}" placed ${PLACE[place]} in ${s(d.contest, award)}. Prize: ${money(d.amount)}.`, "Weekly prizes are processed after the winner is announced and valid payment details are provided."], "You're getting this because your clip won a prize.");
     }
 
     case "prize_paid":

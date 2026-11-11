@@ -61,6 +61,8 @@ export function NavAuth() {
           <nav className="acct-links" onClick={() => setOpen(false)}>
             <Link role="menuitem" href="/dashboard">Dashboard</Link>
             <Link role="menuitem" href="/wallet">Wallet & billing</Link>
+            <Link role="menuitem" href="/favorites">Favorites</Link>
+            <Link role="menuitem" href="/support">Support</Link>
             <Link role="menuitem" href="/submit">Send a clip</Link>
             <Link role="menuitem" href="/settings">Settings</Link>
             {!paying && <Link role="menuitem" href="/pricing" className="acct-up">Upgrade</Link>}

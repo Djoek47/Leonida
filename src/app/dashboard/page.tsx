@@ -29,6 +29,7 @@ export default function Dashboard() {
   const [prizes, setPrizes] = useState(0);
   const [badges, setBadges] = useState<Badge[]>([]);
   const [gt, setGt] = useState(false);
+  const [views, setViews] = useState<Record<string, { views: number; views_24h: number }>>({});
 
   const reloadProfile = useCallback(async () => {
     const c = sb(); if (!c || !user) return;
@@ -41,6 +42,7 @@ export default function Dashboard() {
     const c = sb();
     if (!c) { setClips([DEMO_CLIPS[3]]); return; }
     c.from("clip_scores").select("*").eq("owner_id", user.id).order("created_at", { ascending: false }).then(({ data }) => setClips((data as Clip[]) ?? []));
+    c.rpc("my_clip_views").then(({ data }) => setViews(Object.fromEntries(((data ?? []) as { clip_id: string; views: number; views_24h: number }[]).map((x) => [x.clip_id, x]))));
     c.rpc("my_clip_sales").then(({ data }) => setSales(Object.fromEntries(((data ?? []) as Sale[]).map((x) => [x.clip_id, x]))));
     c.from("wallet_entries").select("amount_cents,kind").then(({ data }) => {
       const rows = (data ?? []) as { amount_cents: number; kind: string }[];
@@ -100,13 +102,13 @@ export default function Dashboard() {
           <div className="mt-3 flex flex-wrap items-center gap-2">
             <Link href="/wallet" className="wallet-pill"><span>Wallet</span><b>{exactMoney(balance)}</b></Link>
             {paying ? <span className="dash-plan">{credits} download{credits === 1 ? "" : "s"} left</span>
-              : <Link href="/pricing" className="dash-plan">Go Pro</Link>}
+              : <Link href="/pricing" className="dash-plan">Join</Link>}
           </div>
         </div>
       </header>
 
       <dl className="dash-stats">
-        {([["Clips", String(clips.length)], ["Approved", String(clips.filter((c) => ["approved", "featured"].includes(c.status)).length)], ["Sold", String(sold)], ["Earned", exactMoney(earned + prizes)]] as const).map(([k, v]) => (
+        {([["Clips", String(clips.length)], ["Views", String(Object.values(views).reduce((n, v) => n + v.views, 0))], ["Sold", String(sold)], ["Earned", exactMoney(earned + prizes)]] as const).map(([k, v]) => (
           <div key={k} className="dash-stat"><dt>{k}</dt><dd className="text-[clamp(1.5rem,6vw,2.4rem)]">{v}</dd></div>
         ))}
       </dl>
@@ -156,6 +158,7 @@ export default function Dashboard() {
                       <p className="font-extrabold truncate">{c.id === best && <span className="best-tag">Best seller</span>}{c.title}</p>
                       <span className={`clip-state ${kind}`}>{label}</span>
                     </div>
+                    <div className="sales-n" title={`${views[c.id]?.views_24h ?? 0} in the last 24 hours`}><b>{views[c.id]?.views ?? 0}</b><small>views</small></div>
                     <div className="sales-n" title="Downloads"><b>{s?.downloads ?? 0}</b><small>sold</small></div>
                     <div className="sales-n money" title="Earned from downloads"><b>{exactMoney(s?.earned_cents ?? 0)}</b><small>earned</small></div>
                     {["approved", "featured", "pending"].includes(c.status) && (

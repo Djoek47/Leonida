@@ -111,6 +111,7 @@ function SendForm({ userId, cap, usedToday, gamertag, platform }: { userId: stri
     openContests().then((rs) => { setRounds(rs); setRoundId(rs[0]?.id ?? ""); }).catch(() => setRounds([]));
   }, []);
   const forContest = roundId !== "";
+  const [entered, setEntered] = useState<{ title: string; starts_at: string; timezone: string; state: string } | null>(null);
   const [len, setLen] = useState<number | null>(null);
   const [tags, setTags] = useState<string[]>([]);
   const [agreed, setAgreed] = useState(false);
@@ -147,11 +148,16 @@ function SendForm({ userId, cap, usedToday, gamertag, platform }: { userId: stri
         title: f.get("title"), platform: f.get("platform"), gamertag: f.get("gamertag"),
         storage_path, source_url: mode === "link" ? f.get("url") : null,
         for_contest: forContest, duration_seconds: len == null ? null : Math.round(len),
-      }).select("id").single();
+      }).select("id, contest_id").single();
       if (error) {
         // The row was refused, so nothing will ever point at the file. Take it back.
         if (storage_path) await c.storage.from("clips").remove([storage_path]);
         throw error;
+      }
+      // A poster frame for the grids. Best effort: a clip with no thumbnail still plays.
+      if (mode === "file" && file && file.size && clip?.id) {
+        const jpg = await grabFrame(file).catch(() => null);
+        if (jpg) await c.storage.from("thumbs").upload(`${userId}/${clip.id}.jpg`, jpg, { contentType: "image/jpeg", upsert: true });
       }
       // Tags are a nice-to-have: a failure here must not lose the clip itself.
       if (tags.length && clip?.id) {
@@ -164,6 +170,11 @@ function SendForm({ userId, cap, usedToday, gamertag, platform }: { userId: stri
       if (!me?.platform) fill.platform = f.get("platform");
       if (!me?.gamertag) fill.gamertag = f.get("gamertag");
       if (Object.keys(fill).length) await c.from("profiles").update(fill).eq("id", userId);
+      if (clip?.contest_id) {
+        const { data: rs } = await c.rpc("round_status");
+        const r = ((rs ?? []) as { id: string; title: string; starts_at: string; timezone: string; state: string }[]).find((x) => x.id === clip.contest_id);
+        if (r) setEntered(r);
+      }
       setState("sent");
     } catch (x) {
       const m = (x as Error).message;
@@ -177,6 +188,13 @@ function SendForm({ userId, cap, usedToday, gamertag, platform }: { userId: stri
   if (state === "sent") return (
     <div className="mt-10 rounded-lg border border-gulf border-2 bg-ink p-6">
       <p className="display text-4xl">Clip received</p>
+      {entered && (
+        <p className="mt-2 font-bold">
+          {entered.state === "scheduled"
+            ? <>Entered for the next weekly round. Voting opens {new Date(entered.starts_at).toLocaleString(undefined, { weekday: "long", month: "short", day: "numeric", hour: "numeric", minute: "2-digit", timeZone: entered.timezone })} ({entered.timezone.replace("_", " ")} time).</>
+            : <>Entered for {entered.title}. Status: Pending review.</>}
+        </p>
+      )}
       <p className="mt-2 text-haze">It&apos;s in the review queue now. Staff watch every clip before it goes live — usually within a day, and you&apos;ll get an email either way. Until then it shows as <b className="text-foam">under review</b> on your dashboard.</p>
       <div className="mt-5 flex gap-3"><Link href="/dashboard" className="btn btn-hot">Open my dashboard</Link><button className="btn btn-ghost" onClick={() => setState("idle")}>Send another</button></div>
     </div>
@@ -240,8 +258,8 @@ function SendForm({ userId, cap, usedToday, gamertag, platform }: { userId: stri
                 <span>
                   <b>{r.title}</b>
                   <small>
-                    Entries close {new Date(r.submissions_close).toLocaleString(undefined,
-                      { weekday: "short", month: "short", day: "numeric", hour: "numeric", minute: "2-digit" })}
+                    Weekly entries go to the round open when your upload finishes. Entries close {new Date(r.submissions_close).toLocaleString(undefined,
+                      { weekday: "short", month: "short", day: "numeric", hour: "numeric", minute: "2-digit", timeZone: "America/Toronto", timeZoneName: "short" })}
                     {" · voting "}
                     {new Date(r.voting_opens).toLocaleDateString(undefined, { month: "short", day: "numeric" })}
                     {"–"}
@@ -338,4 +356,23 @@ function ClaimForm({ userId }: { userId: string }) {
       )}
     </div>
   );
+}
+
+/** One frame, a second in (or a third of the way for very short clips), as a 640px JPEG. */
+function grabFrame(file: File): Promise<Blob | null> {
+  return new Promise((resolve) => {
+    const v = document.createElement("video");
+    const u = URL.createObjectURL(file);
+    const done = (b: Blob | null) => { URL.revokeObjectURL(u); resolve(b); };
+    v.muted = true; v.playsInline = true; v.preload = "auto"; v.src = u;
+    v.onloadedmetadata = () => { v.currentTime = Math.min(1, (v.duration || 3) / 3); };
+    v.onseeked = () => {
+      const w = 640, h = Math.round((v.videoHeight / v.videoWidth) * w) || 360;
+      const cv = document.createElement("canvas"); cv.width = w; cv.height = h;
+      cv.getContext("2d")?.drawImage(v, 0, 0, w, h);
+      cv.toBlob((b) => done(b), "image/jpeg", 0.8);
+    };
+    v.onerror = () => done(null);
+    setTimeout(() => done(null), 8000);
+  });
 }

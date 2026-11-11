@@ -193,7 +193,7 @@ export default function Pricing() {
 
           <div className="panel-steel">
             <p className="k">Every download</p>
-            <p className="v">{price(DOWNLOAD.creatorCents)}</p>
+            <p className="v"><small className="text-[0.45em] align-middle mr-1">Up to</small>$0.90</p>
             <p className="s">to the creator. Credits pay them too.</p>
           </div>
 

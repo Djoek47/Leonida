@@ -21,12 +21,33 @@ export const esc = (s: unknown) => String(s ?? "")
   .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
 
 type Look = "sign" | "night";
-const P = {
+/** Rank colours, the same ones the dashboard wears (globals.css .dash-*). */
+export type Tier = "free" | "street" | "hustler" | "kingpin";
+const RANKS: Record<Tier, { page: string; card: string; text: string; muted: string; rule: string; button: string; buttonText: string; accent: string; soft: string; led: string; label: string }> = {
+  free:    { page: "#f3d48a", card: "#fff5d6", text: "#140d03", muted: "#5c4313", rule: "#e3c27a", button: "#b3121c", buttonText: "#ffffff", accent: "#00704a", soft: "#f8e7b4", led: "#cfe3f5", label: "FREE" },
+  street:  { page: "#cfdeea", card: "#eef5fb", text: "#132230", muted: "#4a6276", rule: "#8fabc2", button: "#1c6aa3", buttonText: "#ffffff", accent: "#1c6aa3", soft: "#dce8f2", led: "#9fe0ff", label: "STREET" },
+  hustler: { page: "#f6cdd3", card: "#fff0f2", text: "#40081a", muted: "#8e3348", rule: "#e88a9a", button: "#e0193f", buttonText: "#ffffff", accent: "#e0193f", soft: "#fbdde2", led: "#ff5a78", label: "HUSTLER" },
+  kingpin: { page: "#1c1f4a", card: "#2a2d63", text: "#f6f3ff", muted: "#c3c3ec", rule: "#5b61b0", button: "#ffd24a", buttonText: "#1c1f4a", accent: "#ffd24a", soft: "#363a78", led: "#ffd24a", label: "KINGPIN" },
+};
+let RANK: Tier = "free";
+/** Set once per email by the template entry points. */
+export function setRank(t: unknown) { RANK = (["street", "hustler", "kingpin"].includes(String(t)) ? t : "free") as Tier; }
+const P0 = {
   sign:  { page: "#f3d48a", card: "#fff5d6", text: "#140d03", muted: "#5c4313", rule: "#e3c27a",
            button: "#b3121c", buttonText: "#ffffff", accent: "#00704a", soft: "#f8e7b4" },
   night: { page: "#0c0618", card: "#1a0d31", text: "#fff1e8", muted: "#bfaedc", rule: "#3a2363",
            button: "#ffc23d", buttonText: "#140a26", accent: "#ff3d8b", soft: "#24133f" },
 } as const;
+const P = new Proxy(P0, { get: (o, k: string) => (k === "sign" ? RANKS[RANK] : (o as Record<string, unknown>)[k]) }) as unknown as Record<Look, typeof RANKS.free>;
+
+/** LED scoreboard strip — the dashboard's stat band, in a table. */
+export function led(items: Array<[string, string]>): Block {
+  const glow = RANKS[RANK].led;
+  const cells = items.map(([k, v]) => `<td align="center" style="padding:14px 6px;">
+<p style="margin:0;font-family:'Courier New',Courier,monospace;font-size:26px;font-weight:700;letter-spacing:2px;color:${glow};text-shadow:0 0 8px ${glow};">${v}</p>
+<p style="margin:4px 0 0;font-family:${HEAVY};font-size:10px;letter-spacing:2.5px;color:#8f93b8;">${esc(k.toUpperCase())}</p></td>`).join("");
+  return `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" bgcolor="#090a1f" style="margin:2px 0 22px;background:#090a1f;border-radius:12px;border:1px solid #23264f;"><tr>${cells}</tr></table>`;
+}
 
 export type Block = string;
 
@@ -103,11 +124,11 @@ export function shell(o: { look: Look; preheader: string; body: Block[]; reason:
 </td></tr>
 <tr><td align="center" style="padding:6px 24px 18px;font-family:${HEAVY};font-size:12px;letter-spacing:8px;color:#ffc23d;">&#9733;&#9733;&#9733;&#9733;&#9733;&#9733;</td></tr>`
     : `<tr><td style="padding:28px 24px 0;">
-<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" bgcolor="#00704a" style="background:#00704a;border-radius:12px;border:3px solid #ffffff;box-shadow:0 0 0 2px #00704a;">
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" bgcolor="#090a1f" style="background:#090a1f;border-radius:14px;border:2px solid ${RANKS[RANK].accent};">
 <tr><td width="64" style="padding:12px 0 12px 14px;"><img src="${asset("logo.png")}" width="48" height="48" alt="" style="display:block;width:48px;height:48px;border:0;border-radius:50%;"></td>
 <td style="padding:12px 16px 12px 12px;">
-<p style="margin:0;font-family:${HEAVY};font-size:19px;font-weight:900;letter-spacing:0.5px;color:#ffffff;">LIVE FROM LEONIDA</p>
-<p style="margin:2px 0 0;font-family:${FONT};font-size:12px;font-weight:700;letter-spacing:1.5px;color:#cde8db;">GTA VI CLIPS &middot; PRIZES &middot; NEWS</p>
+<p style="margin:0;font-family:'Courier New',Courier,monospace;font-size:19px;font-weight:700;letter-spacing:3px;color:${RANKS[RANK].led};text-shadow:0 0 8px ${RANKS[RANK].led};">LIVE FROM LEONIDA</p>
+<p style="margin:3px 0 0;font-family:${HEAVY};font-size:10px;letter-spacing:2.5px;color:#8f93b8;">GTA VI CLIPS &middot; PRIZES &middot; ${RANKS[RANK].label}</p>
 </td></tr></table></td></tr>`;
 
   return `<!doctype html>
@@ -121,7 +142,7 @@ export function shell(o: { look: Look; preheader: string; body: Block[]; reason:
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="max-width:560px;">
 ${top}
 <tr><td style="padding:${night ? "0" : "18px"} 0 0;">
-<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" bgcolor="${c.card}" style="background:${c.card};border-radius:16px;${night ? "border:1px solid #3a2363;" : "border:1px solid #c99a3a;"}">
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" bgcolor="${c.card}" style="background:${c.card};border-radius:16px;${night ? "border:1px solid #3a2363;" : `border:1px solid ${c.rule};`}">
 <tr><td style="padding:34px 32px 18px;">
 ${o.body.join("\n")}
 </td></tr></table></td></tr>
@@ -131,7 +152,7 @@ ${o.body.join("\n")}
 <a href="${SITE}/settings" style="color:${c.muted};text-decoration:underline;">Account settings</a> &nbsp;&middot;&nbsp;
 <a href="${SITE}/rules" style="color:${c.muted};text-decoration:underline;">Contest rules</a> &nbsp;&middot;&nbsp;
 <a href="${SITE}/privacy" style="color:${c.muted};text-decoration:underline;">Privacy</a></p>
-<p style="margin:0;font-family:${FONT};font-size:11px;line-height:1.6;color:${c.muted};">Live From Leonida is a fan site. Not affiliated with Rockstar Games or Take-Two Interactive.<br>Sent from a no-reply address, so replies are not read.</p>
+<p style="margin:0;font-family:${FONT};font-size:11px;line-height:1.6;color:${c.muted};">Live From Leonida is a fan site. Not affiliated with Rockstar Games or Take-Two Interactive.<br>Need a hand? <a href="${SITE}/support" style="color:${c.muted};text-decoration:underline;">Contact support</a>.</p>
 </td></tr>
 </table></td></tr></table></body></html>`;
 }

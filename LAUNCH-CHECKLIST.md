@@ -55,7 +55,7 @@ PlayStation has no public sign-in for third-party sites, so PSN stays on the pro
 Clip upload (Supabase Storage) → staff review queue → auto-trim and caption with FFmpeg (server job) → staff orders the week's clips → compilation rendered with chapter markers → uploaded to YouTube via the YouTube Data API with each clip's timestamp → timestamps written back so "Watch" on each clip jumps to its moment. Needs: Google Cloud project with YouTube Data API, and a small worker (Supabase Edge Function or a $5 server) for FFmpeg.
 
 ## Open items only you can decide
-- Company running the contest: rules name Mytikas 73 Inc.; confirm or change.
+- Company running the contest: rules say "Organized by Live From Leonida" (no company name).
 - Contact email: rules use contact@livefromleonida.com (placeholder).
 - Legal review of the contest rules before the first paid round.
 - Social handles: check `livefromleonida` is free on each platform.
