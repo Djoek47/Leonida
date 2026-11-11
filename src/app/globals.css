@@ -1772,3 +1772,11 @@ aside .trophy-shelf li { width: 4.1rem; }
 .hub-nextrow small { display:block; font-size:.74rem; color:var(--haze); margin-top:.2rem; }
 .hub-nextthumb { position:relative; aspect-ratio:16/9; border-radius:8px; overflow:hidden; background:#090a1f; }
 .hub-nextthumb img { width:100%; height:100%; object-fit:cover; }
+.status-strip .ring, .gauge > svg { border: 0 !important; outline: 0 !important; background: none !important; box-shadow: none !important; }
+.deal-fold > summary { list-style: none; cursor: pointer; display: flex; align-items: center; justify-content: space-between; gap: 1rem; }
+.deal-fold > summary::-webkit-details-marker { display: none; }
+.deal-tog { width: 2.2rem; height: 2.2rem; border-radius: 999px; border: 2px solid currentColor; display: grid; place-items: center; opacity: .7; }
+.deal-tog::before { content: "+"; font-weight: 900; font-size: 1.2rem; line-height: 1; }
+.deal-fold[open] .deal-tog::before { content: "–"; }
+.deal-fold:not([open]) { padding-block: 1rem; }
+.btn-dl-done { background: #1f9d55; color: #fff; border-color: #1f9d55; }

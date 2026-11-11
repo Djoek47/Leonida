@@ -50,8 +50,10 @@ export function Wallet({ payoutReady }: { payoutReady: boolean }) {
       setSplit({ pending_cents: 2100, available_cents: 625, releases_at: new Date(new Date().getFullYear(), new Date().getMonth() + 1, 1).toISOString() });
       return;
     }
+    const me = (await c.auth.getUser()).data.user?.id;
+    if (!me) return;
     const [{ data }, { data: sp }] = await Promise.all([
-      c.from("wallet_entries").select("id,amount_cents,kind,note,created_at").order("created_at", { ascending: false }).limit(50),
+      c.from("wallet_entries").select("id,amount_cents,kind,note,created_at").eq("player_id", me).order("created_at", { ascending: false }).limit(50),
       c.rpc("wallet_split"),
     ]);
     setEntries((data ?? []) as Entry[]);

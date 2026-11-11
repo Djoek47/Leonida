@@ -310,6 +310,7 @@ function Review() {
   const [busy, setBusy] = useState(false);
   const [note, setNote] = useState("");
   const vid = useRef<HTMLVideoElement>(null);
+  const [coverMsg, setCoverMsg] = useState("");
 
   const load = useCallback(async () => {
     const c = sb();
@@ -400,13 +401,29 @@ function Review() {
       <div className="grid gap-8 lg:grid-cols-[1.6fr_1fr] mt-5">
         <div>
           <div className="aspect-video bg-ink-2 rounded-lg overflow-hidden grid place-items-center">
-            {src ? <video ref={vid} key={clip.id} src={src} controls autoPlay className="h-full w-full" /> :
+            {src ? <video ref={vid} key={clip.id} src={src} controls autoPlay crossOrigin="anonymous" className="h-full w-full" /> :
               clip.source_url ? <a href={clip.source_url} target="_blank" rel="noreferrer" className="btn btn-ghost">Open the linked clip</a> :
               // eslint-disable-next-line @next/next/no-img-element
               clip.thumb ? <img src={clip.thumb} alt="" className="h-full w-full object-cover" /> :
               <span className="text-haze">Loading the video…</span>}
           </div>
 
+          {src && (
+            <div className="mt-2 flex items-center gap-3">
+              <button className="btn btn-ghost !py-1.5 text-sm" onClick={async () => {
+                const v = vid.current; const c = sb(); if (!v || !c || !clip.owner_id) return;
+                const w = 640, h = Math.round((v.videoHeight / v.videoWidth) * w) || 360;
+                const cv = document.createElement("canvas"); cv.width = w; cv.height = h;
+                try { cv.getContext("2d")?.drawImage(v, 0, 0, w, h); } catch { setCoverMsg("Couldn't grab that frame."); return; }
+                cv.toBlob(async (b) => {
+                  if (!b) { setCoverMsg("Couldn't grab that frame."); return; }
+                  const { error } = await c.storage.from("thumbs").upload(`${clip.owner_id}/${clip.id}.jpg`, b, { contentType: "image/jpeg", upsert: true });
+                  setCoverMsg(error ? "Cover didn't save." : `Cover set at ${Math.floor(v.currentTime)}s.`);
+                }, "image/jpeg", 0.85);
+              }}>Use this moment as the cover</button>
+              {coverMsg && <span className="text-sm font-semibold text-gulf">{coverMsg}</span>}
+            </div>
+          )}
           {clips.length > 1 && (
             <ul className="q-strip" aria-label="Queue">
               {clips.slice(0, 14).map((x, n) => (

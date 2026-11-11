@@ -26,7 +26,7 @@ export async function POST(req: NextRequest) {
     p_user: me.id, p_cents: cents, p_note: viaStripe ? "Stripe transfer" : `to ${p.payout_method}`,
   });
   if (error) {
-    const m = error.message.includes("INSUFFICIENT_FUNDS") ? "That's more than your balance." : "Couldn't start that. Try again.";
+    const m = error.message.includes("INSUFFICIENT_FUNDS") ? "That's more than you can cash out right now. Download earnings from this month unlock on the 1st, after the month ends." : "Couldn't start that. Try again.";
     return Response.json({ error: m }, { status: 400 });
   }
   if (!viaStripe) return Response.json({ ok: true, queued: true });

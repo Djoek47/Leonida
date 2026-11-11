@@ -19,7 +19,7 @@ const TERMS: [string, string][] = [
   ["Who runs it", "Organized by Live From Leonida. Live From Leonida is a fan community, not affiliated with or endorsed by Rockstar Games or Take-Two Interactive."],
   ["Entering", "A free account, that's it. Void where prohibited. Canadian winners answer a skill-testing question; Quebec residents may take disputes to the Régie des alcools, des courses et des jeux."],
   ["What we won't take", "Other people's footage, mods, cheats, code glitches, anything breaking Rockstar's terms, hate, harassment, sexual content, personal information, or music laid over the top."],
-  ["Review", "Staff review every clip and pick what goes in the weekly compilation, trimming or captioning as needed. A clip we don't select can't win that round."],
+  ["Review", "Staff review every clip before it goes into the weekly or monthly competition. The best clips may also feature in our weekly montage on YouTube."],
   ["Voting", "You see how many votes you have left in your own account. Each vote is one vote, and you can only vote for a clip once — ever. Buying, trading or automating votes, or running several accounts, voids them and can ban you."],
   ["Winning", "Most votes wins; a tie goes to whoever submitted first. Winners are told in their dashboard and by email. Final once staff confirm."],
   ["Payment", "Verify the gamertag in the clip (Xbox sign-in or a PSN profile code), give a working payout account. Where the law requires it we ask for ID or tax forms — a W-9 for US winners at $600+ a year. You pay your taxes, we pay the transfer fees."],

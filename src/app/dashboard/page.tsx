@@ -29,6 +29,9 @@ export default function Dashboard() {
   const [prizes, setPrizes] = useState(0);
   const [badges, setBadges] = useState<Badge[]>([]);
   const [gt, setGt] = useState(false);
+  // Open the explainer the first time only; after that it stays folded.
+  const [firstVisit, setFirstVisit] = useState(false);
+  useEffect(() => { try { if (!localStorage.getItem("lfl-deal-seen")) { setFirstVisit(true); localStorage.setItem("lfl-deal-seen", "1"); } } catch {} }, []);
   const [views, setViews] = useState<Record<string, { views: number; views_24h: number }>>({});
 
   const reloadProfile = useCallback(async () => {
@@ -44,7 +47,7 @@ export default function Dashboard() {
     c.from("clip_scores").select("*").eq("owner_id", user.id).order("created_at", { ascending: false }).then(({ data }) => setClips((data as Clip[]) ?? []));
     c.rpc("my_clip_views").then(({ data }) => setViews(Object.fromEntries(((data ?? []) as { clip_id: string; views: number; views_24h: number }[]).map((x) => [x.clip_id, x]))));
     c.rpc("my_clip_sales").then(({ data }) => setSales(Object.fromEntries(((data ?? []) as Sale[]).map((x) => [x.clip_id, x]))));
-    c.from("wallet_entries").select("amount_cents,kind").then(({ data }) => {
+    c.from("wallet_entries").select("amount_cents,kind").eq("player_id", user.id).then(({ data }) => {
       const rows = (data ?? []) as { amount_cents: number; kind: string }[];
       setBalance(rows.reduce((n, r) => n + r.amount_cents, 0));
       setPrizes(rows.filter((r) => r.kind === "prize").reduce((n, r) => n + r.amount_cents, 0));
@@ -60,14 +63,24 @@ export default function Dashboard() {
 
   // Taking a clip out of the running. The clip and its file stay with us —
   // that is what the terms say — it simply stops competing.
+  const [pull, setPull] = useState<{ clip: Clip; votes: number | null; state: "ask" | "busy" | "error"; err?: string } | null>(null);
   async function pullOut(c: Clip) {
-    if (!window.confirm(`Take "${c.title}" out of the competition?\n\nIt stops competing straight away. We keep the clip and its file, as the terms set out, and it carries on earning from downloads.`)) return;
+    setPull({ clip: c, votes: null, state: "ask" });
+    const s = sb();
+    if (s) { const { data } = await s.rpc("my_clip_votes", { p_clip: c.id }); setPull((p) => (p && p.clip.id === c.id ? { ...p, votes: Number(data ?? 0) } : p)); }
+    else setPull((p) => (p ? { ...p, votes: 3 } : p));
+  }
+  async function confirmPull() {
+    if (!pull) return;
+    const c = pull.clip;
+    setPull({ ...pull, state: "busy" });
     const s = sb();
     if (s) {
       const { error } = await s.rpc("withdraw_my_clip", { p_clip: c.id, p_reason: null });
-      if (error) { alert(error.message); return; }
+      if (error) { setPull({ ...pull, state: "error", err: "That didn't go through. Try again." }); return; }
     }
     setClips((cs) => cs.map((x) => (x.id === c.id ? { ...x, status: "withdrawn" } : x)));
+    setPull(null);
   }
 
   if (loading) return <div className="mx-auto max-w-xl px-4 py-24 text-haze font-semibold" role="status">Loading your account…</div>;
@@ -116,8 +129,8 @@ export default function Dashboard() {
       <GetStarted account={account} onClaimed={() => location.reload()} onGamertag={() => setGt(true)} />
       {account && <StatusStrip account={account} paying={paying} fallbackClips={clips.length} />}
 
-      <section className="deal">
-        <h2 className="display text-3xl md:text-4xl">How your clips pay</h2>
+      <details className="deal deal-fold" open={firstVisit} onToggle={(e) => { try { if (!(e.currentTarget as HTMLDetailsElement).open) localStorage.setItem("lfl-deal-seen", "1"); } catch {} }}>
+        <summary><h2 className="display text-3xl md:text-4xl">How your clips pay</h2><span className="deal-tog" aria-hidden /></summary>
         <ol className="deal-lanes">
           <li><span className="deal-n">1</span><b>Send it</b><small>Up to {account?.daily_submissions ?? 2} a day. Staff approve it into the weekly vote.</small></li>
           <li><span className="deal-n">2</span><b>Win it</b><small>Top three each week, month and year split the prize pool.</small></li>
@@ -130,7 +143,30 @@ export default function Dashboard() {
             : <>members get free downloads every month, then {exactMoney(DOWNLOAD.priceCents)} each. Free accounts stream everything.</>}{" "}
           Either way, the player who made the clip takes most of it. <Link href="/clips" className="underline">Browse clips</Link>
         </p>
-      </section>
+      </details>
+
+      {pull && (
+        <div className="hub-scrim" onClick={() => pull.state !== "busy" && setPull(null)} onKeyDown={(e) => e.key === "Escape" && pull.state !== "busy" && setPull(null)}>
+          <div role="dialog" aria-modal="true" aria-labelledby="pull-t" className="hub-sheet" onClick={(e) => e.stopPropagation()}>
+            <p className="dash-kicker">Withdraw from competition</p>
+            <h2 id="pull-t" className="display text-3xl mt-1">Take “{pull.clip.title}” out?</h2>
+            <dl className="dash-stats !grid-cols-2 !mt-5">
+              <div className="dash-stat"><dt>Votes so far</dt><dd className="text-3xl">{pull.votes ?? "…"}</dd></div>
+              <div className="dash-stat"><dt>Views</dt><dd className="text-3xl">{views[pull.clip.id]?.views ?? 0}</dd></div>
+            </dl>
+            <p className="mt-4 text-haze">
+              {(pull.votes ?? 0) > 0 ? <>People are already backing this clip. Withdrawing throws those votes away and it can&apos;t win this round.</>
+                : <>Withdrawing means it can&apos;t win this round — and it can&apos;t be entered again.</>}
+              {" "}It stays on the site and keeps earning from downloads; we keep the file, as the terms set out.
+            </p>
+            {pull.state === "error" && <p role="alert" className="mt-3 font-semibold text-flamingo">{pull.err}</p>}
+            <div className="mt-6 flex flex-wrap gap-3">
+              <button autoFocus className="btn btn-hot flex-1 justify-center" onClick={() => setPull(null)} disabled={pull.state === "busy"}>Keep it in</button>
+              <button className="btn btn-ghost" onClick={confirmPull} disabled={pull.state === "busy"}>{pull.state === "busy" ? "Withdrawing…" : "Withdraw it"}</button>
+            </div>
+          </div>
+        </div>
+      )}
 
       <div className="mt-10 grid gap-10 lg:grid-cols-[1.5fr_1fr] items-start">
         <section>

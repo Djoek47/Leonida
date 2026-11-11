@@ -12,9 +12,19 @@ export type NewsItem = {
   links: { label: string; href: string }[];
 };
 
-export const NEWS_UPDATED = "2026-11-09";
+export const NEWS_UPDATED = "2026-11-11";
 
 export const NEWS: NewsItem[] = ([
+  {
+    date: "2026-11-10",
+    title: "Pre-load is live, with a new \"Pre-Load Now\" trailer",
+    body: "Digital buyers on PS5 and Xbox Series X|S can pre-load now, ahead of the November 19 launch. Rockstar says it takes up to 212 GB depending on the console. Physical copies get a pre-load code in the box, expected around November 12 depending on the retailer. The short trailer was captured on PS5: Jason backflips, Lucia hits a Vice City club. Rockstar also gave Hypebeast and HypeDrive new screenshots of the West Coast Customs cars next to the in-game versions.",
+    source: "Rockstar",
+    links: [
+      { label: "Game Rant on the pre-load trailer", href: "https://gamerant.com/gta-6-trailer-4-pre-load/" },
+      { label: "Rockstar on YouTube", href: "https://www.youtube.com/@RockstarGames/videos" },
+    ],
+  },
   {
     date: "2026-11-09",
     title: "West Coast Customs builds six GTA VI cars for real",

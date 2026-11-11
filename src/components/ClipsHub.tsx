@@ -58,6 +58,23 @@ const DEMO: Row[] = DEMO_CLIPS.map((c, i) => ({
   winner: i === 2, votable: true, featured_until: i < 2 ? new Date(Date.now() + 5 * 36e5).toISOString() : null, total: 8, thumb: c.thumb,
 }));
 
+// Signed playback URLs, minted ahead of the click (on hover/focus) so the
+// player starts instantly. They last an hour; we reuse them for 50 minutes.
+const signed = new Map<string, { url: string; at: number }>();
+async function signFor(r: Row): Promise<string | null> {
+  const path = r.watermark_path ?? r.storage_path; const c = sb();
+  if (!c || !path) return null;
+  const hit = signed.get(path); if (hit && Date.now() - hit.at < 50 * 6e4) return hit.url;
+  const { data } = await c.storage.from("clips").createSignedUrl(path, 3600);
+  if (!data) return null;
+  signed.set(path, { url: data.signedUrl, at: Date.now() });
+  return data.signedUrl;
+}
+function warm(r: Row) {
+  signFor(r).then((u) => { if (!u || document.querySelector(`link[href="${u}"]`)) return;
+    const l = document.createElement("link"); l.rel = "preload"; l.as = "video"; l.href = u; document.head.appendChild(l); }).catch(() => {});
+}
+
 async function browse(cat: Cat, o: { section?: string; sort?: string; tags?: string[]; offset?: number; limit?: number }): Promise<Row[]> {
   const c = sb();
   if (!c) {
@@ -112,9 +129,11 @@ export function ClipsHub({ cat }: { cat: Cat }) {
     });
   }, [cat]);
 
+  const [owned, setOwned] = useState<Set<string>>(new Set());
   useEffect(() => {
     const c = sb();
     if (!c || !user) return;
+    c.rpc("my_downloaded_clips").then(({ data }) => setOwned(new Set(((data ?? []) as { clip_id: string }[]).map((d) => d.clip_id))));
     c.rpc("my_favorite_ids").then(({ data }) => setFavs(new Set(((data ?? []) as string[]))));
   }, [user]);
 
@@ -208,6 +227,7 @@ export function ClipsHub({ cat }: { cat: Cat }) {
     if (j.checkout) { location.href = j.checkout; return; }
     if (!j.file) { setMsg(j.error ?? (paying ? "Could not start the download." : `Downloads are for members, or ${exactMoney(DOWNLOAD.priceCents)} each.`)); return; }
     if (j.external) window.open(j.file, "_blank", "noopener"); else location.href = j.file;
+    setOwned((o) => new Set(o).add(r.id));
     setMsg(r.owner_id !== user.id ? `Downloading. ${r.gamertag} gets their share.` : "Downloading.");
   }
 
@@ -324,7 +344,7 @@ export function ClipsHub({ cat }: { cat: Cat }) {
         onApply={(s, t) => { setQuery(s, t); setFilterOpen(false); }} />}
       {open && <Player r={open} list={grid} fav={favs.has(open.id)} voted={voted.includes(open.id)} showVote={cat === "week"}
         mine={Boolean(user && open.owner_id === user.id)} onClose={() => setOpen(null)} onPick={setOpen}
-        onFav={() => toggleFav(open)} onVote={() => vote(open)} onDownload={() => download(open)} />}
+        onFav={() => toggleFav(open)} onVote={() => vote(open)} onDownload={() => download(open)} downloaded={owned.has(open.id)} />}
     </div>
   );
 }
@@ -354,7 +374,7 @@ function ClipCard({ r, wide, fav, voted, mine, showVote, onOpen, onFav, onVote }
   const t = thumbOf(r);
   const hot = r.trending_until && new Date(r.trending_until) > new Date();
   return (
-    <article className={`hub-card${wide ? " wide" : ""}`}>
+    <article className={`hub-card${wide ? " wide" : ""}`} onPointerEnter={() => warm(r)} onFocus={() => warm(r)}>
       <button className="hub-thumb" onClick={onOpen} aria-label={`Play ${r.title}`}>
         {/* eslint-disable-next-line @next/next/no-img-element */}
         {t && img ? <img src={t} alt="" loading="lazy" onError={() => setImg(false)} /> : <span className="hub-noimg">{r.gamertag.slice(0, 2).toUpperCase()}</span>}
@@ -441,7 +461,8 @@ function FilterDialog({ stats, sort, tags, onClose, onApply }: {
   );
 }
 
-function Player({ r, list, fav, voted, mine, showVote, onClose, onPick, onFav, onVote, onDownload }: {
+function Player({ r, list, fav, voted, mine, showVote, onClose, onPick, onFav, onVote, onDownload, downloaded }: {
+  downloaded: boolean;
   r: Row; list: Row[]; fav: boolean; voted: boolean; mine: boolean; showVote: boolean;
   onClose: () => void; onPick: (r: Row) => void; onFav: () => void; onVote: () => void; onDownload: () => void;
 }) {
@@ -455,7 +476,9 @@ function Player({ r, list, fav, voted, mine, showVote, onClose, onPick, onFav, o
     const c = sb(); const path = r.watermark_path ?? r.storage_path;
     if (!c) { setErr("Demo build: playback needs the live site."); return; }
     if (!path) { if (r.source_url) setUrl(r.source_url); else setErr("This clip has no file to play."); return; }
-    c.storage.from("clips").createSignedUrl(path, 3600).then(({ data, error }) => (error || !data ? setErr("That clip wouldn't load. Try again.") : setUrl(data.signedUrl)));
+    signFor(r).then((u) => (u ? setUrl(u) : setErr("That clip wouldn't load. Try again.")));
+    // Line up the next one too.
+    const n = list[list.findIndex((x) => x.id === r.id) + 1]; if (n) signFor(n);
   }, [r]);
   useEffect(() => { const k = (e: KeyboardEvent) => e.key === "Escape" && onClose(); addEventListener("keydown", k); document.body.style.overflow = "hidden"; return () => { removeEventListener("keydown", k); document.body.style.overflow = ""; }; }, [onClose]);
   function counted1() {
@@ -472,7 +495,7 @@ function Player({ r, list, fav, voted, mine, showVote, onClose, onPick, onFav, o
         <div className="hub-stage">
           <div ref={frame} className="clip-frame relative aspect-video bg-black">
             {url && isFile && (
-              <video key={url} src={url} poster={thumbOf(r)} controls autoPlay playsInline onPlay={counted1}
+              <video key={url} src={url} poster={thumbOf(r)} controls autoPlay playsInline preload="auto" onPlay={counted1}
                 controlsList="nodownload noremoteplayback" disablePictureInPicture onContextMenu={(e) => e.preventDefault()} className="h-full w-full object-contain" />
             )}
             {url && !isFile && <div className="grid h-full place-items-center"><a href={url} target="_blank" rel="noreferrer" onClick={counted1} className="btn btn-hot">Watch on the original site ↗</a></div>}
@@ -493,7 +516,8 @@ function Player({ r, list, fav, voted, mine, showVote, onClose, onPick, onFav, o
               <button className={`btn ${fav ? "bg-gulf text-white" : "btn-ghost"} !py-2`} aria-pressed={fav} onClick={onFav}>{fav ? "♥ Saved" : "♡ Favorite"}</button>
               {showVote && !mine && (voted ? <span className="hub-voted self-center">✓ Voted privately</span>
                 : r.votable && <button className="btn btn-hot !py-2" onClick={onVote}>Vote</button>)}
-              <button className="btn btn-ghost !py-2" onClick={onDownload}>↓ Download</button>
+              <button className={`btn !py-2 ${downloaded ? "btn-dl-done" : "btn-ghost"}`} onClick={onDownload}
+                title={downloaded ? "Already downloaded — get it again at no charge" : "Download this clip"}>{downloaded ? "✓ Downloaded" : "↓ Download"}</button>
               <button className="btn btn-ghost !py-2" onClick={onClose} aria-label="Close player">Close</button>
             </div>
           </div>

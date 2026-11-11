@@ -113,6 +113,9 @@ function SendForm({ userId, cap, usedToday, gamertag, platform }: { userId: stri
   const forContest = roundId !== "";
   const [entered, setEntered] = useState<{ title: string; starts_at: string; timezone: string; state: string } | null>(null);
   const [len, setLen] = useState<number | null>(null);
+  // The cover: a moment the creator scrubs to. It's what voters see first.
+  const [preview, setPreview] = useState<string | null>(null);
+  const [coverAt, setCoverAt] = useState(1);
   const [tags, setTags] = useState<string[]>([]);
   const [agreed, setAgreed] = useState(false);
   const atCap = usedToday >= cap;
@@ -156,7 +159,7 @@ function SendForm({ userId, cap, usedToday, gamertag, platform }: { userId: stri
       }
       // A poster frame for the grids. Best effort: a clip with no thumbnail still plays.
       if (mode === "file" && file && file.size && clip?.id) {
-        const jpg = await grabFrame(file).catch(() => null);
+        const jpg = await grabFrame(file, coverAt).catch(() => null);
         if (jpg) await c.storage.from("thumbs").upload(`${userId}/${clip.id}.jpg`, jpg, { contentType: "image/jpeg", upsert: true });
       }
       // Tags are a nice-to-have: a failure here must not lose the clip itself.
@@ -231,13 +234,24 @@ function SendForm({ userId, cap, usedToday, gamertag, platform }: { userId: stri
         </div>
         {mode === "file"
           ? <input name="file" type="file" accept="video/mp4,video/quicktime,video/webm" required
-              onChange={async (e) => { const f = e.target.files?.[0]; setLen(f ? await durationOf(f) : null); }}
+              onChange={async (e) => { const f = e.target.files?.[0]; setLen(f ? await durationOf(f) : null);
+                if (preview) URL.revokeObjectURL(preview); setPreview(f ? URL.createObjectURL(f) : null); setCoverAt(1); }}
               className="field file:mr-4 file:rounded file:border-0 file:bg-flamingo file:px-3 file:py-1.5 file:font-bold file:text-white" />
           : <input name="url" type="url" required className="field" placeholder="YouTube, TikTok, Twitch clip or PlayStation share link" />}
         <p className="text-xs text-haze mt-1.5">
           Upload a clip under 2 minutes and under 600 MB. MP4, MOV or WebM. Raw footage is fine, we edit.
           
         </p>
+        {mode === "file" && preview && len != null && (
+          <div className="cover-pick mt-3">
+            <span className="text-sm font-bold">Pick the cover moment</span>
+            <video src={preview} muted playsInline preload="auto" className="mt-2 w-full max-w-md rounded-lg border-2 border-line bg-black aspect-video"
+              ref={(v) => { if (v && Math.abs(v.currentTime - coverAt) > 0.2) v.currentTime = coverAt; }} />
+            <input type="range" min={0} max={Math.max(0, Math.floor(len * 10) / 10 - 0.1)} step={0.1} value={coverAt}
+              onChange={(e) => setCoverAt(Number(e.target.value))} className="mt-2 w-full max-w-md" aria-label="Cover moment" />
+            <p className="text-xs text-haze">At {mmss(coverAt)} — this frame is the thumbnail people see before they press play.</p>
+          </div>
+        )}
         {len != null && (
           <p className={`text-sm mt-1.5 font-semibold ${tooLong ? "text-flamingo" : "text-gulf"}`}>
             {tooLong
@@ -359,13 +373,13 @@ function ClaimForm({ userId }: { userId: string }) {
 }
 
 /** One frame, a second in (or a third of the way for very short clips), as a 640px JPEG. */
-function grabFrame(file: File): Promise<Blob | null> {
+function grabFrame(file: File, at?: number): Promise<Blob | null> {
   return new Promise((resolve) => {
     const v = document.createElement("video");
     const u = URL.createObjectURL(file);
     const done = (b: Blob | null) => { URL.revokeObjectURL(u); resolve(b); };
     v.muted = true; v.playsInline = true; v.preload = "auto"; v.src = u;
-    v.onloadedmetadata = () => { v.currentTime = Math.min(1, (v.duration || 3) / 3); };
+    v.onloadedmetadata = () => { v.currentTime = at != null ? Math.min(at, Math.max(0, (v.duration || 1) - 0.1)) : Math.min(1, (v.duration || 3) / 3); };
     v.onseeked = () => {
       const w = 640, h = Math.round((v.videoHeight / v.videoWidth) * w) || 360;
       const cv = document.createElement("canvas"); cv.width = w; cv.height = h;

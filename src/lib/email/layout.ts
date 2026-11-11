@@ -14,8 +14,10 @@ export const SITE = (process.env.NEXT_PUBLIC_SITE_URL ?? "https://www.livefromle
 const ASSETS = SITE.startsWith("http://localhost") ? "https://www.livefromleonida.com" : SITE;
 export const asset = (p: string) => `${ASSETS}/email/${p}`;
 
-const FONT = "'Helvetica Neue',Helvetica,Arial,sans-serif";
-const HEAVY = "'Arial Black','Helvetica Neue',Helvetica,Arial,sans-serif";
+// The site's typeface. Apple Mail, iOS and most modern clients load it; Gmail
+// falls back to the system sans, which is the closest stand-in it allows.
+const FONT = "'Overpass','Segoe UI',Roboto,'Helvetica Neue',Arial,sans-serif";
+const HEAVY = FONT;
 
 export const esc = (s: unknown) => String(s ?? "")
   .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
@@ -53,7 +55,7 @@ export type Block = string;
 
 export function heading(text: string, look: Look): Block {
   const c = P[look];
-  return `<h1 style="margin:0 0 14px;font-family:${HEAVY};font-size:28px;line-height:1.15;font-weight:900;letter-spacing:-0.5px;color:${c.text};">${esc(text)}</h1>`;
+  return `<h1 style="margin:0 0 14px;font-family:${HEAVY};font-size:34px;line-height:0.98;font-weight:900;letter-spacing:-1px;color:${c.text};">${esc(text)}</h1>`;
 }
 
 export function para(html: string, look: Look): Block {
@@ -109,7 +111,7 @@ export function hero(o: { img?: string; imgAlt?: string; kicker: string; figure:
 <tr><td align="center" style="padding:6px 0 0;">
 ${o.img ? `<img src="${esc(o.img)}" width="150" height="150" alt="${esc(o.imgAlt ?? "")}" style="display:block;width:150px;height:150px;border:0;margin:0 auto 14px;">` : ""}
 <p style="margin:0 0 6px;font-family:${HEAVY};font-size:12px;font-weight:900;letter-spacing:3px;text-transform:uppercase;color:${c.accent};">${esc(o.kicker)}</p>
-<p style="margin:0;font-family:${HEAVY};font-size:52px;line-height:1.05;font-weight:900;letter-spacing:-1px;color:#ffc23d;">${o.figure}</p>
+<p style="margin:0;font-family:${HEAVY};font-size:56px;line-height:0.95;font-weight:900;letter-spacing:-2px;color:#ffc23d;">${o.figure}</p>
 ${o.caption ? `<p style="margin:10px 0 0;font-family:${FONT};font-size:14px;color:${c.muted};">${o.caption}</p>` : ""}
 </td></tr></table>`;
 }
@@ -134,7 +136,9 @@ export function shell(o: { look: Look; preheader: string; body: Block[]; reason:
   return `<!doctype html>
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="color-scheme" content="${night ? "dark" : "light"}"><meta name="supported-color-schemes" content="${night ? "dark" : "light"}">
-<title>Live From Leonida</title></head>
+<title>Live From Leonida</title>
+<link href="https://fonts.googleapis.com/css2?family=Overpass:wght@400;600;800;900&display=swap" rel="stylesheet">
+<style>@import url('https://fonts.googleapis.com/css2?family=Overpass:wght@400;600;800;900&display=swap');</style></head>
 <body style="margin:0;padding:0;background:${c.page};" bgcolor="${c.page}">
 <div style="display:none;max-height:0;overflow:hidden;opacity:0;color:${c.page};">${esc(o.preheader)}&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;</div>
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" bgcolor="${c.page}" style="background:${c.page};">
