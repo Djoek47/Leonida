@@ -66,6 +66,8 @@ export function LeonidaMap() {
   const pointers = useRef(new Map<number, [number, number]>());
   const pinch = useRef<number | null>(null);
   const raf = useRef(0);
+  // The map only takes the wheel and touch once it's been clicked, so scrolling the page never zooms it by accident.
+  const [live, setLive] = useState(false);
   const [night, setNight] = useState(false);
   const [places, setPlaces] = useState<Place[]>([]);
   const [on, setOn] = useState<Set<string>>(new Set(LAYERS.filter((l) => !l.soon).map((l) => l.id)));
@@ -158,10 +160,17 @@ export function LeonidaMap() {
   }
   useEffect(() => {
     const c = cv.current!;
-    const wheel = (e: WheelEvent) => { e.preventDefault(); const b = c.getBoundingClientRect(); zoomAt(-e.deltaY * 0.0025, e.clientX - b.left, e.clientY - b.top); };
+    const wheel = (e: WheelEvent) => { if (!live) return; e.preventDefault(); const b = c.getBoundingClientRect(); zoomAt(-e.deltaY * 0.0025, e.clientX - b.left, e.clientY - b.top); };
     c.addEventListener("wheel", wheel, { passive: false });
     return () => c.removeEventListener("wheel", wheel);
   });
+  useEffect(() => {
+    if (!live) return;
+    const out = (e: PointerEvent) => { if (wrap.current && !wrap.current.contains(e.target as Node)) setLive(false); };
+    const esc = (e: KeyboardEvent) => { if (e.key === "Escape") setLive(false); };
+    document.addEventListener("pointerdown", out); document.addEventListener("keydown", esc);
+    return () => { document.removeEventListener("pointerdown", out); document.removeEventListener("keydown", esc); };
+  }, [live]);
   function down(e: React.PointerEvent) { cv.current!.setPointerCapture(e.pointerId); pointers.current.set(e.pointerId, [e.clientX, e.clientY]); drag.current = { x: e.clientX, y: e.clientY, moved: false }; }
   function move(e: React.PointerEvent) {
     if (!pointers.current.has(e.pointerId)) return;
@@ -196,16 +205,21 @@ export function LeonidaMap() {
 
   return (
     <div className="grid gap-4 lg:grid-cols-[1fr_20rem]">
-      <div ref={wrap} className="relative rounded-xl overflow-hidden border border-line h-[min(78vh,700px)] min-h-[440px]">
+      <div ref={wrap} onMouseLeave={() => setLive(false)} className="relative rounded-xl overflow-hidden border border-line h-[min(78vh,700px)] min-h-[440px]">
         <canvas ref={cv} tabIndex={0} onKeyDown={onKey} aria-label="Map of Leonida. Drag to move, scroll or pinch to zoom, arrow keys to pan."
-          className="absolute inset-0 h-full w-full touch-none cursor-grab active:cursor-grabbing"
+          className={`absolute inset-0 h-full w-full ${live ? "touch-none cursor-grab active:cursor-grabbing" : "touch-pan-y"}`}
           onPointerDown={down} onPointerMove={move} onPointerUp={up} onPointerCancel={up} />
-        <div className="absolute right-3 top-3 grid gap-1">
+        {!live && (
+          <button type="button" onClick={() => setLive(true)} className="map-wake" aria-label="Activate the map to move and zoom it">
+            <span className="map-wake-pill"><i aria-hidden>🌴</i> Click to use the map</span>
+          </button>
+        )}
+        <div className="absolute right-3 top-3 z-10 grid gap-1">
           <button onClick={() => zoomAt(0.6)} className="btn bg-ink text-foam !p-0 size-10 !rounded-md shadow text-xl" aria-label="Zoom in">+</button>
           <button onClick={() => zoomAt(-0.6)} className="btn bg-ink text-foam !p-0 size-10 !rounded-md shadow text-xl" aria-label="Zoom out">−</button>
         </div>
         {sel && (
-          <article className="absolute left-3 top-3 w-[min(19rem,calc(100%-5rem))] rounded-xl bg-ink border border-line shadow-2xl overflow-hidden">
+          <article className="absolute z-10 left-3 top-3 w-[min(19rem,calc(100%-5rem))] rounded-xl bg-ink border border-line shadow-2xl overflow-hidden">
             <button onClick={() => setSel(null)} className="absolute right-2 top-2 size-8 rounded-full bg-ink-2 text-foam" aria-label="Close">×</button>
             <div className="p-4">
               <p className="text-xs font-bold text-haze">{layerOf(sel[6]).label}</p>
