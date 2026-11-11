@@ -18,6 +18,7 @@ export default function Pricing() {
   const [aim, setAim] = useState<number | null>(null);
   const [pool, setPool] = useState<Pool | null>(null);
   const [busy, setBusy] = useState<string | null>(null);
+  const [note, setNote] = useState(false);
   const [err, setErr] = useState("");
   const [ask, setAsk] = useState<Tier | null>(null);
 
@@ -149,7 +150,12 @@ export default function Pricing() {
               </p>
 
               <ul className="plan-perks">
-                {t.perks.map((p) => (
+                {t.perks.map((p) => p.endsWith("*") ? (
+                  <li key={p}><span aria-hidden /><span>{p.slice(0, -1)}{" "}
+                    <button type="button" onClick={() => setNote((n) => !n)} aria-expanded={note} aria-label="What is clip analytics?" className="text-mango font-black">★</button>
+                    {note && <span className="mt-1 block text-xs font-normal opacity-80">For people looking for clips to use in other content, like TikTok or YouTube videos. See which clips are performing best, then download the ones you want. Clips downloaded here come with the creator&apos;s permission to use, under our terms.</span>}
+                  </span></li>
+                ) : (
                   <li key={p}><span aria-hidden /><span>{p}</span></li>
                 ))}
               </ul>
