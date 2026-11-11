@@ -1758,7 +1758,7 @@ aside .trophy-shelf li { width: 4.1rem; }
 .hub-fav.on { color:#ff3d8b; } .hub-fav.on svg { fill:currentColor; }
 .hub-fav:hover { background:var(--ink-2); }
 .hub-act { padding:.55rem 0 0 2.9rem; }
-.hub-voted { font-size:.8rem; font-weight:800; color:var(--gulf); }
+.hub-voted { font-size:.8rem; font-weight:800; color:#2fd27a; }
 .hub-empty { margin-top:2.5rem; text-align:center; padding:4rem 1rem; border:2px dashed var(--line); border-radius:16px; }
 .hub-skel { aspect-ratio:16/12; border-radius:12px; background:linear-gradient(90deg, var(--ink-2), var(--ink), var(--ink-2)); background-size:200% 100%; animation:hubsk 1.2s linear infinite; }
 @keyframes hubsk { to { background-position:-200% 0; } }
