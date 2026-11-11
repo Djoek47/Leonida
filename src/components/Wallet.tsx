@@ -50,6 +50,7 @@ export function Wallet({ payoutReady }: { payoutReady: boolean }) {
   const [busy, setBusy] = useState(false);
   const [msg, setMsg] = useState("");
   const [err, setErr] = useState("");
+  const [info, setInfo] = useState(false);
   const [prizes, setPrizes] = useState<Prize[]>([]);
   // Split from the server: this month's download earnings are pending until
   // month-end; everything else (prizes included) is available now.
@@ -106,7 +107,8 @@ export function Wallet({ payoutReady }: { payoutReady: boolean }) {
       <div className="vault-read led-board">
         <p className="led-tag text-xs">AVAILABLE TO WITHDRAW</p>
         <p className="led-text vault-total">{exactMoney(balance)}</p>
-        <p className="led-tag text-xs">PENDING {exactMoney(pending)} · UNLOCKS {releaseOn.toUpperCase()}</p>
+        <p className="led-tag text-xs">PENDING {exactMoney(pending)} · UNLOCKS {releaseOn.toUpperCase()}
+          <button type="button" onClick={() => setInfo((x) => !x)} aria-expanded={info} aria-label="How payouts work" className="info-star">★</button></p>
       </div>
 
       <dl className="money-split">
@@ -128,14 +130,13 @@ export function Wallet({ payoutReady }: { payoutReady: boolean }) {
           })}
         </ul>
       )}
-      <p className="mt-3 text-sm text-haze">
-        Your download earnings accumulate throughout the month and become available to withdraw at the end of the month.
-      </p>
-      <p className="mt-2 text-sm text-haze">
-        Why the wait? We pay download earnings out once a month instead of one by one. Every payout carries a small processing fee, so
-        batching them keeps more of your money in your pocket, and it gives us time to catch refunds or fake downloads before cash leaves.
-        Prizes are not held. They land here straight away.
-      </p>
+      {info && (
+        <div role="note" className="set-card mt-3 grid gap-2 text-sm text-haze">
+          <p>Your download earnings build up through the month and become available to withdraw at the end of the month.</p>
+          <p>Why the wait? We pay download earnings out once a month instead of one by one. Every payout carries a small processing fee, so batching them keeps more of your money in your pocket, and it gives us time to catch refunds or fake downloads before cash leaves.</p>
+          <p>Prizes are not held. They land here straight away.</p>
+        </div>
+      )}
 
       {balance > 0 && (
         payoutReady ? (

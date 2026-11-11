@@ -1792,3 +1792,9 @@ aside .trophy-shelf li { width: 4.1rem; }
 @media (prefers-reduced-motion: reduce) { .vault-paying b { animation: none; } }
 .tank.is-pickable .tank-step { cursor: pointer; transition: transform .2s ease, filter .2s ease; }
 .tank.is-pickable .tank-step:hover, .tank.is-pickable .tank-step:focus-visible { transform: scale(1.03); filter: brightness(1.15); outline: none; }
+
+/* Flashing LED star: there's more to read here. */
+.info-star { margin-left:.6rem; font-size:1.05rem; line-height:1; color:#ffb020; background:none; border:0; cursor:pointer; text-shadow:0 0 6px #ffb020, 0 0 14px rgba(255,176,32,.7); animation:info-blink 1.3s steps(1,end) infinite; }
+.info-star:hover, .info-star[aria-expanded="true"] { animation:none; text-shadow:0 0 10px #ffd24a, 0 0 22px rgba(255,210,74,.9); }
+@keyframes info-blink { 0%,60% { opacity:1; } 61%,100% { opacity:.2; } }
+@media (prefers-reduced-motion: reduce) { .info-star { animation:none; } }
