@@ -40,7 +40,11 @@ async function load(): Promise<{ items: Item[]; live: boolean }> {
 
 const fmt = (d: string) => new Date(`${d.slice(0, 4)}-${d.slice(4, 6)}-${d.slice(6)}T12:00:00Z`).toLocaleDateString("en-CA", { day: "numeric", month: "short", timeZone: "UTC" });
 
+/** The news strip is only for the run-up. It switches itself off at launch. */
+const LAUNCH_END = Date.parse("2026-11-19T00:00:00-05:00");
+
 export async function LatestNews() {
+  if (Date.now() >= LAUNCH_END) return null;
   const { items, live } = await load();
   return (
     <section id="news" className="mx-auto max-w-7xl px-4 py-16 scroll-mt-40">

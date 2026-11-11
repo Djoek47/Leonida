@@ -5,10 +5,10 @@ type Card = { img: string; name: string; tag: string; pack: string; text: string
 
 /** One card per Ultimate Edition / Vintage pack extra: one picture, the facts beside it. */
 const CARDS: Card[] = [
-  { img: "ultimate/rideout_customs_01", name: "Rideout Customs", tag: "Shop", pack: "Ultimate Edition",
+  { img: "places/gold_donk", name: "Rideout Customs", tag: "Shop", pack: "Ultimate Edition",
     text: "The street-build shop. Take a stock car and turn it into a donk.",
     points: ["Oversized rims and fresh paint", "Detailed interior work", "Suspension tuning"] },
-  { img: "ultimate/one_eyed_willie_01", name: "One-Eyed Willie's", tag: "Shop", pack: "Ultimate Edition",
+  { img: "places/offroad_muscle", name: "One-Eyed Willie's", tag: "Shop", pack: "Ultimate Edition",
     text: "A mod shop at Lake Leonida for people who leave the road.",
     points: ["Off-road builds", "Hand-painted one-off liveries"] },
   { img: "ultimate/wyman_car_collection_01", name: "Wyman's collection", tag: "Cars", pack: "Ultimate Edition",

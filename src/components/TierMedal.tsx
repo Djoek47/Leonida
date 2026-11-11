@@ -53,13 +53,20 @@ function Star({ x, y, r, fill }: { x: number; y: number; r: number; fill: string
 }
 
 export function TierMedal({ tier, className }: { tier: TierId; className?: string }) {
+  // Paid tiers use the struck coin artwork; Free keeps the plain steel medal below.
+  if (tier !== "free") {
+    return (
+      // eslint-disable-next-line @next/next/no-img-element
+      <img src={`/media/coins/${tier}.webp`} alt={`${tier.toUpperCase()} coin`} className={className} style={{ objectFit: "contain", aspectRatio: "1" }} loading="lazy" decoding="async" />
+    );
+  }
   const s = SPEC[tier];
   // Unique per instance. The same medal can be on screen three times — top
   // bar, open menu, pricing card — and SVG ids are document-global, so shared
   // ids resolve to whichever came first, including one in a closed menu,
   // where Chrome won't paint a gradient at all.
   const u = `m-${tier}-${useId().replace(/:/g, "")}`;
-  const label = tier === "free" ? "FREE" : tier.toUpperCase();
+  const label = "FREE";
 
   return (
     <svg viewBox="0 0 200 200" className={className} role="img" aria-label={`${label} tier medal`}>

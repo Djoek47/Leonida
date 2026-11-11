@@ -1,112 +1,112 @@
 [
- {
-  "id": "v-squalo",
-  "kind": "vehicle",
-  "name": "Squalo",
-  "category": "Boat",
-  "maker": "",
-  "inspiration": "",
-  "note": "Ultimate Edition",
-  "img": "/media/arsenal/v-squalo.webp"
- },
- {
-  "id": "v-electric-fang",
-  "kind": "vehicle",
-  "name": "Electric Fang",
-  "category": "Motorcycle",
-  "maker": "",
-  "inspiration": "",
-  "note": "Ultimate Edition",
-  "img": "/media/arsenal/v-electric-fang.webp"
- },
- {
-  "id": "v-stock-305",
-  "kind": "vehicle",
-  "name": "Stock 305",
-  "category": "Muscle",
-  "maker": "",
-  "inspiration": "",
-  "note": "Ultimate Edition",
-  "img": "/media/arsenal/v-stock-305.webp"
- },
- {
-  "id": "v-vapid-ganado-retro-build",
-  "kind": "vehicle",
-  "name": "Vapid Ganado (retro build)",
-  "category": "Muscle",
-  "maker": "Vapid",
-  "inspiration": "",
-  "note": "Ultimate Edition",
-  "img": "/media/arsenal/v-vapid-ganado-retro-build.webp"
- },
- {
-  "id": "v-vapid-buggy",
-  "kind": "vehicle",
-  "name": "Vapid Buggy",
-  "category": "Off-road",
-  "maker": "Vapid",
-  "inspiration": "",
-  "note": "Ultimate Edition",
-  "img": "/media/arsenal/v-vapid-buggy.webp"
- },
- {
-  "id": "v-vapid-stanier",
-  "kind": "vehicle",
-  "name": "Vapid Stanier",
-  "category": "Sedan",
-  "maker": "Vapid",
-  "inspiration": "",
-  "note": "Vintage Vice City Pack",
-  "img": "/media/arsenal/v-vapid-stanier.webp"
- },
- {
-  "id": "v-grotti-cheetah",
-  "kind": "vehicle",
-  "name": "Grotti Cheetah",
-  "category": "Sports",
-  "maker": "Grotti",
-  "inspiration": "",
-  "note": "Ultimate Edition \u00b7 West Coast Customs build: Vice City fade",
-  "img": "/media/arsenal/v-grotti-cheetah.webp"
- },
- {
-  "id": "w-hawk-little-morgan-revolvers",
-  "kind": "weapon",
-  "name": "Hawk & Little Morgan revolvers",
-  "category": "Handgun",
-  "maker": "",
-  "inspiration": "",
-  "note": "Ultimate Edition",
-  "img": "/media/arsenal/w-hawk-little-morgan-revolvers.webp"
- },
- {
-  "id": "v-albany-buccaneer",
-  "kind": "vehicle",
-  "name": "Albany Buccaneer",
-  "category": "Lowrider",
-  "maker": "",
-  "inspiration": "",
-  "note": "West Coast Customs build: candy green flake, gold rims, air ride",
-  "img": "/media/arsenal/v-albany-buccaneer.webp"
- },
- {
-  "id": "v-progen-emerus",
-  "kind": "vehicle",
-  "name": "Progen Emerus",
-  "category": "Super",
-  "maker": "",
-  "inspiration": "",
-  "note": "West Coast Customs build: candy orange, big wing, center-lock rims",
-  "img": "/media/arsenal/v-progen-emerus.webp"
- },
- {
-  "id": "v-pegassi-tempesta",
-  "kind": "vehicle",
-  "name": "Pegassi Tempesta",
-  "category": "Super",
-  "maker": "",
-  "inspiration": "",
-  "note": "West Coast Customs build: Vice Beach police livery, light bar, underglow",
-  "img": "/media/arsenal/v-pegassi-tempesta.webp"
- }
+  {
+    "id": "v-squalo",
+    "kind": "vehicle",
+    "name": "Squalo",
+    "category": "Boat",
+    "maker": "",
+    "inspiration": "",
+    "note": "Ultimate Edition",
+    "img": "/media/arsenal/v-squalo.webp"
+  },
+  {
+    "id": "v-electric-fang",
+    "kind": "vehicle",
+    "name": "Electric Fang",
+    "category": "Motorcycle",
+    "maker": "",
+    "inspiration": "",
+    "note": "Ultimate Edition",
+    "img": "/media/arsenal/v-electric-fang.webp"
+  },
+  {
+    "id": "v-stock-305",
+    "kind": "vehicle",
+    "name": "Stock 305",
+    "category": "Muscle",
+    "maker": "",
+    "inspiration": "",
+    "note": "Ultimate Edition",
+    "img": "/media/arsenal/v-stock-305.webp"
+  },
+  {
+    "id": "v-vapid-ganado-retro-build",
+    "kind": "vehicle",
+    "name": "Vapid Ganado (retro build)",
+    "category": "Muscle",
+    "maker": "Vapid",
+    "inspiration": "",
+    "note": "Ultimate Edition",
+    "img": "/media/places/ganado_coast.webp"
+  },
+  {
+    "id": "v-vapid-buggy",
+    "kind": "vehicle",
+    "name": "Vapid Buggy",
+    "category": "Off-road",
+    "maker": "Vapid",
+    "inspiration": "",
+    "note": "Ultimate Edition",
+    "img": "/media/arsenal/v-vapid-buggy.webp"
+  },
+  {
+    "id": "v-vapid-stanier",
+    "kind": "vehicle",
+    "name": "Vapid Stanier",
+    "category": "Sedan",
+    "maker": "Vapid",
+    "inspiration": "",
+    "note": "Vintage Vice City Pack",
+    "img": "/media/arsenal/v-vapid-stanier.webp"
+  },
+  {
+    "id": "v-grotti-cheetah",
+    "kind": "vehicle",
+    "name": "Grotti Cheetah",
+    "category": "Sports",
+    "maker": "Grotti",
+    "inspiration": "",
+    "note": "Ultimate Edition · West Coast Customs build: Vice City fade",
+    "img": "/media/arsenal/v-grotti-cheetah.webp"
+  },
+  {
+    "id": "w-hawk-little-morgan-revolvers",
+    "kind": "weapon",
+    "name": "Hawk & Little Morgan revolvers",
+    "category": "Handgun",
+    "maker": "",
+    "inspiration": "",
+    "note": "Ultimate Edition",
+    "img": "/media/arsenal/w-hawk-little-morgan-revolvers.webp"
+  },
+  {
+    "id": "v-albany-buccaneer",
+    "kind": "vehicle",
+    "name": "Albany Buccaneer",
+    "category": "Lowrider",
+    "maker": "",
+    "inspiration": "",
+    "note": "West Coast Customs build: candy green flake, gold rims, air ride",
+    "img": "/media/arsenal/v-albany-buccaneer.webp"
+  },
+  {
+    "id": "v-progen-emerus",
+    "kind": "vehicle",
+    "name": "Progen Emerus",
+    "category": "Super",
+    "maker": "",
+    "inspiration": "",
+    "note": "West Coast Customs build: candy orange, big wing, center-lock rims",
+    "img": "/media/arsenal/v-progen-emerus.webp"
+  },
+  {
+    "id": "v-pegassi-tempesta",
+    "kind": "vehicle",
+    "name": "Pegassi Tempesta",
+    "category": "Super",
+    "maker": "",
+    "inspiration": "",
+    "note": "West Coast Customs build: Vice Beach police livery, light bar, underglow",
+    "img": "/media/arsenal/v-pegassi-tempesta.webp"
+  }
 ]

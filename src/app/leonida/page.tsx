@@ -116,7 +116,7 @@ export default function Guide() {
         <div className="mt-8"><Arsenal /></div>
 
         <h3 className="display text-4xl mt-16">Edition extras</h3>
-        <p className="text-haze mt-2 mb-6 max-w-2xl">What the Ultimate Edition and the Vintage Vice City Pack add at launch, from Rockstar&apos;s own screenshots. Swipe sideways. Rockstar hasn&apos;t said yet what the standard game gets.</p>
+        <p className="text-haze mt-2 mb-6 max-w-2xl">What the Ultimate Edition and the Vintage Vice City Pack add at launch, from Rockstar&apos;s screenshots and press images. Swipe sideways. Rockstar hasn&apos;t said yet what the standard game gets.</p>
         <EditionCarousel />
       </section>
 

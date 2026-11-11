@@ -26,7 +26,9 @@ export function NavAuth() {
 
   if (loading) return <span className="inline-block size-9 rounded-full bg-ink-2 animate-pulse" aria-hidden />;
   if (!user) {
-    return <Link href="/login" className="btn btn-hot !py-2 !px-4 text-sm whitespace-nowrap">Sign in</Link>;
+    return <Link href="/pricing" className="btn btn-hot !py-1.5 !pl-2 !pr-4 text-sm whitespace-nowrap inline-flex items-center gap-2">
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img src="/media/coins/kingpin.webp" alt="" className="size-7 coin-spin" /> Join</Link>;
   }
 
   const tier = ((paying ? profile?.tier : "free") ?? "free") as TierId;
