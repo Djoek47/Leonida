@@ -2,6 +2,9 @@ import { NextRequest } from "next/server";
 import { admin, env, userFromRequest } from "@/lib/server";
 import { eventEmail } from "@/lib/email/templates";
 import { emailReady, sendEmail } from "@/lib/email/send";
+import { timingSafeEqual } from "node:crypto";
+/** Constant-time string compare, so a secret can't be guessed byte by byte. */
+function same(a: string, b: string) { const x = Buffer.from(a), y = Buffer.from(b); return x.length === y.length && timingSafeEqual(x, y); }
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -13,7 +16,7 @@ export const dynamic = "force-dynamic";
  *  committed. Anything that fails stays queued and goes out on the next ping. */
 export async function POST(req: NextRequest) {
   const secret = process.env.EMAIL_FLUSH_SECRET;
-  const ok = (secret && req.headers.get("x-flush-secret") === secret) || (await isStaff(req));
+  const ok = (secret && same(req.headers.get("x-flush-secret") ?? "", secret)) || (await isStaff(req));
   if (!ok) return new Response("forbidden", { status: 403 });
   if (!emailReady || !env.serviceKey) return Response.json({ sent: 0, reason: "email not configured" });
   return Response.json(await flush());
