@@ -3,6 +3,7 @@ import { admin, env, userFromRequest } from "@/lib/server";
 import { eventEmail } from "@/lib/email/templates";
 import { emailReady, sendEmail } from "@/lib/email/send";
 import { timingSafeEqual } from "node:crypto";
+import { prefFor } from "@/lib/email/prefs";
 /** Constant-time string compare, so a secret can't be guessed byte by byte. */
 function same(a: string, b: string) { const x = Buffer.from(a), y = Buffer.from(b); return x.length === y.length && timingSafeEqual(x, y); }
 
@@ -41,6 +42,15 @@ async function flush() {
       db.from("profiles").select("display_name, tier, subscription_status").eq("id", row.user_id).maybeSingle(),
     ]);
     const to = u?.user?.email;
+    // Members can switch off the optional kinds in Settings → Notifications.
+    const cat = prefFor(row.kind);
+    if (cat) {
+      const { data: pr } = await db.from("email_prefs").select("muted").eq("user_id", row.user_id).maybeSingle();
+      if (pr?.muted?.includes(cat)) {
+        await db.from("email_outbox").update({ status: "skipped", error: "muted by member" }).eq("id", row.id);
+        continue;
+      }
+    }
     const mail = eventEmail(row.kind, { tier: p && ["active", "trialing"].includes(p.subscription_status) ? p.tier : "free", ...(row.data ?? {}) }, p?.display_name ?? "there");
     if (!to || !mail) {
       await db.from("email_outbox").update({ status: "skipped", error: !to ? "no email address" : "unknown kind" }).eq("id", row.id);

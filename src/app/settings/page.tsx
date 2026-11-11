@@ -5,6 +5,7 @@ import { sb } from "@/lib/supabase";
 import { useUser } from "@/lib/useUser";
 import { plainAuthError } from "@/lib/authErrors";
 import { TierMedal } from "@/components/TierMedal";
+import { NotificationCenter } from "@/components/NotificationCenter";
 import type { TierId } from "@/lib/tiers";
 
 const METHODS: [string, string][] = [
@@ -290,6 +291,8 @@ export default function Settings() {
         </form>
         <Flash note={eNote} />
       </section>
+
+      <NotificationCenter userId={user.id} />
 
       <section className="set-card">
         <h2>Password</h2>

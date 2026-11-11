@@ -63,6 +63,26 @@ export default function Dashboard() {
 
   // Taking a clip out of the running. The clip and its file stay with us —
   // that is what the terms say — it simply stops competing.
+  // Download-only clips can go into the open round whenever the owner likes.
+  const [entering, setEntering] = useState<string | null>(null);
+  const [enterErr, setEnterErr] = useState<{ id: string; text: string } | null>(null);
+  async function enterRound(c: Clip) {
+    const s = sb(); if (!s) return;
+    setEntering(c.id); setEnterErr(null);
+    const { data, error } = await s.rpc("enter_clip_in_round", { p_clip: c.id });
+    setEntering(null);
+    if (error) {
+      const m = error.message ?? "";
+      setEnterErr({ id: c.id, text: m.includes("NO_OPEN_ROUND") ? "No round is taking entries right now. We'll email you when the next one opens."
+        : m.includes("CLIP_TOO_LONG") ? "Round clips must be under 3:00."
+        : m.includes("NOT_LIVE") ? "It has to be approved before it can enter."
+        : "That didn't go through. Try again." });
+      return;
+    }
+    setClips((cs) => cs.map((x) => (x.id === c.id ? { ...x, for_contest: true, contest_id: String(data) } : x)));
+  }
+  const downloadOnly = (c: Clip) => c.for_contest === false && !c.contest_id && ["approved", "featured"].includes(c.status);
+
   const [pull, setPull] = useState<{ clip: Clip; votes: number | null; state: "ask" | "busy" | "error"; err?: string } | null>(null);
   async function pullOut(c: Clip) {
     setPull({ clip: c, votes: null, state: "ask" });
@@ -193,11 +213,17 @@ export default function Dashboard() {
                     <div className="min-w-0 flex-1">
                       <p className="font-extrabold truncate">{c.id === best && <span className="best-tag">Best seller</span>}{c.title}</p>
                       <span className={`clip-state ${kind}`}>{label}</span>
+                      {downloadOnly(c) && <span className="clip-state off ml-2">Download only</span>}
+                      {enterErr?.id === c.id && <p role="alert" className="mt-1 text-xs font-semibold text-flamingo">{enterErr.text}</p>}
                     </div>
                     <div className="sales-n" title={`${views[c.id]?.views_24h ?? 0} in the last 24 hours`}><b>{views[c.id]?.views ?? 0}</b><small>views</small></div>
                     <div className="sales-n" title="Downloads"><b>{s?.downloads ?? 0}</b><small>sold</small></div>
                     <div className="sales-n money" title="Earned from downloads"><b>{exactMoney(s?.earned_cents ?? 0)}</b><small>earned</small></div>
-                    {["approved", "featured", "pending"].includes(c.status) && (
+                    {downloadOnly(c) && (
+                      <button onClick={() => enterRound(c)} disabled={entering === c.id} className="enter-round"
+                        title="Put this clip into the open round">{entering === c.id ? "Entering…" : "Enter a round"}</button>
+                    )}
+                    {["approved", "featured", "pending"].includes(c.status) && c.for_contest !== false && (
                       <button onClick={() => pullOut(c)} className="pull-out"
                         title="Take this clip out of the competition">Withdraw</button>
                     )}
