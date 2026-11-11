@@ -11,13 +11,15 @@ import "server-only";
  *              neon and gold, the amount set big enough to screenshot. */
 
 export const SITE = (process.env.NEXT_PUBLIC_SITE_URL ?? "https://www.livefromleonida.com").replace(/\/$/, "");
-const ASSETS = SITE.startsWith("http://localhost") ? "https://www.livefromleonida.com" : SITE;
+const ASSETS = process.env.EMAIL_ASSET_BASE ?? (SITE.startsWith("http://localhost") ? "https://www.livefromleonida.com" : SITE);
 export const asset = (p: string) => `${ASSETS}/email/${p}`;
 
 // The site's typeface. Apple Mail, iOS and most modern clients load it; Gmail
 // falls back to the system sans, which is the closest stand-in it allows.
 const FONT = "'Overpass','Segoe UI',Roboto,'Helvetica Neue',Arial,sans-serif";
 const HEAVY = FONT;
+// The LED boards' dot-matrix face (Doto), with a monospace stand-in.
+const LED = "'Doto','Courier New',Courier,monospace";
 
 export const esc = (s: unknown) => String(s ?? "")
   .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
@@ -46,7 +48,7 @@ const P = new Proxy(P0, { get: (o, k: string) => (k === "sign" ? RANKS[RANK] : (
 export function led(items: Array<[string, string]>): Block {
   const glow = RANKS[RANK].led;
   const cells = items.map(([k, v]) => `<td align="center" style="padding:14px 6px;">
-<p style="margin:0;font-family:'Courier New',Courier,monospace;font-size:26px;font-weight:700;letter-spacing:2px;color:${glow};text-shadow:0 0 8px ${glow};">${v}</p>
+<p style="margin:0;font-family:${LED};font-size:28px;font-weight:900;letter-spacing:1px;color:${glow};text-shadow:0 0 8px ${glow};">${v}</p>
 <p style="margin:4px 0 0;font-family:${HEAVY};font-size:10px;letter-spacing:2.5px;color:#8f93b8;">${esc(k.toUpperCase())}</p></td>`).join("");
   return `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" bgcolor="#090a1f" style="margin:2px 0 22px;background:#090a1f;border-radius:12px;border:1px solid #23264f;"><tr>${cells}</tr></table>`;
 }
@@ -111,7 +113,7 @@ export function hero(o: { img?: string; imgAlt?: string; kicker: string; figure:
 <tr><td align="center" style="padding:6px 0 0;">
 ${o.img ? `<img src="${esc(o.img)}" width="150" height="150" alt="${esc(o.imgAlt ?? "")}" style="display:block;width:150px;height:150px;border:0;margin:0 auto 14px;">` : ""}
 <p style="margin:0 0 6px;font-family:${HEAVY};font-size:12px;font-weight:900;letter-spacing:3px;text-transform:uppercase;color:${c.accent};">${esc(o.kicker)}</p>
-<p style="margin:0;font-family:${HEAVY};font-size:56px;line-height:0.95;font-weight:900;letter-spacing:-2px;color:#ffc23d;">${o.figure}</p>
+<p style="margin:0;font-family:${LED};font-size:58px;line-height:1;font-weight:900;letter-spacing:1px;color:#ffa21a;text-shadow:0 0 6px rgba(255,140,0,.85),0 0 16px rgba(255,120,0,.45);">${o.figure}</p>
 ${o.caption ? `<p style="margin:10px 0 0;font-family:${FONT};font-size:14px;color:${c.muted};">${o.caption}</p>` : ""}
 </td></tr></table>`;
 }
@@ -129,7 +131,7 @@ export function shell(o: { look: Look; preheader: string; body: Block[]; reason:
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" bgcolor="#090a1f" style="background:#090a1f;border-radius:14px;border:2px solid ${RANKS[RANK].accent};">
 <tr><td width="64" style="padding:12px 0 12px 14px;"><img src="${asset("logo.png")}" width="48" height="48" alt="" style="display:block;width:48px;height:48px;border:0;border-radius:50%;"></td>
 <td style="padding:12px 16px 12px 12px;">
-<p style="margin:0;font-family:'Courier New',Courier,monospace;font-size:19px;font-weight:700;letter-spacing:3px;color:${RANKS[RANK].led};text-shadow:0 0 8px ${RANKS[RANK].led};">LIVE FROM LEONIDA</p>
+<p style="margin:0;font-family:${LED};font-size:20px;font-weight:900;letter-spacing:2px;color:${RANKS[RANK].led};text-shadow:0 0 8px ${RANKS[RANK].led};">LIVE FROM LEONIDA</p>
 <p style="margin:3px 0 0;font-family:${HEAVY};font-size:10px;letter-spacing:2.5px;color:#8f93b8;">GTA VI CLIPS &middot; PRIZES &middot; ${RANKS[RANK].label}</p>
 </td></tr></table></td></tr>`;
 
@@ -137,8 +139,10 @@ export function shell(o: { look: Look; preheader: string; body: Block[]; reason:
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="color-scheme" content="${night ? "dark" : "light"}"><meta name="supported-color-schemes" content="${night ? "dark" : "light"}">
 <title>Live From Leonida</title>
-<link href="https://fonts.googleapis.com/css2?family=Overpass:wght@400;600;800;900&display=swap" rel="stylesheet">
-<style>@import url('https://fonts.googleapis.com/css2?family=Overpass:wght@400;600;800;900&display=swap');</style></head>
+<style>
+@font-face { font-family: 'Overpass'; font-style: normal; font-weight: 100 900; src: url('${asset("overpass.woff2")}') format('woff2'); }
+@font-face { font-family: 'Doto'; font-style: normal; font-weight: 900; src: url('${asset("doto-900.woff2")}') format('woff2'); }
+</style></head>
 <body style="margin:0;padding:0;background:${c.page};" bgcolor="${c.page}">
 <div style="display:none;max-height:0;overflow:hidden;opacity:0;color:${c.page};">${esc(o.preheader)}&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;</div>
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" bgcolor="${c.page}" style="background:${c.page};">

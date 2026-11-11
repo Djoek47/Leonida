@@ -1,3 +1,23 @@
 {
-  "crons": [{ "path": "/api/cron/rounds", "schedule": "5 17 * * *" }]
+  "crons": [
+    {
+      "path": "/api/cron/rounds",
+      "schedule": "5 17 * * *"
+    }
+  ],
+  "headers": [
+    {
+      "source": "/email/(.*)",
+      "headers": [
+        {
+          "key": "Access-Control-Allow-Origin",
+          "value": "*"
+        },
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=31536000, immutable"
+        }
+      ]
+    }
+  ]
 }
