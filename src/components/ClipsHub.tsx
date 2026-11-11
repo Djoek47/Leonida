@@ -414,7 +414,7 @@ function ClipCard({ r, wide, fav, voted, mine, showVote, onOpen, onFav, onVote }
       {showVote && (
         <div className="hub-act">
           {mine ? <span className="text-xs font-bold text-haze">Your clip</span>
-            : voted ? <span className="hub-voted">✓ Your pick</span>
+            : voted ? <span className="hub-voted">Voted ✓</span>
             : r.votable ? <button className="btn btn-hot !py-1.5 !px-4 text-sm" onClick={onVote}>Vote</button>
             : <span className="text-xs font-bold text-haze">Voting not open for this clip</span>}
         </div>
@@ -529,7 +529,7 @@ function Player({ r, list, fav, voted, mine, showVote, onClose, onPick, onFav, o
             </div>
             <div className="flex gap-2">
               <button className={`btn ${fav ? "bg-gulf text-white" : "btn-ghost"} !py-2`} aria-pressed={fav} onClick={onFav}>{fav ? "♥ Saved" : "♡ Favorite"}</button>
-              {showVote && !mine && (voted ? <span className="hub-voted self-center">✓ Your pick</span>
+              {showVote && !mine && (voted ? <span className="hub-voted self-center">Voted ✓</span>
                 : r.votable && <button className="btn btn-hot !py-2" onClick={onVote}>Vote</button>)}
               <button className={`btn !py-2 ${downloaded ? "btn-dl-done" : "btn-ghost"}`} onClick={onDownload}
                 title={downloaded ? "Already downloaded — get it again at no charge" : "Download this clip"}>{downloaded ? "✓ Downloaded" : "↓ Download"}</button>
