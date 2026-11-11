@@ -47,8 +47,19 @@ export async function POST(req: NextRequest) {
     jobs.push({ to: user.email, kind: t === "email" ? "magiclink" : t, link: t === "reauthentication" ? undefined : link(e.token_hash, t), token: e.token });
   }
 
+  // The member's plan colours the email, but only while the subscription is good.
+  let tier: string | undefined;
+  try {
+    const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
+    if (key) {
+      const r = await fetch(`${base}/rest/v1/profiles?id=eq.${encodeURIComponent(user.id)}&select=tier,subscription_status`, { headers: { apikey: key, authorization: `Bearer ${key}` } });
+      const p = ((await r.json()) as Array<{ tier: string; subscription_status: string }>)[0];
+      if (p && ["active", "trialing"].includes(p.subscription_status)) tier = p.tier;
+    }
+  } catch { /* fall back to the free look */ }
+
   for (const j of jobs) {
-    const mail = authEmail(j.kind, { name, link: j.link, token: j.token, newEmail: user.new_email });
+    const mail = authEmail(j.kind, { name, link: j.link, token: j.token, newEmail: user.new_email, tier });
     if (!mail) return fail(400, `no template for ${j.kind}`);
     const r = await sendEmail(j.to, mail, `auth-${user.id}-${j.kind}-${e.token_hash || e.token}`, `auth_${j.kind}`);
     if (!r.ok) return fail(500, r.error);

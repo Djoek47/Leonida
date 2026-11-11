@@ -1,6 +1,6 @@
 import "server-only";
 
-import { led, setRank, asset, button, code, esc, hero, heading, list, para, plain, rows, shell, SITE, small } from "./layout";
+import { led, setRank, setWelcome, rankLogo, asset, button, code, esc, hero, heading, list, para, plain, rows, shell, SITE, small } from "./layout";
 
 /** Every email the site sends, in one place.
  *
@@ -21,7 +21,7 @@ const RANK: Record<string, number> = { free: 0, street: 1, hustler: 2, kingpin: 
 const PERKS: Record<string, string[]> = {
   street: ["Upload up to 4 clips a day.", "3 clip downloads a month", "No ads", "Members chat access."],
   hustler: ["Upload up to 6 clips a day.", "8 clip downloads a month", "Leonida Economist and the weekly Meta Brief", "Feature 1 clip."],
-  kingpin: ["Upload up to 8 clips a day.", "20 clip downloads a month", "Feature 3 clips a month, 24 hours each", "Clip Performance Lab", "Kingpin flair on your profile and clips"],
+  kingpin: ["Upload up to 8 clips a day.", "20 clip downloads a month", "Feature 3 clips a month, 24 hours each"],
 };
 const PLACE = ["", "1st", "2nd", "3rd"];
 const PERIOD: Record<string, string> = { week: "Clip of the Week", month: "Clip of the Month", year: "Clip of the Year" };
@@ -43,9 +43,11 @@ function night(subject: string, preheader: string, body: string[], text: (string
 
 /* ─────────────────────────── Account and sign-in ─────────────────────────── */
 
-export function authEmail(kind: string, d: { name: string; link?: string; token?: string; newEmail?: string }): Email | null {
+export function authEmail(kind: string, d: { name: string; link?: string; token?: string; newEmail?: string; tier?: string }): Email | null {
   const { name, link, token, newEmail } = d;
-  setRank("free");
+  // Sign-in, reset and change emails follow the member's plan colours; the very first email (sign-up, invite) is the multicolour welcome.
+  setRank(d.tier ?? "free");
+  setWelcome(kind === "signup" || kind === "invite");
   // The site signs in by link, so links carry the whole flow; only reauthentication uses a typed code.
   const codeLine: string[] = [];
   const codeText = null;
@@ -229,7 +231,7 @@ export function eventEmail(kind: string, d: D, name: string): Email | null {
 
     case "payment_receipt":
       return night(`Receipt: ${money(d.amount)} paid`, s(d.what, "Payment received."), [
-        hero({ img: asset("logo.png"), imgAlt: "", kicker: "Payment received", figure: money(d.amount) }),
+        hero({ img: rankLogo(), imgAlt: "", kicker: "Payment received", figure: money(d.amount) }),
         para(`${hi(name)} thanks, your payment went through.`, N),
         rows([["For", esc(s(d.what, "Live From Leonida"))], ["Amount", money(d.amount)], ...(d.invoice ? [["Receipt no.", esc(d.invoice)] as [string, string]] : [])], N),
         button("See receipts", `${SITE}/wallet`, N),
@@ -237,7 +239,7 @@ export function eventEmail(kind: string, d: D, name: string): Email | null {
 
     case "download_receipt":
       return night(`Your download: ${s(d.title, "a clip")}`, `${money(d.creator)} of it went to ${s(d.gamertag, "the player")}.`, [
-        hero({ img: asset("logo.png"), imgAlt: "", kicker: "Clip bought", figure: money(d.amount), caption: esc(s(d.title, "A clip")) }),
+        hero({ img: rankLogo(), imgAlt: "", kicker: "Clip bought", figure: money(d.amount), caption: esc(s(d.title, "A clip")) }),
         para(`${hi(name)} the clip is yours to download, and you can grab it again from the clip page any time without paying twice.`, N),
         rows([
           ["Clip", esc(s(d.title, "A clip"))],

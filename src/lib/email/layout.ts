@@ -35,7 +35,12 @@ const RANKS: Record<Tier, { page: string; card: string; text: string; muted: str
 };
 let RANK: Tier = "free";
 /** Set once per email by the template entry points. */
-export function setRank(t: unknown) { RANK = (["street", "hustler", "kingpin"].includes(String(t)) ? t : "free") as Tier; }
+export function setRank(t: unknown) { RANK = (["street", "hustler", "kingpin"].includes(String(t)) ? t : "free") as Tier; WELCOME = false; }
+/** First-time emails (sign-up, invite) wear the original multicolour logo, before a plan colours it. */
+let WELCOME = false;
+export function setWelcome(on: boolean) { WELCOME = on; }
+/** The logo in the member's current plan colour (multicolour for first-time emails). */
+export const rankLogo = () => asset(WELCOME ? "logo.png" : `logo-${RANK}.png`);
 const P0 = {
   sign:  { page: "#f3d48a", card: "#fff5d6", text: "#140d03", muted: "#5c4313", rule: "#e3c27a",
            button: "#b3121c", buttonText: "#ffffff", accent: "#00704a", soft: "#f8e7b4" },
@@ -123,13 +128,13 @@ export function shell(o: { look: Look; preheader: string; body: Block[]; reason:
   const night = o.look === "night";
   const top = night
     ? `<tr><td align="center" style="padding:30px 24px 8px;">
-<img src="${asset(RANK === "free" ? "logo-night.png" : `logo-${RANK}.png`)}" width="64" height="64" alt="Live From Leonida" style="display:block;width:64px;height:64px;border:0;border-radius:50%;margin:0 auto 10px;">
+<img src="${asset(WELCOME ? "logo.png" : RANK === "free" ? "logo-night.png" : `logo-${RANK}.png`)}" width="64" height="64" alt="Live From Leonida" style="display:block;width:64px;height:64px;border:0;border-radius:50%;margin:0 auto 10px;">
 <p style="margin:0;font-family:${HEAVY};font-size:13px;font-weight:900;letter-spacing:4px;color:#ff3d8b;">LIVE FROM LEONIDA</p>
 </td></tr>
 <tr><td align="center" style="padding:6px 24px 18px;font-family:${HEAVY};font-size:12px;letter-spacing:8px;color:#ffc23d;">&#9733;&#9733;&#9733;&#9733;&#9733;&#9733;</td></tr>`
     : `<tr><td style="padding:28px 24px 0;">
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" bgcolor="#090a1f" style="background:#090a1f;border-radius:14px;border:2px solid ${RANKS[RANK].accent};">
-<tr><td width="64" style="padding:12px 0 12px 14px;"><img src="${asset(`logo-${RANK}.png`)}" width="48" height="48" alt="" style="display:block;width:48px;height:48px;border:0;border-radius:50%;"></td>
+<tr><td width="64" style="padding:12px 0 12px 14px;"><img src="${asset(WELCOME ? "logo.png" : `logo-${RANK}.png`)}" width="48" height="48" alt="" style="display:block;width:48px;height:48px;border:0;border-radius:50%;"></td>
 <td style="padding:12px 16px 12px 12px;">
 <p style="margin:0;font-family:${LED};font-size:20px;font-weight:900;letter-spacing:2px;color:${RANKS[RANK].led};text-shadow:0 0 8px ${RANKS[RANK].led};">LIVE FROM LEONIDA</p>
 <p style="margin:3px 0 0;font-family:${HEAVY};font-size:10px;letter-spacing:2.5px;color:#8f93b8;">GTA VI CLIPS &middot; PRIZES &middot; ${RANKS[RANK].label}</p>
