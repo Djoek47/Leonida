@@ -52,7 +52,7 @@ export function authEmail(kind: string, d: { name: string; link?: string; token?
   const codeLine: string[] = [];
   const codeText = null;
   void token;
-  const expiry = small("The link works once and run out in an hour. If this wasn't you, ignore this email and nothing changes.", L);
+  const expiry = small("The link works once and runs out in an hour. If this wasn't you, ignore this email and nothing changes.", L);
 
   switch (kind) {
     case "signup":
@@ -69,13 +69,16 @@ export function authEmail(kind: string, d: { name: string; link?: string; token?
         button("Sign me in", link ?? SITE, L), ...codeLine, expiry,
       ], [`${name}, here's your sign-in link:`, link, codeText, "", "Works once, for one hour. If you didn't ask for it, ignore this email."]);
 
-    case "recovery":
-      return sign("Reset your password", "Pick a new password. The link works for one hour.", [
-        heading("New password, same account.", L),
-        para(`${hi(name)} someone asked to reset the password on this account. If it was you, choose a new one here:`, L),
-        button("Choose a new password", link ?? SITE, L), ...codeLine,
-        small("If you didn't ask for this, your password hasn't changed and you can ignore this email.", L),
-      ], [`${name}, reset your password here:`, link, codeText, "", "If you didn't ask for this, ignore it. Your password hasn't changed."]);
+    case "recovery": {
+      const t = d.tier ?? "free";
+      return night("Reset your password", "Pick a new password. The link works once, for one hour.", [
+        hero({ img: asset(`medal-${t}.png`), imgAlt: "", kicker: "Password reset", figure: "60 MIN", caption: "One tap, then choose a new password." }),
+        para(`${hi(name)} someone asked to reset the password on your Live From Leonida account. If that was you, this is the way in:`, N),
+        button("Choose a new password", link ?? SITE, N),
+        rows([["The link works", "Once, for 60 minutes"], ["Your account", "Unchanged until you finish"]], N),
+        small("Didn't ask for this? Ignore this email. Your password stays exactly as it is, and nobody can use this link without it.", N),
+      ], [`${name}, reset your password here:`, link, "", "The link works once and expires in 60 minutes.", "", "Didn't ask for this? Ignore it. Your password hasn't changed."], "You're getting this because someone asked to reset the password on your account.");
+    }
 
     case "email_change_current":
       return sign("Confirm your email change", `Moving your account to ${newEmail ?? "a new address"}.`, [

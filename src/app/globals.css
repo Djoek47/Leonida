@@ -872,7 +872,10 @@ body:has(.overlay-root) > *:not(:has(.overlay-root)) { display: none; }
   padding: .25rem .8rem; font-size: .68rem; font-weight: 900; letter-spacing: .06em;
 }
 .plan-medal { display: block; width: 9rem; height: auto; margin: 0 auto 1rem; }
-.plan-best .plan-medal { width: 10rem; }
+.plan-free .plan-medal { width: 8.5rem; }
+.plan-street .plan-medal { width: 9rem; }
+.plan-hustler .plan-medal { width: 9.5rem; }
+.plan-kingpin .plan-medal { width: 10rem; }
 /* --haze is tuned for the light page; on the dark card it disappears. */
 .plan-pitch { margin-top: .35rem; text-align: center; font-size: .85rem; line-height: 1.35;
   color: #b8ab91; min-height: 2.4rem; }

@@ -27,7 +27,7 @@ export function NavAuth() {
 
   if (loading) return <span className="inline-block size-9 rounded-full bg-ink-2 animate-pulse" aria-hidden />;
   if (!user) {
-    return <Link href="/login" className="stop-btn"><span>Sign in</span></Link>;
+    return <Link href="/login" className="btn btn-hot !py-2 !px-4 text-sm whitespace-nowrap">Sign in</Link>;
   }
 
   const tier = ((paying ? profile?.tier : "free") ?? "free") as TierId;
