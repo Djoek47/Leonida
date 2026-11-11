@@ -11,7 +11,6 @@ import { Gallery } from "@/components/Gallery";
 import { GuideNav } from "@/components/GuideNav";
 
 export const revalidate = 7200;
-export const metadata = { title: "Leonida guide — Live From Leonida" };
 
 export default function Guide() {
   return (

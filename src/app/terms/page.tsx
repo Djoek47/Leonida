@@ -1,6 +1,6 @@
 import Link from "@/components/A";
 
-export const metadata = { title: "Terms — Live From Leonida", description: "The terms for using Live From Leonida: clips, votes, memberships, prizes and payouts." };
+export const metadata = { title: "Terms of use", alternates: { canonical: "/terms" }, description: "The terms for using Live From Leonida: clips, votes, memberships, prizes and payouts." };
 
 const S = ({ h, children }: { h: string; children: React.ReactNode }) => (
   <section className="mt-10"><h2 className="text-2xl font-extrabold">{h}</h2><div className="mt-3 grid gap-3 text-haze leading-relaxed">{children}</div></section>

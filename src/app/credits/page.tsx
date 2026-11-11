@@ -1,4 +1,3 @@
-export const metadata = { title: "Credits — Live From Leonida" };
 
 export default function Credits() {
   return (

@@ -1,6 +1,6 @@
 import Link from "@/components/A";
 
-export const metadata = { title: "Privacy — Live From Leonida", description: "What Live From Leonida stores about you, why, and how to delete it." };
+export const metadata = { title: "Privacy policy", alternates: { canonical: "/privacy" }, description: "What Live From Leonida stores about you, why we store it, who can see it, and how to delete your account and data at any time." };
 
 const S = ({ h, children }: { h: string; children: React.ReactNode }) => (
   <section className="mt-10"><h2 className="text-2xl font-extrabold">{h}</h2><div className="mt-3 grid gap-3 text-haze leading-relaxed">{children}</div></section>

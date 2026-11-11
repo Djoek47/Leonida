@@ -1,4 +1,3 @@
-export const metadata = { title: "Contest rules — Live From Leonida" };
 
 const UPDATED = "November 9, 2026";
 
