@@ -81,6 +81,31 @@ export default function Guide() {
         </div>
       </section>
 
+      <section id="couple" className="mx-auto max-w-7xl px-4 py-16 scroll-mt-40">
+        <h2 className="display text-6xl md:text-7xl">Jason &amp; Lucia</h2>
+        <p className="text-haze mt-3 max-w-2xl">The relationship isn&apos;t only the story. It&apos;s how you play. Here&apos;s what Rockstar and the press previews have confirmed so far.</p>
+        <div className="mt-8 grid gap-3 grid-cols-2 lg:grid-cols-4">
+          {[["jason_lucia_balcony", "Balcony at sunset"], ["lucia_convertible_heist", "Armoured-truck getaway"], ["jason_lucia_hilltop", "Hilltop over the city"], ["lucia_jason_home", "Home after a shift"]].map(([f, t], i) => (
+            <figure key={f} className={`couple-tile ${i === 0 ? "col-span-2 row-span-2" : ""}`}>
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src={`/media/people/${f}.webp`} alt={t} loading="lazy" />
+              <figcaption>{t}</figcaption>
+            </figure>
+          ))}
+        </div>
+        <div className="mt-10 grid gap-6 md:grid-cols-2">
+          {[
+            ["Two leads, one story", "You play as both. Jason is ex-military and has run drugs; Lucia is a fighter, just out of prison. Their partnership is the spine of the plot."],
+            ["Together or apart", "In the open world you can run around as a couple or split up and cause trouble on your own. One preview had Jason driving the highway, then a switch to Lucia in the passenger seat to use her phone."],
+            ["When you can switch", "Rockstar North's Rob Nelson says it depends on the mission. Some let you swap freely, some swap you mid-mission (in the trailer's bank getaway you shoot as Jason, then drive as Lucia), and some lock you to one of them for the story."],
+            ["Your choices matter", "Previews say how you behave affects the relationship more deeply than earlier Rockstar honour systems. Reports also say you can't break the two of them up, however badly you treat each other."],
+          ].map(([h, p]) => (
+            <div key={h} className="set-card !mt-0"><h3 className="text-xl font-extrabold">{h}</h3><p className="mt-2 text-haze">{p}</p></div>
+          ))}
+        </div>
+        <p className="mt-4 text-xs text-haze">From Rockstar&apos;s interview with Famitsu and Dazed&apos;s preview. We&apos;ll update this from real play after launch.</p>
+      </section>
+
       <section id="garage" className="mx-auto max-w-7xl px-4 py-16 scroll-mt-40">
         <h2 className="display text-6xl md:text-7xl">Cars and weapons</h2>
         <p className="text-haze mt-3 max-w-2xl">Everything seen so far. Tap one for the details. Stats and where to find them get added after launch.</p>
