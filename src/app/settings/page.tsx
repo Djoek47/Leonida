@@ -268,8 +268,8 @@ export default function Settings() {
           <div className="flex flex-wrap gap-2">
             <Link href="/pricing" className="btn btn-ghost">{paying ? "Change plan" : "See plans"}</Link>
             {paying && !ends && (
-              <button onClick={() => cancelPlan()} disabled={busy === "cancel"} className="btn btn-ghost disabled:opacity-70">
-                {busy === "cancel" ? "Cancelling…" : "Cancel plan"}
+              <button onClick={() => cancelPlan()} disabled={busy === "cancel"} className="stop-btn">
+                <span>{busy === "cancel" ? "Cancelling…" : "Cancel plan"}</span>
               </button>
             )}
             {paying && ends && (
@@ -322,7 +322,7 @@ export default function Settings() {
       </section>
 
       <section className="set-card set-danger">
-        <h2>Delete account</h2>
+        <h2 className="flex items-center gap-3"><i className="stop-mark" aria-hidden>!</i>Delete account</h2>
         <p className="text-sm">
           Removes your login, profile, wallet history and votes. Clips you sent stay in the contest
           archive without your name on them. This can&apos;t be undone.
@@ -330,9 +330,8 @@ export default function Settings() {
         <div className="mt-3 flex flex-wrap gap-2 [&>*]:min-w-0">
           <input value={confirm} onChange={(e) => setConfirm(e.target.value)} placeholder="Type DELETE"
             aria-label="Type DELETE to confirm" className="field flex-1 min-w-[10rem]" />
-          <button onClick={deleteAccount} disabled={confirm !== "DELETE" || busy === "delete"}
-            className="btn bg-flamingo text-white disabled:opacity-50">
-            {busy === "delete" ? "Deleting…" : "Delete my account"}
+          <button onClick={deleteAccount} disabled={confirm !== "DELETE" || busy === "delete"} className="stop-btn stop-lg">
+            <span>{busy === "delete" ? "Deleting…" : "Delete my account"}</span>
           </button>
         </div>
         <Flash note={dNote} />

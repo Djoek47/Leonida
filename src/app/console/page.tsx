@@ -529,7 +529,7 @@ function Review() {
           <label className="grid gap-1 text-sm font-bold">Reason if rejecting<input name="reason" className="field font-normal" placeholder="Not GTA VI, too short, someone else's footage…" /></label>
           <div className="flex flex-wrap gap-2 mt-2">
             <button disabled={busy} className="btn btn-hot disabled:opacity-60">Approve</button>
-            <button type="button" disabled={busy} onClick={(e) => decide("rejected", new FormData(e.currentTarget.form!))} className="btn btn-ghost disabled:opacity-60">Disapprove</button>
+            <button type="button" disabled={busy} onClick={(e) => decide("rejected", new FormData(e.currentTarget.form!))} className="stop-btn"><span>Disapprove</span></button>
           </div>
           <div className="mod-row">
             <p className="mod-k">Also</p>

@@ -168,7 +168,7 @@ export default function Dashboard() {
       {pull && (
         <div className="hub-scrim" onClick={() => pull.state !== "busy" && setPull(null)} onKeyDown={(e) => e.key === "Escape" && pull.state !== "busy" && setPull(null)}>
           <div role="dialog" aria-modal="true" aria-labelledby="pull-t" className="hub-sheet" onClick={(e) => e.stopPropagation()}>
-            <p className="dash-kicker">Withdraw from competition</p>
+            <p className="dash-kicker flex items-center gap-2"><i className="stop-mark" aria-hidden>!</i>Withdraw from competition</p>
             <h2 id="pull-t" className="display text-3xl mt-1">Take “{pull.clip.title}” out?</h2>
             <dl className="dash-stats !grid-cols-2 !mt-5">
               <div className="dash-stat"><dt>Votes so far</dt><dd className="text-3xl">{pull.votes ?? "…"}</dd></div>
@@ -182,7 +182,7 @@ export default function Dashboard() {
             {pull.state === "error" && <p role="alert" className="mt-3 font-semibold text-flamingo">{pull.err}</p>}
             <div className="mt-6 flex flex-wrap gap-3">
               <button autoFocus className="btn btn-hot flex-1 justify-center" onClick={() => setPull(null)} disabled={pull.state === "busy"}>Keep it in</button>
-              <button className="btn btn-ghost" onClick={confirmPull} disabled={pull.state === "busy"}>{pull.state === "busy" ? "Withdrawing…" : "Withdraw it"}</button>
+              <button className="stop-btn" onClick={confirmPull} disabled={pull.state === "busy"}><span>{pull.state === "busy" ? "Withdrawing…" : "Withdraw it"}</span></button>
             </div>
           </div>
         </div>
