@@ -3,12 +3,14 @@ import { PortraitClip } from "@/components/PortraitClip";
 import Link from "@/components/A";
 import { PlaceReel } from "@/components/PlaceReel";
 import { LeonidaMap } from "@/components/LeonidaMap";
+import { LatestNews } from "@/components/LatestNews";
 import { GuideNews } from "@/components/GuideNews";
 import { EditionCarousel } from "@/components/EditionCarousel";
 import { Arsenal } from "@/components/Arsenal";
 import { Gallery } from "@/components/Gallery";
 import { GuideNav } from "@/components/GuideNav";
 
+export const revalidate = 7200;
 export const metadata = { title: "Leonida guide — Live From Leonida" };
 
 export default function Guide() {
@@ -44,6 +46,8 @@ export default function Guide() {
           </ul>
         </div>
       </section>
+
+      <LatestNews />
 
       <section id="places" className="py-6 scroll-mt-40">
         <div className="mx-auto max-w-7xl px-4"><h2 className="display text-6xl md:text-7xl">Places</h2></div>

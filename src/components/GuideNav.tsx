@@ -2,7 +2,7 @@
 import { useEffect, useRef, useState } from "react";
 
 const LINKS: [string, string, string][] = [
-  ["map", "Map", "MAP"], ["places", "Places", "PLC"], ["how-it-plays", "How it plays", "HIP"],
+  ["map", "Map", "MAP"], ["news", "News", "NEW"], ["places", "Places", "PLC"], ["how-it-plays", "How it plays", "HIP"],
   ["people", "People", "PPL"], ["couple", "Jason & Lucia", "J&L"], ["garage", "Cars and weapons", "CAR"],
   ["screenshots", "Screenshots", "SHT"], ["guides", "Guides", "GDE"],
 ];
