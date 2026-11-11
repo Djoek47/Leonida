@@ -15,13 +15,14 @@ const archivo = localFont({ src: "../fonts/overpass-latin-wght-normal.woff2", va
 const SITE = "https://www.livefromleonida.com";
 export const metadata: Metadata = {
   metadataBase: new URL(SITE),
-  title: { default: "Live From Leonida — GTA VI clips, prizes and the Leonida guide", template: "%s — Live From Leonida" },
-  description: "Live From Leonida: send your GTA VI clips, let the state vote, and win cash every week. Plus the Leonida guide: Vice City, the Keys, Grassrivers, Port Gellhorn, Ambrosia and Mount Kalaga.",
-  keywords: ["Leonida", "Live From Leonida", "GTA VI", "GTA 6", "Vice City", "Leonida map", "GTA VI clips", "GTA 6 contest", "Leonida Keys", "Port Gellhorn", "Grassrivers"],
-  alternates: { canonical: "/" },
-  openGraph: { type: "website", siteName: "Live From Leonida", url: SITE, title: "Live From Leonida", description: "GTA VI clips, weekly cash prizes and the Leonida guide.",
+  title: { default: "Live From Leonida: GTA 6 clips, weekly prizes and the Leonida guide", template: "%s | Live From Leonida" },
+  description: "Live From Leonida: find, buy and sell GTA 6 clips, enter the weekly GTA VI clip contest and win cash. Plus the Leonida guide: Vice City, the Keys, Grassrivers, Port Gellhorn, Ambrosia and Mount Kalaga.",
+  keywords: ["Live From Leonida", "LiveFromLeonida", "LV Leonida", "Leonida Live", "Leonida", "GTA 6 clips", "GTA VI clips", "buy GTA 6 clips", "find GTA 6 clips", "sell GTA 6 clips", "GTA 6 clips for sale", "GTA 6 clipping service", "GTA 6 clip contest", "GTA 6 gameplay", "Vice City", "Leonida map", "Leonida Keys", "Port Gellhorn", "Grassrivers"],
+  applicationName: "Live From Leonida", category: "games", authors: [{ name: "Live From Leonida", url: SITE }], creator: "Live From Leonida", publisher: "Live From Leonida",
+  alternates: { canonical: "/", languages: { "en": "/", "x-default": "/" } },
+  openGraph: { type: "website", locale: "en_US", siteName: "Live From Leonida", url: SITE, title: "Live From Leonida: GTA 6 clips, weekly prizes and the Leonida guide", description: "Find, buy and sell GTA 6 clips. Weekly GTA VI clip contest with cash prizes.",
     images: [{ url: "/og.png", width: 1200, height: 630, alt: "Live From Leonida — GTA VI clips, prizes and the Leonida guide" }] },
-  twitter: { card: "summary_large_image", title: "Live From Leonida", description: "GTA VI clips, weekly cash prizes and the Leonida guide.", images: ["/og.png"] },
+  twitter: { card: "summary_large_image", site: "@livefromgta6", creator: "@livefromgta6", title: "Live From Leonida: GTA 6 clips and weekly prizes", description: "Find, buy and sell GTA 6 clips. Weekly GTA VI clip contest with cash prizes.", images: ["/og.png"] },
   robots: { index: true, follow: true, googleBot: { index: true, follow: true, "max-image-preview": "large", "max-snippet": -1, "max-video-preview": -1 } },
   // Google Search Console: paste the code from its "HTML tag" option into
   // GOOGLE_SITE_VERIFICATION in Vercel (just the content="…" value).
@@ -31,9 +32,11 @@ export const metadata: Metadata = {
 const jsonLd = {
   "@context": "https://schema.org",
   "@graph": [
-    { "@type": "WebSite", "@id": `${SITE}/#site`, url: SITE, name: "Live From Leonida", alternateName: ["LiveFromLeonida", "Leonida Live"] },
-    { "@type": "Organization", "@id": `${SITE}/#org`, name: "Live From Leonida", url: SITE, logo: `${SITE}/brand/live-from-leonida-avatar-400.png`,
-      sameAs: ["https://www.tiktok.com/@lfleonida", "https://www.instagram.com/lfleonida", "https://www.twitch.tv/livefromleonida", "https://x.com/livefromgta6"] },
+    { "@type": "WebSite", "@id": `${SITE}/#site`, url: SITE, name: "Live From Leonida", alternateName: ["LiveFromLeonida", "Leonida Live", "LV Leonida", "LFL", "Live From Leonida GTA 6 clips"], inLanguage: "en", publisher: { "@id": `${SITE}/#org` } },
+    { "@type": "Organization", "@id": `${SITE}/#org`, name: "Live From Leonida", alternateName: ["LV Leonida", "Leonida Live", "LFL"], url: SITE, logo: `${SITE}/brand/live-from-leonida-avatar-400.png`, image: `${SITE}/og.png`,
+      description: "A GTA VI clip community: find, buy and sell GTA 6 clips, with a weekly clip contest and cash prizes.", slogan: "Live from Leonida",
+      knowsAbout: ["GTA 6", "GTA VI clips", "Leonida", "Vice City", "video game clips"],
+      sameAs: ["https://www.youtube.com/@livefromleonida", "https://www.tiktok.com/@lfleonida", "https://www.instagram.com/lfleonida", "https://www.twitch.tv/livefromleonida", "https://x.com/livefromgta6"] },
   ],
 };
 
@@ -85,6 +88,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
               <p className="mt-4 max-w-md text-xs opacity-70">Live From Leonida is a fan-run community and is not affiliated with, endorsed or sponsored by Rockstar Games or Take-Two Interactive. Grand Theft Auto, GTA VI and related logos and artwork are trademarks and copyright of Take-Two Interactive Software, Inc.</p>
             </div>
             <div className="flex flex-col gap-2">
+              <Link href="/gta-6-clips">GTA 6 clips</Link>
               <Link href="/rules">Contest rules</Link>
               <Link href="/support">Support</Link>
               <Link href="/dashboard">My clips and winnings</Link>
