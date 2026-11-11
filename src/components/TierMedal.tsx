@@ -53,6 +53,8 @@ function Star({ x, y, r, fill }: { x: number; y: number; r: number; fill: string
 }
 
 export function TierMedal({ tier, className }: { tier: TierId; className?: string }) {
+  // Unique per instance (see note below). Called first so hook order never changes.
+  const uid = useId().replace(/:/g, "");
   // Paid tiers use the struck coin artwork; Free keeps the plain steel medal below.
   if (tier !== "free") {
     return (
@@ -65,7 +67,7 @@ export function TierMedal({ tier, className }: { tier: TierId; className?: strin
   // bar, open menu, pricing card — and SVG ids are document-global, so shared
   // ids resolve to whichever came first, including one in a closed menu,
   // where Chrome won't paint a gradient at all.
-  const u = `m-${tier}-${useId().replace(/:/g, "")}`;
+  const u = `m-${tier}-${uid}`;
   const label = "FREE";
 
   return (
