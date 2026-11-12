@@ -46,8 +46,6 @@ export default function Guide() {
         </div>
       </section>
 
-      <LatestNews />
-
       <section id="places" className="py-6 scroll-mt-40">
         <div className="mx-auto max-w-7xl px-4"><h2 className="display text-6xl md:text-7xl">Places</h2></div>
         <div className="mt-8">
@@ -137,6 +135,8 @@ export default function Guide() {
           ))}
         </ul>
       </section>
+
+      <LatestNews />
     </div>
   );
 }
