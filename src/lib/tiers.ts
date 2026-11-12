@@ -59,7 +59,7 @@ export const TIERS: Tier[] = [
   },
   {
     id: "kingpin", label: "Kingpin", rank: 3,
-    monthlyCents: 2500, annualCents: 24000, votes: 6, creditsPerMonth: 20,
+    monthlyCents: 4500, annualCents: 43200, votes: 6, creditsPerMonth: 20,
     dailySubmissions: 8, adFree: true,
     pitch: "Top of the food chain.",
     perks: [
