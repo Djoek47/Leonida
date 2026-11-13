@@ -5,6 +5,7 @@ import Link from "@/components/A";
 import { sb } from "@/lib/supabase";
 import { useUser } from "@/lib/useUser";
 import { Confetti } from "@/components/Confetti";
+import { SpinCoin } from "@/components/SpinCoin";
 
 type Res = {
   contest_id: string; round: string; period: string; announced_at: string; entries: number;
@@ -41,7 +42,7 @@ function Tick({ to, money, start }: { to: number; money?: boolean; start: boolea
 
 function Reveal() {
   const q = useSearchParams();
-  const { user, loading } = useUser();
+  const { user, profile, loading } = useUser();
   const [res, setRes] = useState<Res | null | undefined>(undefined);
   const [open, setOpen] = useState(false);
 
@@ -84,16 +85,12 @@ function Reveal() {
         <p className="yr-k">{res.round} · Results</p>
 
         <button className="yr-coin" onClick={() => setOpen(true)} aria-label={open ? "Your medal" : "Reveal your result"} disabled={open}>
-          <span className="yr-coin-3d">
-            <span className="yr-face yr-back" aria-hidden><span className="yr-q">?</span></span>
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img className="yr-face yr-front" src={coinSrc} alt="" />
-          </span>
+          <SpinCoin medal={coinSrc} avatar={profile?.avatar_path} name={profile?.display_name ?? (user ? "" : "Jay")} metal={(m?.tone ?? "field") as "gold" | "silver" | "bronze" | "field"} state={open ? "open" : "sealed"} className="yr-sc" />
           <span className="yr-flash" aria-hidden />
         </button>
 
         {!open ? (
-          <p className="yr-tap">The votes are counted. <b>Tap to reveal.</b></p>
+          <p className="yr-tap">That&apos;s your side. The votes are counted. <b>Tap to flip it.</b></p>
         ) : res.win && m ? (
           <div className="yr-reveal" aria-live="polite">
             <p className="yr-place">{ORD[res.win.place].toUpperCase()} PLACE · {m.name.toUpperCase()}</p>

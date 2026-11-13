@@ -7,8 +7,9 @@ import { Confetti } from "@/components/Confetti";
 import { poolNow, type Pool } from "@/lib/api";
 import { bracketFor } from "@/lib/tiers";
 import { useUser } from "@/lib/useUser";
+import { SpinCoin } from "@/components/SpinCoin";
 
-type Slot = { place: 1 | 2 | 3; amount_cents: number; clip_id: string; clip_title: string; creator: string; gamertag: string | null; platform: string | null; path: string | null; mine: boolean };
+type Slot = { place: 1 | 2 | 3; amount_cents: number; clip_id: string; clip_title: string; creator: string; avatar?: string | null; gamertag: string | null; platform: string | null; path: string | null; mine: boolean };
 type Round = { id: string; title: string; period: string; announced_at: string; podium: Slot[] };
 type Next = { title: string; announce_at: string; closes_at?: string } | null;
 
@@ -63,7 +64,7 @@ function Stage({ round }: { round: Round }) {
           if (!s) return <div key={pl} className={`res-col p${pl}`} />;
           return (
             <div key={pl} className={`res-col p${pl}`} style={{ ["--d" as string]: `${pl === 1 ? 0.5 : pl === 2 ? 0.25 : 0}s` }}>
-              <div className="res-coin">{/* eslint-disable-next-line @next/next/no-img-element */}<img src={`/media/coins/${COIN[pl]}.webp`} alt="" /></div>
+              <SpinCoin medal={`/media/coins/${COIN[pl]}.webp`} avatar={s.avatar} name={s.creator} metal={pl === 1 ? "gold" : pl === 2 ? "silver" : "bronze"} className={`res-sc p${pl}`} />
               <p className="res-name">{s.mine ? "You" : s.creator}</p>
               <p className="res-amt display">{usd(s.amount_cents)}</p>
               <div className="res-block"><span className="display">{pl}</span></div>
@@ -95,6 +96,13 @@ function Results() {
   useEffect(() => { if (!user) return; sb()?.rpc("my_round_result").then(({ data }) => setLast((data as typeof last) ?? null)); }, [user]);
 
   useEffect(() => {
+    if (params.get("demo") !== null && process.env.NODE_ENV !== "production") {
+      const pod = (t: string, w: string[]) => w.map((cr, k) => ({ place: (k + 1) as 1 | 2 | 3, amount_cents: [1500, 625, 375][k], clip_id: `${t}${k}`, clip_title: ["Airboat through the billboard", "Keys bridge jump", "Squalo stunt off the marina"][k], creator: cr, gamertag: cr, platform: "ps5", path: null, mine: false, avatar: null }));
+      setRounds([{ id: "d1", title: "Week of Nov 19", period: "week", announced_at: new Date().toISOString(), podium: pod("a", ["SwampSaint", "KeysKingpin", "MarinaMenace"]) },
+                 { id: "d2", title: "Week of Nov 12", period: "week", announced_at: new Date(Date.now() - 7 * 864e5).toISOString(), podium: pod("b", ["VicePilot", "GatorGang", "NeonNomad"]) }]);
+      setNext({ title: "Week of Nov 26", announce_at: new Date(Date.now() + 5 * 864e5).toISOString(), closes_at: new Date(Date.now() + 5 * 864e5 - 36e5).toISOString() });
+      return;
+    }
     const c = sb(); if (!c) { setRounds([]); return; }
     c.rpc("public_results", { p_limit: 12 }).then(({ data }) => setRounds((data as Round[]) ?? []));
     c.rpc("next_announcement").then(({ data }) => setNext((data as Next) ?? null));
@@ -119,10 +127,6 @@ function Results() {
                : <p className="res-sub">Winners are announced every Thursday at 1:00pm Eastern</p>}
       </section>
 
-      <div className="res-ticker" aria-hidden>
-        <div>{[0, 1].map((k) => <span key={k}>{(rounds?.length ? rounds.slice(0, 6).map((r) => `${r.title} · Gold: ${r.podium.find((p) => p.place === 1)?.clip_title ?? "—"}`) : ["Results every Thursday 1:00pm Eastern", "Gold · Silver · Bronze", "Free to enter", "Anyone can win"]).map((t, j) => <b key={j}>★ {t}</b>)}</span>)}</div>
-      </div>
-
       {last && (
         <Link href="/result/you" className={`res-minecard${last.win ? ` p${last.win.place}` : ""}`}>
           <span className="res-k">Your last result · {last.round}</span>
@@ -139,7 +143,8 @@ function Results() {
       </section>
 
       <section className="res-grab" aria-label="Up for grabs this week">
-        <p className="res-sub">Up for grabs this week</p>
+        <p className="res-sub">Up for grabs{next ? ` · ${next.title}` : " this week"}</p>
+        {next && <p className="res-dates">Voting closes {new Date(next.closes_at ?? next.announce_at).toLocaleString("en-US", { weekday: "long", month: "short", day: "numeric", hour: "numeric", minute: "2-digit", timeZone: "America/Toronto" })} ET · Winners {new Date(next.announce_at).toLocaleString("en-US", { hour: "numeric", minute: "2-digit", timeZone: "America/Toronto" })} ET</p>}
         <div className="res-grab-row">
           {([[2, "hustler", live.silver], [1, "kingpin", live.gold], [3, "street", live.bronze]] as const).map(([pl, coin, amt]) => (
             <div key={pl} className={`res-grab-c p${pl}`}>
@@ -152,12 +157,6 @@ function Results() {
       </section>
 
       {rounds === null && <p className="res-empty">Loading…</p>}
-      <section className="res-week" aria-label="How a week works">
-        {[["Send", "Clips go in all week"], ["Vote", "Members pick their favourites"], ["Close", next ? new Date(next.closes_at ?? next.announce_at).toLocaleString("en-US", { weekday: "short", hour: "numeric", minute: "2-digit", timeZone: "America/Toronto" }) + " ET" : "Thursday 12:00pm ET"], ["Results", next ? new Date(next.announce_at).toLocaleString("en-US", { weekday: "short", hour: "numeric", minute: "2-digit", timeZone: "America/Toronto" }) + " ET" : "Thursday 1:00pm ET"]].map(([k, v], n) => (
-          <div key={k} className={n === 3 ? "on" : ""}><span className="display">{n + 1}</span><b>{k}</b><small>{v}</small></div>
-        ))}
-      </section>
-
       {rounds?.length === 0 && <p className="res-empty">The first winners will appear here after the next announcement.</p>}
 
       {round && (
@@ -183,6 +182,20 @@ function Results() {
           ))}
         </section>
       )}
+      <section className="res-week res-week-low" aria-label="How a week works">
+        {[["Send", "Clips go in all week"], ["Vote", "Members pick their favourites"], ["Close", next ? new Date(next.closes_at ?? next.announce_at).toLocaleString("en-US", { weekday: "short", hour: "numeric", minute: "2-digit", timeZone: "America/Toronto" }) + " ET" : "Thursday 12:00pm ET"], ["Results", next ? new Date(next.announce_at).toLocaleString("en-US", { weekday: "short", hour: "numeric", minute: "2-digit", timeZone: "America/Toronto" }) + " ET" : "Thursday 1:00pm ET"]].map(([k, v], n) => (
+          <div key={k} className={n === 3 ? "on" : ""}><span className="display">{n + 1}</span><b>{k}</b><small>{v}</small></div>
+        ))}
+      </section>
+
+      <div className="ticker led-board h-8 flex items-center res-bottom" aria-hidden>
+        <span className="led-tag shrink-0 h-full flex items-center px-3 z-10">RESULTS</span>
+        <div className="ticker overflow-hidden flex-1 min-w-0">
+          <div className="ticker-track">
+            {[0, 1].flatMap((k) => (rounds?.length ? rounds.slice(0, 6).map((r) => `${r.title}: gold to ${r.podium.find((p) => p.place === 1)?.creator ?? "—"}`) : ["Results every Thursday 1:00pm Eastern", "Gold · Silver · Bronze", "Free to enter", "Anyone can win", `This week's pool: $${live.pool}`]).map((t, j) => <span key={`${k}-${j}`} className="led-text">★ {t.toUpperCase()}</span>))}
+          </div>
+        </div>
+      </div>
     </div>
   );
 }
