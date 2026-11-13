@@ -94,13 +94,12 @@ export function BadgeWall({ badges }: { badges: Badge[] }) {
   const got = badges.filter((b) => b.earned).length;
   const shelves: [string, (b: Badge) => boolean][] = [
     ["Clipper", (b) => b.id.startsWith("clipper")],
-    ["Podium", (b) => /^(week|month|year)_/.test(b.id)],
     ["Daily Drop", (b) => b.id === "drop_winner"],
   ];
   return (
     <div className="trophy-case">
       <div className="trophy-head">
-        <h3 className="display text-3xl">Trophy case</h3>
+        <h3 className="display text-3xl">Badges</h3>
         <p className="trophy-count"><b>{got}</b> / {badges.length}</p>
       </div>
       {shelves.map(([name, test]) => {

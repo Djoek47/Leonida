@@ -16,5 +16,6 @@ export async function GET(req: NextRequest) {
   if (!env.serviceKey) return Response.json({ ok: false, reason: "no service key" });
   const { data, error } = await admin().rpc("round_tick");
   if (error) return Response.json({ ok: false, error: error.message }, { status: 500 });
-  return Response.json({ ok: true, result: data });
+  const sweep = await admin().rpc("trophy_sweep"); // views and announced prizes have no row event of their own
+  return Response.json({ ok: true, result: data, trophies: sweep.error ? sweep.error.message : sweep.data });
 }

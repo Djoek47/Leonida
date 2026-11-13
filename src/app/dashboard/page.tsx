@@ -6,6 +6,7 @@ import { useUser, type Profile } from "@/lib/useUser";
 import { DEMO_CLIPS, exactMoney, type Clip } from "@/lib/api";
 import { tierById, DOWNLOAD } from "@/lib/tiers";
 import { StatusStrip, BadgeWall, type Badge } from "@/components/Gamification";
+import { TrophyCase } from "@/components/TrophyCase";
 import { FeaturedClips } from "@/components/FeaturedClips";
 import { DemoNote } from "@/components/DemoNote";
 import { GetStarted } from "@/components/GetStarted";
@@ -257,7 +258,8 @@ export default function Dashboard() {
           shelves lay out as shelves. */}
       <FeaturedClips clips={clips} />
 
-      {badges.length > 0 && <div className="mt-10"><BadgeWall badges={badges} /></div>}
+      <div className="mt-10"><TrophyCase /></div>
+      {badges.some((b) => !/^(week|month|year)_/.test(b.id)) && <div className="mt-10"><BadgeWall badges={badges.filter((b) => !/^(week|month|year)_/.test(b.id))} /></div>}
     </div>
     </div>
   );
