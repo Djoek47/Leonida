@@ -6,10 +6,11 @@ import { sb } from "@/lib/supabase";
 import { Confetti } from "@/components/Confetti";
 import { poolNow, type Pool } from "@/lib/api";
 import { bracketFor } from "@/lib/tiers";
+import { useUser } from "@/lib/useUser";
 
 type Slot = { place: 1 | 2 | 3; amount_cents: number; clip_id: string; clip_title: string; creator: string; gamertag: string | null; platform: string | null; path: string | null; mine: boolean };
 type Round = { id: string; title: string; period: string; announced_at: string; podium: Slot[] };
-type Next = { title: string; announce_at: string } | null;
+type Next = { title: string; announce_at: string; closes_at?: string } | null;
 
 const COIN = { 1: "kingpin", 2: "hustler", 3: "street" } as const;
 const usd = (c: number) => `$${(c / 100).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
@@ -89,6 +90,9 @@ function Results() {
   const [pool, setPool] = useState<Pool | null>(null);
   const [entries, setEntries] = useState<number | null>(null);
   const stage = useRef<HTMLDivElement>(null);
+  const { user } = useUser();
+  const [last, setLast] = useState<{ round: string; win: { place: number; amount_cents: number } | null } | null>(null);
+  useEffect(() => { if (!user) return; sb()?.rpc("my_round_result").then(({ data }) => setLast((data as typeof last) ?? null)); }, [user]);
 
   useEffect(() => {
     const c = sb(); if (!c) { setRounds([]); return; }
@@ -105,6 +109,8 @@ function Results() {
 
   return (
     <div className="res">
+      <div className="res-beams" aria-hidden><i /><i /></div>
+      <div className="res-sparks" aria-hidden>{Array.from({ length: 18 }, (_, k) => <i key={k} style={{ left: `${(k * 37) % 100}%`, animationDelay: `${(k * 0.7) % 6}s`, animationDuration: `${6 + (k % 5)}s` }} />)}</div>
       {celebrate && <Confetti count={60} />}
       <section className="res-hero">
         <p className="res-pill">Clip of the Week</p>
@@ -112,6 +118,18 @@ function Results() {
         {next ? <><p className="res-sub">Next winners announced in</p><Countdown to={next.announce_at} /></>
                : <p className="res-sub">Winners are announced every Thursday at 1:00pm Eastern</p>}
       </section>
+
+      <div className="res-ticker" aria-hidden>
+        <div>{[0, 1].map((k) => <span key={k}>{(rounds?.length ? rounds.slice(0, 6).map((r) => `${r.title} · Gold: ${r.podium.find((p) => p.place === 1)?.clip_title ?? "—"}`) : ["Results every Thursday 1:00pm Eastern", "Gold · Silver · Bronze", "Free to enter", "Anyone can win"]).map((t, j) => <b key={j}>★ {t}</b>)}</span>)}</div>
+      </div>
+
+      {last && (
+        <Link href="/result/you" className={`res-minecard${last.win ? ` p${last.win.place}` : ""}`}>
+          <span className="res-k">Your last result · {last.round}</span>
+          <b>{last.win ? `${["", "1st", "2nd", "3rd"][last.win.place]} place · $${(last.win.amount_cents / 100).toFixed(2).replace(/\.00$/, "")}` : "In the running"}</b>
+          <span className="res-go">Open →</span>
+        </Link>
+      )}
 
       <section className="res-stats" aria-label="Live numbers">
         <div><b className="display"><CountUp to={Math.round(live.pool)} money /></b><span>This week&apos;s pool</span></div>
@@ -134,6 +152,12 @@ function Results() {
       </section>
 
       {rounds === null && <p className="res-empty">Loading…</p>}
+      <section className="res-week" aria-label="How a week works">
+        {[["Send", "Clips go in all week"], ["Vote", "Members pick their favourites"], ["Close", next ? new Date(next.closes_at ?? next.announce_at).toLocaleString("en-US", { weekday: "short", hour: "numeric", minute: "2-digit", timeZone: "America/Toronto" }) + " ET" : "Thursday 12:00pm ET"], ["Results", next ? new Date(next.announce_at).toLocaleString("en-US", { weekday: "short", hour: "numeric", minute: "2-digit", timeZone: "America/Toronto" }) + " ET" : "Thursday 1:00pm ET"]].map(([k, v], n) => (
+          <div key={k} className={n === 3 ? "on" : ""}><span className="display">{n + 1}</span><b>{k}</b><small>{v}</small></div>
+        ))}
+      </section>
+
       {rounds?.length === 0 && <p className="res-empty">The first winners will appear here after the next announcement.</p>}
 
       {round && (

@@ -1,7 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { sb } from "@/lib/supabase";
 import { useUser } from "@/lib/useUser";
 import { Confetti } from "@/components/Confetti";
@@ -15,6 +15,7 @@ const usd = (c: number) => `$${(c / 100).toLocaleString("en-US", { minimumFracti
 export function WinCelebration() {
   const { user, demo, loading } = useUser();
   const router = useRouter();
+  const path = usePathname();
   const [win, setWin] = useState<Win | null>(null);
   const [shown, setShown] = useState(0);
   const [mounted, setMounted] = useState(false);
@@ -49,7 +50,7 @@ export function WinCelebration() {
     document.addEventListener("keydown", esc); return () => document.removeEventListener("keydown", esc);
   });
 
-  if (!mounted || !win) return null;
+  if (!mounted || !win || path?.startsWith("/result/you")) return null;
   const inWallet = win.status === "sent";
   return createPortal(
     <div className="win-wrap" role="dialog" aria-modal="true" aria-labelledby="win-h">
@@ -71,7 +72,7 @@ export function WinCelebration() {
           <div><dt>Status</dt><dd>{inWallet ? "In your wallet" : "Add your payout details and it's on its way"}</dd></div>
         </dl>
         <div className="win-actions">
-          <button className="btn btn-hot" onClick={() => done("/result?win={id}")}>See the results</button>
+          <button className="btn btn-hot" onClick={() => done("/result/you")}>See the results</button>
           <button className="btn btn-ghost" onClick={() => done(inWallet ? "/wallet" : "/wallet#payout")}>{inWallet ? "Open my wallet" : "Add payout details"}</button>
         </div>
       </div>

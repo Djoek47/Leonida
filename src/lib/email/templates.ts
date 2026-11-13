@@ -25,6 +25,39 @@ const PERKS: Record<string, string[]> = {
 };
 const PLACE = ["", "1st", "2nd", "3rd"];
 const PERIOD: Record<string, string> = { week: "Clip of the Week", month: "Clip of the Month", year: "Clip of the Year" };
+const MEDAL: Record<number, { name: string; color: string; glow: string; gif: string }> = {
+  1: { name: "gold", color: "#ffc23d", glow: "rgba(255,194,61,.55)", gif: "spin-gold.gif" },
+  2: { name: "silver", color: "#e4ebf3", glow: "rgba(228,235,243,.45)", gif: "spin-silver.gif" },
+  3: { name: "bronze", color: "#e8955c", glow: "rgba(232,149,92,.5)", gif: "spin-bronze.gif" },
+};
+const LEDF = "'Doto','Courier New',Courier,monospace";
+const FONTF = "'Overpass','Segoe UI',Roboto,'Helvetica Neue',Arial,sans-serif";
+const kicker = (t: string) => `<p style="margin:0 0 10px;font-family:${FONTF};font-size:12px;font-weight:900;letter-spacing:3px;text-transform:uppercase;color:#ff3d8b;">${t}</p>`;
+/** The win moment: a spinning medal (animated GIF, first frame is the full face for clients that freeze it). */
+function medalHero(o: { place: number; kicker: string; title: string; figure: string }) {
+  const m = MEDAL[o.place];
+  return `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin:0 0 22px;"><tr><td align="center">
+<p style="margin:0 0 12px;font-family:${FONTF};font-size:12px;font-weight:900;letter-spacing:3px;text-transform:uppercase;color:#ff3d8b;">${o.kicker}</p>
+<img src="${asset(m.gif)}" width="160" height="160" alt="${m.name} medal" style="display:block;width:160px;height:160px;border:0;margin:0 auto 6px;border-radius:50%;">
+<p style="margin:0;font-family:${LEDF};font-size:22px;font-weight:900;letter-spacing:6px;color:${m.color};text-shadow:0 0 10px ${m.glow};">${PLACE[o.place].toUpperCase()} PLACE</p>
+<p style="margin:8px 0 4px;font-family:${FONTF};font-size:40px;line-height:1;font-weight:900;letter-spacing:-1px;color:#fff1e8;">${o.title}</p>
+<p style="margin:6px 0 0;font-family:${LEDF};font-size:60px;line-height:1;font-weight:900;color:#7dffb0;text-shadow:0 0 8px rgba(125,255,176,.7),0 0 22px rgba(125,255,176,.35);">${o.figure}</p>
+</td></tr></table>`;
+}
+/** The top three, titles and creators only. Vote totals never go out. */
+function podiumList(p: Array<{ place: number; title: string; creator: string }>) {
+  return `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin:0 0 20px;background:#24133f;border-radius:12px;">${p.slice(0, 3).map((r, i) => `<tr>
+<td width="46" style="padding:12px 0 12px 14px;${i ? "border-top:1px solid #3a2363;" : ""}"><img src="${asset(`place-${r.place}.png`)}" width="32" height="32" alt="${PLACE[r.place]}" style="display:block;width:32px;height:32px;border:0;"></td>
+<td style="padding:12px 14px;${i ? "border-top:1px solid #3a2363;" : ""}font-family:${FONTF};font-size:15px;line-height:1.35;color:#fff1e8;"><strong>${esc(r.title)}</strong><br><span style="font-size:13px;color:#bfaedc;">by ${esc(r.creator)}</span></td>
+<td align="right" style="padding:12px 14px;${i ? "border-top:1px solid #3a2363;" : ""}font-family:${LEDF};font-size:16px;font-weight:900;color:${MEDAL[r.place].color};">${PLACE[r.place].toUpperCase()}</td></tr>`).join("")}</table>`;
+}
+/** Numbered next steps. */
+function steps(items: string[]) {
+  return `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin:0 0 18px;">${items.map((t, i) => `<tr>
+<td width="34" valign="top" style="padding:6px 0;"><span style="display:inline-block;width:24px;height:24px;line-height:24px;border-radius:50%;background:#ffc23d;color:#140a26;text-align:center;font-family:${FONTF};font-size:13px;font-weight:900;">${i + 1}</span></td>
+<td style="padding:8px 0;font-family:${FONTF};font-size:15px;color:#fff1e8;">${esc(t)}</td></tr>`).join("")}</table>
+<table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin:0 0 20px;"><tr><td style="border:2px solid #ffc23d;border-radius:10px;"><a href="${SITE}/wallet#payout" target="_blank" style="display:inline-block;padding:12px 22px;font-family:${FONTF};font-size:15px;font-weight:900;color:#ffc23d;text-decoration:none;">Claim it in your wallet</a></td></tr></table>`;
+}
 const date = (iso: unknown) => {
   const d = new Date(s(iso));
   return isNaN(d.getTime()) ? "" : d.toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric", timeZone: "UTC" });
@@ -339,19 +372,37 @@ export function eventEmail(kind: string, d: D, name: string): Email | null {
       ], [`${name}, your clip has been disapproved.`, `${SITE}/dashboard`]);
 
     case "prize_won": {
-      const place = Number(d.place ?? 1);
+      const place = Math.min(3, Math.max(1, Number(d.place ?? 1)));
       const award = PERIOD[s(d.period)] ?? "the round";
-      return night(place === 1 ? `You won ${award}. ${money(d.amount)} is yours.` : `${PLACE[place]} place: ${money(d.amount)} is yours`,
-        `${s(d.title, "Your clip")} placed ${PLACE[place]} in ${s(d.contest, award)}.`, [
-        hero({ img: asset(`place-${place}.png`), imgAlt: `${PLACE[place]} place`, kicker: `${PLACE[place]} place · ${award}`, figure: money(d.amount), caption: esc(s(d.contest)) }),
-        heading(place === 1 ? "The whole state voted. You won." : `On the podium. ${PLACE[place]} place.`, N),
-        para(`${hi(name)} your clip <strong>${esc(s(d.title, "your clip"))}</strong> finished <strong>${PLACE[place]}</strong> in ${esc(s(d.contest, award))}. The ${place === 1 ? "gold" : place === 2 ? "silver" : "bronze"} badge is on your profile.`, N),
-        rows([["Place", PLACE[place]], ["Prize", money(d.amount)], ["Round", esc(s(d.contest, award))]], N),
-        led([["Place", PLACE[place].toUpperCase()], ["Prize", money(d.amount)]]),
-        para("Weekly prizes are processed after the winner is announced and valid payment details are provided. You'll get one more email when it's paid.", N),
-        button("See the results", `${SITE}/clips`, N),
-        small("Make sure your gamertag is verified and your payout details are set, so nothing holds the money up.", N),
-      ], [`${name}, "${s(d.title)}" placed ${PLACE[place]} in ${s(d.contest, award)}. Prize: ${money(d.amount)}.`, "Weekly prizes are processed after the winner is announced and valid payment details are provided."], "You're getting this because your clip won a prize.");
+      const m = MEDAL[place];
+      const link = `${SITE}/result/you${d.contest_id ? `?c=${encodeURIComponent(s(d.contest_id))}` : ""}`;
+      return night(place === 1 ? `You won ${award}. ${money(d.amount)} is yours.` : `${PLACE[place]} place. ${money(d.amount)} is yours.`,
+        `The results are in: ${s(d.title, "your clip")} finished ${PLACE[place]}.`, [
+        medalHero({ place, kicker: `Results · ${esc(s(d.contest, award))}`, title: place === 1 ? "You won." : "You made the podium.", figure: money(d.amount) }),
+        para(`${hi(name)} the votes are counted and <strong>${esc(s(d.title, "your clip"))}</strong> finished <strong style="color:${m.color};">${PLACE[place]}</strong> in ${esc(s(d.contest, award))}${d.entries ? `, out of ${esc(d.entries)} clips` : ""}. ${place === 1 ? "Leonida picked yours over every other clip this week." : "Out of everything sent in this week, yours made the top three."}`, N),
+        button(`Reveal your ${m.name} medal`, link, N),
+        rows([["Clip", esc(s(d.title, "Your clip"))], ["Round", esc(s(d.contest, award))], ["Place", `<span style="color:${m.color};">${PLACE[place]} · ${m.name[0].toUpperCase()}${m.name.slice(1)}</span>`], ["Prize", money(d.amount)]], N),
+        steps(["Verify the gamertag on your clip", "Add your payout details in the wallet", "We send it, and email you when it's paid"]),
+        small(`The ${m.name} badge and the Podium trophy are already in your trophy case.`, N),
+      ], [`${name}, the results are in. "${s(d.title)}" finished ${PLACE[place]} in ${s(d.contest, award)}. Prize: ${money(d.amount)}.`,
+          "To get paid: verify the gamertag on your clip, add payout details in your wallet, and we send it.", link],
+        "You're getting this because your clip placed in a Live From Leonida round.");
+    }
+
+    case "round_result": {
+      const link = `${SITE}/result/you${d.contest_id ? `?c=${encodeURIComponent(s(d.contest_id))}` : ""}`;
+      const pod = (Array.isArray(d.podium) ? d.podium : []) as Array<{ place: number; title: string; creator: string }>;
+      return night(`The results are in: ${s(d.contest, "this week's round")}`, `See where ${s(d.title, "your clip")} landed, and who took gold.`, [
+        kicker(`Results · ${esc(s(d.contest, "This week"))}`),
+        heading("The votes are counted.", N),
+        para(`${hi(name)} <strong>${esc(s(d.title, "your clip"))}</strong> was one of ${esc(s(d.entries, "the"))} clips in the running this week. It didn't make the podium this time, but every view it picked up stays with it, and it can keep earning from downloads.`, N),
+        led([["Clips", s(d.entries, "–")], ["Your views", s(d.views, "0")], ["Next round", "THU"]]),
+        pod.length ? podiumList(pod) : "",
+        button("See your result", link, N),
+        small("The next round opens Thursday at noon Eastern. Your next clip could be the one.", N),
+      ], [`${name}, the results for ${s(d.contest)} are in. "${s(d.title)}" was one of ${s(d.entries)} clips and didn't place this time.`,
+          ...pod.map((p) => `${PLACE[p.place]}: ${p.title} by ${p.creator}`), link],
+        "You're getting this because you had a clip in this round. Switch these off in Settings, Notifications.");
     }
 
     case "prize_paid":
