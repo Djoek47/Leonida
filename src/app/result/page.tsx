@@ -4,6 +4,8 @@ import { useSearchParams } from "next/navigation";
 import Link from "@/components/A";
 import { sb } from "@/lib/supabase";
 import { Confetti } from "@/components/Confetti";
+import { poolNow, type Pool } from "@/lib/api";
+import { bracketFor } from "@/lib/tiers";
 
 type Slot = { place: 1 | 2 | 3; amount_cents: number; clip_id: string; clip_title: string; creator: string; gamertag: string | null; platform: string | null; path: string | null; mine: boolean };
 type Round = { id: string; title: string; period: string; announced_at: string; podium: Slot[] };
@@ -23,6 +25,17 @@ function useCountdown(to?: string) {
   if (left === null) return null;
   const s = Math.floor(left / 1000);
   return { d: Math.floor(s / 86400), h: Math.floor(s / 3600) % 24, m: Math.floor(s / 60) % 60, s: s % 60 };
+}
+
+function CountUp({ to, money = false }: { to: number; money?: boolean }) {
+  const [v, setV] = useState(0);
+  useEffect(() => {
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) { setV(to); return; }
+    let raf = 0; const t0 = performance.now();
+    const step = (t: number) => { const k = Math.min(1, (t - t0) / 1400); setV(Math.round(to * (1 - Math.pow(1 - k, 3)))); if (k < 1) raf = requestAnimationFrame(step); };
+    raf = requestAnimationFrame(step); return () => cancelAnimationFrame(raf);
+  }, [to]);
+  return <>{money ? usd(v * 100).replace(/\.00$/, "") : v.toLocaleString("en-US")}</>;
 }
 
 function Countdown({ to }: { to: string }) {
@@ -73,14 +86,20 @@ function Results() {
   const [rounds, setRounds] = useState<Round[] | null>(null);
   const [next, setNext] = useState<Next>(null);
   const [i, setI] = useState(0);
+  const [pool, setPool] = useState<Pool | null>(null);
+  const [entries, setEntries] = useState<number | null>(null);
   const stage = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const c = sb(); if (!c) { setRounds([]); return; }
     c.rpc("public_results", { p_limit: 12 }).then(({ data }) => setRounds((data as Round[]) ?? []));
     c.rpc("next_announcement").then(({ data }) => setNext((data as Next) ?? null));
+    c.rpc("browse_clips", { p_cat: "week", p_limit: 1 }).then(({ data }) => setEntries(((data as { total: number }[] | null)?.[0]?.total) ?? 0));
   }, []);
+  useEffect(() => { poolNow().then(setPool); }, []);
 
+  const live = bracketFor(pool?.paying_users ?? 0);
+  const paidOut = useMemo(() => (rounds ?? []).reduce((n, r) => n + r.podium.reduce((m, p) => m + p.amount_cents, 0), 0), [rounds]);
   const round = rounds?.[i];
   const mine = useMemo(() => round?.podium.find((p) => p.mine), [round]);
 
@@ -88,19 +107,34 @@ function Results() {
     <div className="res">
       {celebrate && <Confetti count={60} />}
       <section className="res-hero">
-        <p className="res-k">Clip of the Week</p>
-        <h1 className="display res-h1">RESULT</h1>
-        {next && <><p className="res-sub">Next winners</p><Countdown to={next.announce_at} /></>}
+        <p className="res-pill">Clip of the Week</p>
+        <h1 className="display res-h1">Results</h1>
+        {next ? <><p className="res-sub">Next winners announced in</p><Countdown to={next.announce_at} /></>
+               : <p className="res-sub">Winners are announced every Thursday at 1:00pm Eastern</p>}
+      </section>
+
+      <section className="res-stats" aria-label="Live numbers">
+        <div><b className="display"><CountUp to={Math.round(live.pool)} money /></b><span>This week&apos;s pool</span></div>
+        <div><b className="display">{entries === null ? "–" : <CountUp to={entries} />}</b><span>Clips in the running</span></div>
+        <div><b className="display">{rounds === null ? "–" : <CountUp to={Math.round(paidOut / 100)} money />}</b><span>Paid to winners</span></div>
+        <div><b className="display">{rounds === null ? "–" : <CountUp to={rounds.length} />}</b><span>Rounds announced</span></div>
+      </section>
+
+      <section className="res-grab" aria-label="Up for grabs this week">
+        <p className="res-sub">Up for grabs this week</p>
+        <div className="res-grab-row">
+          {([[2, "hustler", live.silver], [1, "kingpin", live.gold], [3, "street", live.bronze]] as const).map(([pl, coin, amt]) => (
+            <div key={pl} className={`res-grab-c p${pl}`}>
+              <div className="res-coin">{/* eslint-disable-next-line @next/next/no-img-element */}<img src={`/media/coins/${coin}.webp`} alt="" /></div>
+              <b className="display">${amt}</b>
+            </div>
+          ))}
+        </div>
+        <Link href="/submit" className="btn btn-hot mt-5">Send a clip</Link>
       </section>
 
       {rounds === null && <p className="res-empty">Loading…</p>}
-      {rounds?.length === 0 && (
-        <section className="res-emptybox">
-          <div className="res-coin big">{/* eslint-disable-next-line @next/next/no-img-element */}<img src="/media/coins/kingpin.webp" alt="" /></div>
-          <p className="display">First winners land Thursday</p>
-          <Link href="/submit" className="btn btn-hot">Send a clip</Link>
-        </section>
-      )}
+      {rounds?.length === 0 && <p className="res-empty">The first winners will appear here after the next announcement.</p>}
 
       {round && (
         <section ref={stage} className="res-main">
