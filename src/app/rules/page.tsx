@@ -16,7 +16,7 @@ const PLAIN: [string, string][] = [
 /** The terms. Kept to what actually has to be said. */
 const TERMS: [string, string][] = [
   ["Who runs it", "Organized by Live From Leonida. Live From Leonida is a fan community, not affiliated with or endorsed by Rockstar Games or Take-Two Interactive."],
-  ["Entering", "A free account, that's it. Void where prohibited. Canadian winners answer a skill-testing question; Quebec residents may take disputes to the Régie des alcools, des courses et des jeux."],
+  ["Entering", "A free account, that's it."],
   ["What we won't take", "Other people's footage, mods, cheats, code glitches, anything breaking Rockstar's terms, hate, harassment, sexual content, personal information, or music laid over the top."],
   ["Review", "Staff review every clip before it goes into the weekly or monthly competition. The best clips may also feature in our weekly montage on YouTube."],
   ["Voting", "You see how many votes you have left in your own account. Each vote is one vote, and you can only vote for a clip once — ever. Buying, trading or automating votes, or running several accounts, voids them and can ban you."],
