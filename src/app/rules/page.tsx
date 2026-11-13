@@ -9,7 +9,7 @@ const PLAIN: [string, string][] = [
   ["One voting round per week", "Winners announced every Thursday at 1:00pm, in Eastern Time."],
   ["Votes decide it", "Every subscriber can vote. Every clip can be voted once."],
   ["Top three split the pool", "Gold 60%, Silver 25%, Bronze 15%."],
-  ["Prove the gamertag, then get paid", "PayPal, Venmo, Cash App, Interac or Wise. 60 days to claim."],
+  ["Prove the gamertag, then get paid", "PayPal, Venmo, Cash App or Interac. 60 days to claim."],
   ["You keep your clip", "Your clip could earn up to $0.99 per download."],
 ];
 

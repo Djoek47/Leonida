@@ -35,7 +35,7 @@ export default function Favorites() {
         {!user ? (
           <div className="hub-empty"><p className="display text-3xl">Sign in to see your favorites</p><Link href="/login?next=/favorites" className="btn btn-hot mt-5">Sign in</Link></div>
         ) : !paying ? (
-          <div className="hub-empty"><p className="display text-3xl">🔒 Favorites are for members</p><p className="text-haze mt-2">Street, Hustler and Kingpin can save clips here. Anything you saved before is kept for when you&apos;re back.</p><Link href="/pricing" className="btn btn-hot mt-5">See the plans</Link></div>
+          <div className="hub-empty"><p className="display text-3xl">Favorites are for members</p><p className="text-haze mt-2">Street, Hustler and Kingpin Tiers can save clips here.</p><Link href="/pricing" className="btn btn-hot mt-5">See the plans</Link></div>
         ) : err ? (
           <div className="hub-empty"><p className="display text-3xl">Couldn&apos;t load your favorites</p><button className="btn btn-hot mt-5" onClick={load}>Try again</button></div>
         ) : rows === null ? (

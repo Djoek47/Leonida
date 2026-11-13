@@ -9,13 +9,13 @@ export const dynamic = "force-dynamic";
  *  Stripe members are paid on the spot: the wallet is debited, a transfer goes
  *  to their Stripe account, and Stripe pays it to their card or bank. If the
  *  transfer fails the debit is put back. Everyone else is queued for staff to
- *  send by PayPal, Venmo, Cash App, Interac or Wise. */
+ *  send by PayPal, Venmo, Cash App, Interac. */
 export async function POST(req: NextRequest) {
   if (!env.serviceKey) return Response.json({ error: "Not available yet." }, { status: 503 });
   const me = await userFromRequest(req);
   if (!me) return Response.json({ error: "Sign in first." }, { status: 401 });
   const { cents } = (await req.json()) as { cents: number };
-  if (!Number.isInteger(cents) || cents < 100) return Response.json({ error: "The smallest cash-out is $1." }, { status: 400 });
+  if (!Number.isInteger(cents) || cents < 500) return Response.json({ error: "The smallest cash-out is $5." }, { status: 400 });
 
   const db = admin();
   const { data: p } = await db.from("profiles").select("payout_method, payout_handle, stripe_connect_id, stripe_connect_ready").eq("id", me.id).single();
@@ -26,7 +26,7 @@ export async function POST(req: NextRequest) {
     p_user: me.id, p_cents: cents, p_note: viaStripe ? "Stripe transfer" : `to ${p.payout_method}`,
   });
   if (error) {
-    const m = error.message.includes("INSUFFICIENT_FUNDS") ? "That's more than you can cash out right now. Download earnings from this month unlock on the 1st, after the month ends." : "Couldn't start that. Try again.";
+    const m = error.message.includes("BELOW_MINIMUM") ? "The smallest cash-out is $5." : error.message.includes("INSUFFICIENT_FUNDS") ? "That's more than you can cash out right now. Download earnings from this month unlock on the 1st, after the month ends." : "Couldn't start that. Try again.";
     return Response.json({ error: m }, { status: 400 });
   }
   if (!viaStripe) return Response.json({ ok: true, queued: true });

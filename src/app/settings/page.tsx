@@ -10,7 +10,7 @@ import { NotificationCenter } from "@/components/NotificationCenter";
 import type { TierId } from "@/lib/tiers";
 
 const METHODS: [string, string][] = [
-  ["paypal", "PayPal"], ["venmo", "Venmo"], ["cashapp", "Cash App"], ["interac", "Interac e-Transfer"], ["wise", "Wise"],
+  ["paypal", "PayPal"], ["venmo", "Venmo"], ["cashapp", "Cash App"], ["interac", "Interac e-Transfer"],
 ];
 const PLATFORMS: [string, string][] = [["ps5", "PlayStation 5"], ["xbox", "Xbox Series X|S"], ["pc", "PC"]];
 

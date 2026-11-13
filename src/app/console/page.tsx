@@ -313,7 +313,7 @@ function People() {
   );
 }
 
-/** Members asking to be paid by PayPal, Venmo, Cash App, Interac or Wise.
+/** Members asking to be paid by PayPal, Venmo, Cash App, Interac.
  *  Send it outside the site, then mark it here with the reference — that
  *  sends them the receipt. If it can't go, return it to their wallet. */
 type Cashout = { id: string; creator_id: string; amount_cents: number; method: string; handle: string | null;

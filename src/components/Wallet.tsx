@@ -86,6 +86,7 @@ export function Wallet({ payoutReady }: { payoutReady: boolean }) {
     e.preventDefault();
     const cents = Math.round(parseFloat(amount) * 100);
     if (!Number.isFinite(cents) || cents <= 0) { setErr("Enter an amount."); return; }
+    if (cents < 500) { setErr("The smallest cash-out is $5."); return; }
     if (cents > balance) { setErr("That's more than you can withdraw right now. This month's download earnings unlock at month-end."); return; }
     setBusy(true); setErr(""); setMsg("");
     const c = sb();

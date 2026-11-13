@@ -57,7 +57,7 @@ export async function POST(req: NextRequest) {
     } else {
       const { data: price } = await db.from("download_prices").select("price_cents, creator_cents").eq("id", true).single();
       const amount = price?.price_cents ?? 99;
-      const toCreator = price?.creator_cents ?? 70;
+      const toCreator = price?.creator_cents ?? 99;
       const session = await stripe().checkout.sessions.create({
         mode: "payment",
         customer: prof?.stripe_customer_id ?? undefined,

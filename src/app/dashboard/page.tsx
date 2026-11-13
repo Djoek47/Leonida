@@ -74,7 +74,7 @@ export default function Dashboard() {
     if (error) {
       const m = error.message ?? "";
       setEnterErr({ id: c.id, text: m.includes("NO_OPEN_ROUND") ? "No round is taking entries right now. We'll email you when the next one opens."
-        : m.includes("CLIP_TOO_LONG") ? "Round clips must be under 3:00."
+        : m.includes("CLIP_TOO_LONG") ? "That clip could not be entered."
         : m.includes("NOT_LIVE") ? "It has to be approved before it can enter."
         : "That didn't go through. Try again." });
       return;

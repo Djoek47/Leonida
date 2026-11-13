@@ -5,7 +5,7 @@ import { sb } from "@/lib/supabase";
 import type { Profile } from "@/lib/useUser";
 import { money, type Winning } from "@/lib/api";
 
-const methods = [["paypal", "PayPal"], ["venmo", "Venmo"], ["cashapp", "Cash App"], ["interac", "Interac e-Transfer"], ["wise", "Wise"]] as const;
+const methods = [["paypal", "PayPal"], ["venmo", "Venmo"], ["cashapp", "Cash App"], ["interac", "Interac e-Transfer"]] as const;
 
 async function call(url: string, body: object) {
   const t = (await sb()?.auth.getSession())?.data.session?.access_token;
@@ -35,7 +35,7 @@ export function GetPaid({ profile, setProfile }: { profile: Profile; setProfile:
     setBusy(false);
     if (String(j.error ?? "").includes("switched on")) {
       setWay("other");
-      setNote("Card and bank payouts aren't available yet. Use PayPal, Venmo, Cash App, Interac or Wise for now; nothing is lost, your wallet keeps the money.");
+      setNote("Card and bank payouts aren't available yet. Use PayPal, Venmo, Cash App or Interac for now; nothing is lost, your wallet keeps the money.");
     } else setNote(j.error ?? "Couldn't open Stripe.");
   }
   async function save(e: React.FormEvent<HTMLFormElement>) {
@@ -53,7 +53,7 @@ export function GetPaid({ profile, setProfile }: { profile: Profile; setProfile:
         <button type="button" role="radio" aria-checked={way === "stripe"} onClick={() => setWay("stripe")} className={way === "stripe" ? "on" : ""}>
           <b>Card or bank</b><span>Instant, via Stripe</span></button>
         <button type="button" role="radio" aria-checked={way === "other"} onClick={() => setWay("other")} className={way === "other" ? "on" : ""}>
-          <b>PayPal & co.</b><span>Sent by staff</span></button>
+          <b>Payout apps</b><span>Sent by staff</span></button>
       </div>
       <div className="mt-4 grid gap-3 max-w-sm">
       {way === "stripe" ? (

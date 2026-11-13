@@ -85,7 +85,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           <div className="mx-auto max-w-7xl px-4 py-12 grid gap-8 md:grid-cols-[2fr_1fr_1fr_1fr] text-sm">
             <div>
               <div className="flex items-center gap-3">{/* eslint-disable-next-line @next/next/no-img-element */}<img src="/brand/live-from-leonida-avatar-180.png" alt="Live From Leonida logo" className="size-16 rounded-full" /><p className="sign-sm !text-lg !px-4 !py-2.5">Live From Leonida</p></div>
-              <p className="mt-3 max-w-md">Free to enter. Winners are paid by PayPal, Venmo, Cash App, Interac or Wise after we confirm the gamertag is theirs.</p>
+              <p className="mt-3 max-w-md">Free to enter. Winners are paid by PayPal, Venmo, Cash App or Interac after we confirm the gamertag is theirs.</p>
               <p className="mt-4 max-w-md text-xs opacity-70">Live From Leonida is a fan-run community and is not affiliated with, endorsed or sponsored by Rockstar Games or Take-Two Interactive. Grand Theft Auto, GTA VI and related logos and artwork are trademarks and copyright of Take-Two Interactive Software, Inc.</p>
             </div>
             <div className="flex flex-col gap-2">

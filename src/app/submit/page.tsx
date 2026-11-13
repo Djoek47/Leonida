@@ -52,7 +52,6 @@ export default function SubmitPage() {
 
 /** Every clip: under two minutes and under 600 MB. Both are hard limits,
  *  checked here and again on the server. */
-const MAX_SECONDS = 120;
 const MAX_BYTES = 600 * 1024 * 1024;
 
 /** Read the duration out of the file in the browser, so we can refuse a long clip
@@ -119,7 +118,6 @@ function SendForm({ userId, cap, usedToday, gamertag, platform }: { userId: stri
   const [tags, setTags] = useState<string[]>([]);
   const [agreed, setAgreed] = useState(false);
   const atCap = usedToday >= cap;
-  const tooLong = len != null && len >= MAX_SECONDS;
 
   async function submit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -139,9 +137,6 @@ function SendForm({ userId, cap, usedToday, gamertag, platform }: { userId: stri
 
       if (mode === "file" && file && file.size) {
         if (file.size >= MAX_BYTES) throw new Error("That file is 600 MB or over. Clips have to come in under 600 MB — trim it or paste a link instead.");
-        if (len != null && len >= MAX_SECONDS) {
-          throw new Error(`Clips have to come in under 2 minutes. Yours is ${mmss(len)}.`);
-        }
         storage_path = `${userId}/${crypto.randomUUID()}-${file.name.replace(/[^\w.-]/g, "_")}`;
         const up = await c.storage.from("clips").upload(storage_path, file);
         if (up.error) throw up.error;
@@ -182,7 +177,7 @@ function SendForm({ userId, cap, usedToday, gamertag, platform }: { userId: stri
     } catch (x) {
       const m = (x as Error).message;
       setErr(m.includes("DAILY_LIMIT") ? `That's your ${cap} clips for today. The limit resets at midnight.`
-           : m.includes("CLIP_TOO_LONG") ? "Clips have to come in under 2 minutes."
+           : m.includes("CLIP_TOO_LONG") ? "That clip is too long."
            : m);
       setState("error");
     }
@@ -239,7 +234,7 @@ function SendForm({ userId, cap, usedToday, gamertag, platform }: { userId: stri
               className="field file:mr-4 file:rounded file:border-0 file:bg-flamingo file:px-3 file:py-1.5 file:font-bold file:text-white" />
           : <input name="url" type="url" required className="field" placeholder="YouTube, TikTok, Twitch clip or PlayStation share link" />}
         <p className="text-xs text-haze mt-1.5">
-          Upload a clip under 2 minutes and under 600 MB. MP4, MOV or WebM. Raw footage is fine, we edit.
+          Upload a clip under 600 MB, 1 to 3 minutes works best. MP4, MOV or WebM. Raw footage is fine, we edit.
           
         </p>
         {mode === "file" && preview && len != null && (
@@ -253,11 +248,7 @@ function SendForm({ userId, cap, usedToday, gamertag, platform }: { userId: stri
           </div>
         )}
         {len != null && (
-          <p className={`text-sm mt-1.5 font-semibold ${tooLong ? "text-flamingo" : "text-gulf"}`}>
-            {tooLong
-              ? `${mmss(len)} — too long for a contest clip. Trim it under 3:00, or untick the box below and send it as a regular upload.`
-              : `${mmss(len)} — good for the contest.`}
-          </p>
+          <p className="text-sm mt-1.5 font-semibold text-gulf">{mmss(len)}{len < 60 || len > 180 ? " · 1 to 3 minutes works best" : ""}</p>
         )}
       </div>
       <TagPicker value={tags} onChange={setTags} />
@@ -320,7 +311,7 @@ function SendForm({ userId, cap, usedToday, gamertag, platform }: { userId: stri
           Tick the box above to send your clip — we can&apos;t publish it without your say-so.
         </p>
       )}
-      <button disabled={state === "sending" || atCap || tooLong || !agreed}
+      <button disabled={state === "sending" || atCap || !agreed}
         className="btn btn-hot w-fit disabled:opacity-60">
         {state === "sending" ? "Sending…" : "Send clip"}
       </button>

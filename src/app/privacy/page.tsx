@@ -13,7 +13,7 @@ export default function Privacy() {
       <h1 className="display mt-5 text-5xl md:text-6xl">What we keep, and why.</h1>
       <p className="mt-4 text-haze">Last updated November 9, 2026.</p>
       <S h="What we store">
-        <p><strong className="text-foam">Account:</strong> your email, display name, platform and gamertag, and the payout handle you choose (PayPal, Venmo, Cash App, Interac or Wise).</p>
+        <p><strong className="text-foam">Account:</strong> your email, display name, platform and gamertag, and the payout handle you choose (PayPal, Venmo, Cash App or Interac).</p>
         <p><strong className="text-foam">Your clips:</strong> the videos you upload, their titles and tags, and the votes cast in each round.</p>
         <p><strong className="text-foam">Money:</strong> your plan, wallet entries, prizes, downloads and payouts. Card details never touch our servers: Stripe handles payments.</p>
       </S>

@@ -190,7 +190,7 @@ export function ClipsHub({ cat }: { cat: Cat }) {
 
   async function toggleFav(r: Row) {
     if (!user) { setMsg("Sign in, then pick a plan, to save favorites."); return; }
-    if (!paying) { setMsg("Favorites are for Street, Hustler and Kingpin members."); return; }
+    if (!paying) { setMsg("Street, Hustler and Kingpin Tiers can save clips here."); return; }
     const on = !favs.has(r.id);
     const prev = new Set(favs);
     const nx = new Set(favs); if (on) nx.add(r.id); else nx.delete(r.id); setFavs(nx);

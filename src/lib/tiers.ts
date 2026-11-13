@@ -78,7 +78,7 @@ export const tierById = (id: string | null | undefined): Tier =>
   TIERS.find((t) => t.id === id) ?? TIERS[0];
 
 /** $0.99 a download. The creator who made the clip is paid on every one. */
-export const DOWNLOAD = { priceCents: 99, creatorCents: 70, platformCents: 29 };
+export const DOWNLOAD = { priceCents: 99, creatorCents: 99, platformCents: 0 };
 
 /** Months free when paying for a year instead of twelve months. */
 export function annualSaving(t: Tier): number {
