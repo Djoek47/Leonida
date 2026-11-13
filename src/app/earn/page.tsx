@@ -5,6 +5,7 @@ import { DOWNLOAD, MONTHLY_PRIZE_CENTS, PERIOD_MULTIPLE, bracketFor } from "@/li
 import { poolNow, type Pool } from "@/lib/api";
 import { Vault } from "@/components/Vault";
 import { PrizeLadder } from "@/components/PrizeLadder";
+import { PayoutLogos } from "@/components/PayoutLogos";
 import { DemoNote } from "@/components/DemoNote";
 
 const usd = (n: number) => `$${n.toLocaleString("en-US", { minimumFractionDigits: n % 1 ? 2 : 0, maximumFractionDigits: 2 })}`;
@@ -114,6 +115,7 @@ export default function Earn() {
           <div>
             <p className="display text-4xl md:text-5xl">Free to enter. Always.</p>
             <p className="font-semibold mt-1">Send a clip, win the week.</p>
+            <PayoutLogos className="mt-4" />
           </div>
           <div className="flex flex-wrap gap-3 shrink-0">
             <Link href="/submit" className="btn btn-hot">Send a clip</Link>

@@ -2010,3 +2010,10 @@ aside .trophy-shelf li { width: 4.1rem; }
 .res-chip{flex:0 0 auto;scroll-snap-align:start;text-align:left;display:grid;padding:.6rem .9rem;border-radius:.8rem;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.14);color:#fff;cursor:pointer;min-width:9rem}
 .res-chip span{font-size:.7rem;opacity:.6}.res-chip.on{border-color:#f0c24b;background:rgba(240,194,75,.15)}
 @media(prefers-reduced-motion:reduce){.confetti{display:none}.win-flip,.res-coin,.res-col{animation:none;opacity:1}}
+
+/* ---- Payout logo carousel ---- */
+.payout-logos{position:relative;display:grid;place-items:center;width:11rem;height:4.2rem;border-radius:.9rem;background:#fff;box-shadow:0 2px 14px rgba(0,0,0,.25)}
+.payout-tile{position:absolute;inset:0;display:grid;place-items:center;opacity:0;transform:translateY(10px) scale(.94);animation:payout-cycle 12s infinite;animation-delay:calc(var(--i)*3s)}
+.payout-tile img{max-width:70%;max-height:2.9rem;width:auto;height:auto;object-fit:contain}
+@keyframes payout-cycle{0%{opacity:0;transform:translateY(10px) scale(.94)}4%,22%{opacity:1;transform:none}26%,100%{opacity:0;transform:translateY(-10px) scale(.94)}}
+@media(prefers-reduced-motion:reduce){.payout-logos{width:auto;height:auto;gap:.9rem;padding:.6rem 1rem;display:flex}.payout-tile{position:static;opacity:1;transform:none;animation:none}.payout-tile img{max-height:2rem}}

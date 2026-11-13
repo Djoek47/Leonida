@@ -1,4 +1,5 @@
 "use client";
+import { PayoutLogos } from "@/components/PayoutLogos";
 import { useCallback, useEffect, useState } from "react";
 import Link from "@/components/A";
 import { sb } from "@/lib/supabase";
@@ -49,6 +50,7 @@ export function GetPaid({ profile, setProfile }: { profile: Profile; setProfile:
   return (
     <section>
       <h2 id="payout" className="money-h scroll-mt-28">Get paid</h2>
+      <PayoutLogos className="mt-3" />
       <div className="pay-tabs" role="radiogroup" aria-label="Payout method">
         <button type="button" role="radio" aria-checked={way === "stripe"} onClick={() => setWay("stripe")} className={way === "stripe" ? "on" : ""}>
           <b>Card or bank</b><span>Instant, via Stripe</span></button>
