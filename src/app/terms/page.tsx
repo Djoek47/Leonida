@@ -24,7 +24,7 @@ export default function Terms() {
         <p>Plans renew automatically until you cancel in settings. Cancelling keeps your perks until the end of the period you paid for. Download credits reset each cycle and don&apos;t carry over. Paid downloads are final once the file is delivered.</p>
       </S>
       <S h="What a download pays the creator">
-        <p>When someone downloads your clip, you can earn up to $0.99 per paid download, usually about $0.70. We take off payment processing fees and credit the rest to your wallet. Payouts need a minimum balance of $5. The amount shown before a sale is an indication, not a promise.</p>
+        <p>When someone downloads your clip, you can earn up to $0.99 per paid download, after payment processing fees, credited to your wallet. Payouts need a minimum balance of $5. The amount shown before a sale is an indication, not a promise.</p>
         <p>What is fixed is the record: every sale writes the exact amount into your wallet, down to the cent, and you can see it per clip on your dashboard and per sale in your receipts. If we ever change the split itself, we&apos;ll email you before it takes effect.</p>
       </S>
       <S h="Wallet and payouts">
