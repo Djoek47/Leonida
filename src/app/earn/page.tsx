@@ -123,7 +123,7 @@ export default function Earn() {
           </div>
         </div>
         <p className="mt-4 text-sm text-haze">
-          Winners confirm the gamertag on the clip before any money moves. Full terms are in the{" "}
+          Full terms are in the{" "}
           <Link href="/rules" className="text-gulf underline underline-offset-4">contest rules</Link>.
         </p>
       </section>

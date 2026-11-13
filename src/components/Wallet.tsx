@@ -163,9 +163,9 @@ export function Wallet({ payoutReady }: { payoutReady: boolean }) {
         <>
           <h2 className="money-h">How money lands here</h2>
           <ul className="money-howto">
-            <li><b>Win a week.</b> Gold, silver and bronze are paid in here once staff confirm the gamertag.</li>
+            <li><b>Win a week.</b> Gold, silver and bronze are paid in here after the announcement.</li>
             <li><b>Sell a clip.</b> Every member download pays the player who made it, for as long as people keep downloading.</li>
-            <li><b>Cash out</b> whenever you like — card, bank, or PayPal and the rest.</li>
+            <li><b>Cash out</b> with PayPal, Venmo, Cash App or Interac once you have $5.</li>
           </ul>
           <div className="flex flex-wrap gap-2 mt-4">
             <Link href="/submit" className="btn btn-hot !py-2">Send a clip</Link>
