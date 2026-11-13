@@ -90,7 +90,7 @@ export default function Gta6Clips() {
         <h2 className="display text-3xl">Sell your GTA 6 clips</h2>
         <p className="mt-3 text-haze">
           Send your clip into the weekly round. Once staff approve it, it goes live in the library and into the contest.
-          Every time a member downloads it you earn a share of that download. Right now that is up to 70¢ a download, and it can grow as the community does.
+          Every time a member downloads it you earn a share of that download. You can earn up to 99¢ per download.
           Free accounts can enter, vote and win prizes too.
         </p>
         <p className="mt-3"><Link href="/earn" className="font-black underline">How earning works</Link></p>
