@@ -60,6 +60,30 @@ export function useMoney(days = 30) {
   return m;
 }
 
+function PayoutSetting() {
+  const [cur, setCur] = useState<number | null>(null);
+  const [val, setVal] = useState(70);
+  const [msg, setMsg] = useState("");
+  useEffect(() => { const c = sb(); if (!c) return; c.from("download_prices").select("creator_cents").eq("id", true).single().then(({ data }) => { if (data) { setCur(data.creator_cents); setVal(data.creator_cents); } }); }, []);
+  async function save() {
+    const c = sb(); if (!c) return;
+    const { error } = await c.rpc("set_creator_payout", { p_cents: val });
+    if (error) { setMsg(error.message.includes("OUT_OF_RANGE") ? "Pick between 70 and 99 cents." : "Could not save. Are you signed in as admin?"); return; }
+    setCur(val); setMsg("Saved. New downloads use this amount; past downloads keep theirs.");
+  }
+  return (
+    <section className="set-card !mt-0"><h3 className="font-black">Creator pays per download</h3>
+      <p className="text-sm text-haze">One number for everyone. Never below 70¢, never above 99¢. Public copy says "up to 99¢".{cur !== null && <> Right now: <b>{cur}¢</b>.</>}</p>
+      <div className="mt-3 flex flex-wrap items-center gap-3">
+        <input type="range" min={70} max={99} value={val} onChange={(e) => setVal(+e.target.value)} aria-label="Cents per download" className="w-48" />
+        <b className="display text-2xl">{val}¢</b>
+        <button onClick={save} disabled={val === cur} className="btn btn-hot !py-1 !px-4 text-sm">Save</button>
+      </div>
+      {msg && <p className="mt-2 text-xs text-haze" role="status">{msg}</p>}
+    </section>
+  );
+}
+
 export function MoneyPanel({ compact }: { compact?: boolean }) {
   const [days, setDays] = useState(30);
   const m = useMoney(days);
@@ -89,6 +113,7 @@ export function MoneyPanel({ compact }: { compact?: boolean }) {
       </div>
 
       <div className="grid gap-4 lg:grid-cols-2">
+        <PayoutSetting />
         <section className="set-card !mt-0"><h3 className="font-black">Download sales</h3>
           <p className="text-sm text-haze">{$(sales)} sold · {$(share)} to creators</p>
           <Bars days={m.series} a={(d) => d.sales_cents} b={(d) => d.creator_cents} aLabel="Sold" bLabel="Creator share" fmt={$} /></section>
