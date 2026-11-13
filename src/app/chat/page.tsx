@@ -13,11 +13,11 @@ type Message = { id: number; channel_id: string; author_id: string; body: string
   top_badge: string | null; top_badge_label: string | null; badge_count: number; is_staff: boolean };
 
 const FALLBACK: Channel[] = [
-  { id: "lobby", label: "The Lobby", description: "Everyone. Say hello.", members_only: false, min_rank: 0, position: 1 },
-  { id: "clips", label: "Clip talk", description: "This week's round, picks and arguments.", members_only: false, min_rank: 0, position: 2 },
-  { id: "trending", label: "Trending", description: "Daily Drop winners and what's climbing.", members_only: false, min_rank: 0, position: 3 },
-  { id: "members", label: "Members", description: "Street and up.", members_only: true, min_rank: 1, position: 4 },
-  { id: "kingpins", label: "Back room", description: "Hustler and Kingpin.", members_only: true, min_rank: 2, position: 5 },
+  { id: "lobby", label: "The Lobby", description: "Everyone. Say hello.", members_only: true, min_rank: 1, position: 1 },
+  { id: "clips", label: "Clip talk", description: "This week's round, picks and arguments.", members_only: true, min_rank: 1, position: 2 },
+  { id: "voting", label: "Voting", description: "Talk through this week's vote.", members_only: true, min_rank: 1, position: 3 },
+  { id: "trending", label: "Trending", description: "Daily Drop winners and what's climbing.", members_only: true, min_rank: 1, position: 4 },
+  { id: "members", label: "Members", description: "Street, Hustler and Kingpin.", members_only: true, min_rank: 1, position: 5 },
 ];
 
 const DEMO: Message[] = [
@@ -141,7 +141,7 @@ export default function Chat() {
             <div className="flex-1 grid place-items-center p-8 text-center">
               <div>
                 <p className="display text-4xl">{needed?.label} and up</p>
-                <p className="text-haze mt-2 max-w-sm">This room is for paying members. The Lobby, Clip talk and Trending are open to everyone.</p>
+                <p className="text-haze mt-2 max-w-sm">Chat is for Street, Hustler and Kingpin members.</p>
                 <Link href="/pricing" className="btn btn-hot mt-5">See the plans</Link>
               </div>
             </div>

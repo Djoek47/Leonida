@@ -21,7 +21,7 @@ import { DEMO_CLIPS } from "@/lib/api";
  *  is paged, so a filter covers the whole catalogue, not just what loaded.
  *  Vote totals never reach this page. */
 
-export type Cat = "week" | "all" | "featured";
+export type Cat = "week" | "daily" | "all" | "featured";
 type Row = {
   id: string; contest_id: string | null; owner_id: string | null; title: string; platform: Clip["platform"];
   gamertag: string; storage_path: string | null; watermark_path: string | null; source_url: string | null;
@@ -35,10 +35,12 @@ type Round = { id: string; title: string; state: string; timezone: string; start
 
 const CATS: [Cat, string, string][] = [
   ["week", "This week's clips", "/clips"],
+  ["daily", "Daily Clips", "/clips/daily"],
   ["all", "All Videos", "/clips/all"],
   ["featured", "Featured Clips", "/clips/featured"],
 ];
 const PAGE = 24;
+const SORT_LABEL: Record<string, string> = { views_desc: "Most viewed", views_asc: "Least viewed", votes_desc: "Most votes", votes_asc: "Fewest votes", new_desc: "Newest", new_asc: "Oldest" };
 const SUPA = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const thumbOf = (r: Row) => r.thumb ?? (SUPA && r.owner_id ? `${SUPA}/storage/v1/object/public/thumbs/${r.owner_id}/${r.id}.jpg` : undefined);
 const num = (n: number) => (n >= 1e6 ? `${(n / 1e6).toFixed(1)}M` : n >= 1e4 ? `${Math.round(n / 1e3)}K` : n >= 1e3 ? `${(n / 1e3).toFixed(1)}K` : String(n));
@@ -78,17 +80,19 @@ function warm(r: Row) {
     const l = document.createElement("link"); l.rel = "preload"; l.as = "video"; l.href = u; document.head.appendChild(l); }).catch(() => {});
 }
 
-async function browse(cat: Cat, o: { section?: string; sort?: string; tags?: string[]; offset?: number; limit?: number }): Promise<Row[]> {
+async function browse(cat: Cat, o: { section?: string; sort?: string; tags?: string[]; offset?: number; limit?: number; window?: string }): Promise<Row[]> {
   const c = sb();
   if (!c) {
     let r = [...DEMO];
     if (cat === "featured" || o.section === "featured") r = r.filter((x) => x.featured_until);
     if (o.tags?.length) r = r.filter((x) => x.tags.some((t) => o.tags!.includes(t)));
-    if (o.sort === "views" || o.section === "trending") r.sort((a, b) => b.view_count - a.view_count);
+    const so = o.sort ?? "new_desc";
+    if (so.startsWith("views") || o.section === "trending") r.sort((a, b) => so === "views_asc" ? a.view_count - b.view_count : b.view_count - a.view_count);
+    else if (so === "new_asc") r.reverse();
     return r.map((x) => ({ ...x, total: r.length })).slice(o.offset ?? 0, (o.offset ?? 0) + (o.limit ?? PAGE));
   }
   const { data, error } = await c.rpc("browse_clips", {
-    p_cat: cat, p_section: o.section ?? null, p_sort: o.sort ?? "new",
+    p_cat: cat, p_section: o.section ?? null, p_sort: o.sort ?? "new_desc", p_window: o.window ?? null,
     p_tags: o.tags?.length ? o.tags : null, p_limit: o.limit ?? PAGE, p_offset: o.offset ?? 0,
   });
   if (error) throw error;
@@ -97,7 +101,10 @@ async function browse(cat: Cat, o: { section?: string; sort?: string; tags?: str
 
 export function ClipsHub({ cat }: { cat: Cat }) {
   const router = useRouter(), path = usePathname(), q = useSearchParams();
-  const sort = q.get("sort") === "views" ? "views" : q.get("sort") === "new" ? "new" : null;
+  const SORTS = ["views_desc", "views_asc", "votes_desc", "votes_asc", "new_desc", "new_asc"];
+  const rawSort = q.get("sort");
+  const sort = rawSort === "views" ? "views_desc" : rawSort === "new" ? "new_desc" : rawSort && SORTS.includes(rawSort) ? rawSort : null;
+  const win = cat === "daily" && q.get("window") === "hour" ? "hour" : "today";
   const tags = useMemo(() => (q.get("tags") ?? "").split(",").filter((t) => ALL_TAGS.map(slugTag).includes(t)), [q]);
   const filtered = Boolean(sort || tags.length);
 
@@ -146,16 +153,16 @@ export function ClipsHub({ cat }: { cat: Cat }) {
     const my = ++seq.current;
     setState("loading");
     try {
-      if (filtered) {
-        const rows = await browse(cat, { sort: sort ?? "new", tags });
+      if (filtered || cat === "daily") {
+        const rows = await browse(cat, { sort: sort ?? "new_desc", tags, window: win });
         if (my !== seq.current) return;
         setGrid(rows); setMore(rows.length > 0 && rows[0].total > rows.length); setSections(null);
       } else {
         const [trending, fresh, featured, all] = await Promise.all([
           cat === "featured" ? Promise.resolve([]) : browse(cat, { section: "trending", limit: 12 }),
-          cat === "featured" ? Promise.resolve([]) : browse(cat, { section: "new", limit: 12 }),
+          Promise.resolve([] as Row[]),
           cat === "week" ? browse(cat, { section: "featured", limit: 12 }) : Promise.resolve([]),
-          browse(cat, { sort: "new" }),
+          browse(cat, { sort: "new_desc" }),
         ]);
         if (my !== seq.current) return;
         setSections({ trending, fresh, featured });
@@ -163,7 +170,7 @@ export function ClipsHub({ cat }: { cat: Cat }) {
       }
       setState("ok");
     } catch { if (my === seq.current) setState("error"); }
-  }, [cat, filtered, sort, tags]);
+  }, [cat, filtered, sort, tags, win]);
   useEffect(() => { load(); }, [load]);
 
   // Deep link to one clip: /clips/all?play=<id>
@@ -175,16 +182,17 @@ export function ClipsHub({ cat }: { cat: Cat }) {
   }, [q, state, grid]);
 
   async function loadMore() {
-    const rows = await browse(cat, { sort: sort ?? "new", tags, offset: grid.length }).catch(() => []);
+    const rows = await browse(cat, { sort: sort ?? "new_desc", tags, offset: grid.length, window: win }).catch(() => []);
     const seen = new Set(grid.map((r) => r.id));
     const next = [...grid, ...rows.filter((r) => !seen.has(r.id))];
     setGrid(next); setMore(rows.length > 0 && rows[0].total > next.length);
   }
 
-  function setQuery(nextSort: string | null, nextTags: string[]) {
+  function setQuery(nextSort: string | null, nextTags: string[], override?: string) {
     const p = new URLSearchParams();
     if (nextSort) p.set("sort", nextSort);
     if (nextTags.length) p.set("tags", nextTags.join(","));
+    if (cat === "daily" && (override ?? win) === "hour") p.set("window", "hour");
     router.push(p.toString() ? `${path}?${p}` : path, { scroll: false });
   }
 
@@ -299,12 +307,19 @@ export function ClipsHub({ cat }: { cat: Cat }) {
           </div>
         )}
 
+        {cat === "daily" && (
+          <div role="tablist" aria-label="Time window" className="hub-tabs sm mt-6">
+            {([["today", "Today"], ["hour", "Last hour"]] as const).map(([k, l]) => (
+              <button key={k} role="tab" aria-selected={win === k} className={win === k ? "on" : ""} onClick={() => setQuery(sort, tags, k)}>{l}</button>
+            ))}
+          </div>
+        )}
         <div className="hub-bar">
           <button className="btn btn-ghost !py-2" onClick={() => setFilterOpen(true)} aria-haspopup="dialog">
             <svg viewBox="0 0 24 24" className="size-4" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" aria-hidden><path d="M4 6h16M7 12h10M10 18h4" /></svg>
             Filter{filtered ? ` · ${(sort ? 1 : 0) + tags.length}` : ""}
           </button>
-          {sort && <span className="hub-chip">Sort: {sort === "views" ? "Most viewed" : "New"}<button aria-label="Remove sort" onClick={() => setQuery(null, tags)}>×</button></span>}
+          {sort && <span className="hub-chip">Sort: {SORT_LABEL[sort]}<button aria-label="Remove sort" onClick={() => setQuery(null, tags)}>×</button></span>}
           {tags.map((t) => <span key={t} className="hub-chip">{tl(t)}<button aria-label={`Remove ${tl(t)}`} onClick={() => setQuery(sort, tags.filter((x) => x !== t))}>×</button></span>)}
           {filtered && <button className="text-sm font-bold text-gulf underline underline-offset-4" onClick={() => setQuery(null, [])}>Clear all</button>}
           {filtered && grid[0] && <span className="ml-auto text-sm font-bold text-haze">{grid[0].total} result{grid[0].total === 1 ? "" : "s"}{tags.length > 1 ? " · match any selected tag" : ""}</span>}
@@ -335,7 +350,7 @@ export function ClipsHub({ cat }: { cat: Cat }) {
             )}
             {grid.length === 0 ? (
               <div className="hub-empty">
-                <p className="display text-4xl">{filtered ? "No clips match" : cat === "featured" ? "Nothing featured right now" : "No clips here yet"}</p>
+                <p className="display text-4xl">{filtered ? "No clips match" : cat === "daily" ? (win === "hour" ? "No clips in the last hour" : "No clips today yet") : cat === "featured" ? "Nothing featured right now" : "No clips here yet"}</p>
                 {filtered ? <button className="btn btn-ghost mt-5" onClick={() => setQuery(null, [])}>Clear all</button>
                   : <Link href="/submit" className="btn btn-hot mt-5">Send a clip</Link>}
               </div>
@@ -448,7 +463,9 @@ function FilterDialog({ stats, sort, tags, onClose, onApply }: {
         </div>
         {tab === "sort" ? (
           <div className="mt-4 grid gap-2">
-            {[["views", "Most viewed", "Highest view count first"], ["new", "New", "Most recently published first"]].map(([k, label, sub]) => (
+            {[["views_desc", "Most viewed", "Highest view count first"], ["views_asc", "Least viewed", "Lowest view count first"],
+              ["votes_desc", "Most votes", "Most voted first"], ["votes_asc", "Fewest votes", "Least voted first"],
+              ["new_desc", "New", "Newest first"], ["new_asc", "Oldest", "Oldest first"]].map(([k, label, sub]) => (
               <label key={k} className={`round-opt${s === k ? " on" : ""}`}>
                 <input type="radio" name="sort" checked={s === k} onChange={() => setS(k)} /><span><b>{label}</b><small>{sub}</small></span>
               </label>
