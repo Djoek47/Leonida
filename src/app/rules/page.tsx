@@ -3,29 +3,27 @@ const UPDATED = "November 9, 2026";
 
 /** The short version people actually read. */
 const PLAIN: [string, string][] = [
-  ["Free to enter, free to win", "No payment, ever, to enter or to collect. Paying changes nothing about your odds."],
-  ["18 and over", "Or the age of majority where you live. Staff and their households can't win."],
-  ["Your own footage", "GTA VI gameplay you recorded yourself. Under 2 minutes and under 600 MB. No mods, no cheats, no one else's clips."],
-  ["One round a week", "The round page shows the deadlines, in Eastern Time."],
-  ["Votes decide it", "Every account can vote. One vote per person per clip, and you can't vote for your own."],
-  ["Top three split the pool", "Gold 60%, Silver 25%, Bronze 15%. The pool is locked when the round opens, so it can't shrink under you."],
+  ["Free to enter.", "Anyone can win."],
+  ["18 and over", "Or the age of majority where you live."],
+  ["Your own footage", "GTA VI gameplay you recorded yourself. Between 1-3 minutes (preferably) and under 600 MB. No mods, no cheats, no one else's clips."],
+  ["One voting round per week", "Winners announced every Thursday at 1:00pm, in Eastern Time."],
+  ["Votes decide it", "Every subscriber can vote. Every clip can be voted once."],
+  ["Top three split the pool", "Gold 60%, Silver 25%, Bronze 15%."],
   ["Prove the gamertag, then get paid", "PayPal, Venmo, Cash App, Interac or Wise. 60 days to claim."],
-  ["You keep your clip", "We get a licence to show it with your name on it. Ask and we'll stop using a clip that didn't win."],
+  ["You keep your clip", "Your clip could earn up to $0.99 per download."],
 ];
 
-/** The terms. Kept to what actually has to be said. */
-const TERMS: [string, string][] = [
-  ["Who runs it", "Organized by Live From Leonida. Live From Leonida is a fan community, not affiliated with or endorsed by Rockstar Games or Take-Two Interactive."],
-  ["Entering", "A free account, that's it."],
-  ["What we won't take", "Other people's footage, mods, cheats, code glitches, anything breaking Rockstar's terms, hate, harassment, sexual content, personal information, or music laid over the top."],
-  ["Review", "Staff review every clip before it goes into the weekly or monthly competition. The best clips may also feature in our weekly montage on YouTube."],
-  ["Voting", "You see how many votes you have left in your own account. Each vote is one vote, and you can only vote for a clip once — ever. Buying, trading or automating votes, or running several accounts, voids them and can ban you."],
-  ["Winning", "Most votes wins; a tie goes to whoever submitted first. Winners are told in their dashboard and by email. Final once staff confirm."],
-  ["Payment", "Verify the gamertag in the clip (Xbox sign-in or a PSN profile code), give a working payout account. Where the law requires it we ask for ID or tax forms — a W-9 for US winners at $600+ a year. You pay your taxes, we pay the transfer fees."],
-  ["Claiming a clip", "If your gameplay turns up in a clip you didn't send, claim it. Approved, the clip, its votes and any prize move to you. Competing claims are settled on the evidence."],
-  ["Your rights", "You own your clip. We get a worldwide, royalty-free licence to host, edit and publish it, credited to your gamertag. Ask us to drop a non-winning clip and it's out of future posts within 14 days."],
-  ["Changes", "We disqualify cheats. If something outside our control hits a round — an outage, a game patch — we may extend, pause or cancel it, and we'll say why here."],
-  ["Privacy", "Account details run the contest, pay winners and keep voting honest. We don't sell your data."],
+/** The terms. The owner's numbering is kept on purpose: there is no 8 or 10. */
+const TERMS: [number, string, string][] = [
+  [1, "Who runs it", "Organized by Live From Leonida. Live From Leonida is a fan community, not affiliated with or endorsed by Rockstar Games or Take-Two Interactive."],
+  [2, "Entering", "A free account, that's it."],
+  [3, "What we won't take", "Other people's footage, mods, cheats, code glitches, anything breaking Rockstar's terms, hate, harassment, sexual content, personal information, or music laid over the top."],
+  [4, "Review", "All clips are reviewed before being automatically uploaded on the website"],
+  [5, "Voting", "Each video can be voted on once, even for users with multiple votes."],
+  [6, "Winning", "Most votes wins. If there is a tie, the winner is the user with the most views on their videos."],
+  [7, "Payment", "Give us a working payout account and you will receive your winnings after the announcement."],
+  [9, "Your rights", "You own your clip. Every clip download makes you $0.99. The user may edit and publish it, credited to your gamertag."],
+  [11, "Privacy", "Account details run the contest, pay winners and keep voting honest. We don't sell your data."],
 ];
 
 export default function Rules() {
@@ -45,9 +43,9 @@ export default function Rules() {
 
       <h2 className="display text-4xl mt-14">The terms</h2>
       <ol className="mt-6 grid gap-6">
-        {TERMS.map(([t, p], i) => (
+        {TERMS.map(([n, t, p]) => (
           <li key={t}>
-            <h3 className="font-extrabold">{i + 1}. {t}</h3>
+            <h3 className="font-extrabold">{n}. {t}</h3>
             <p className="text-haze mt-1">{p}</p>
           </li>
         ))}

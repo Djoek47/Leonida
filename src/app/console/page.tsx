@@ -8,7 +8,7 @@ import { DemoNote } from "@/components/DemoNote";
 import NotFound from "@/app/not-found";
 import { MoneyPanel } from "./Money";
 
-type Tab = "overview" | "cashouts" | "review" | "gamertags" | "contest" | "payouts" | "creators" | "wallets" | "people" | "claims" | "drops" | "staff" | "support" | "rounds" | "money";
+type Tab = "overview" | "cashouts" | "review" | "gamertags" | "contest" | "payouts" | "creators" | "wallets" | "people" | "claims" | "drops" | "staff" | "support" | "rounds" | "money" | "presets";
 type Row = Record<string, unknown> & { id: string };
 
 export default function Admin() {
@@ -31,7 +31,7 @@ type Counts = Record<string, number>;
 const NAV: { group: string; items: [Tab, string, string?][] }[] = [
   { group: "Today", items: [["overview", "Overview"], ["review", "Clip queue", "clips_pending"], ["support", "Support", "support_open"], ["gamertags", "Gamertags", "gamertags_pending"], ["claims", "Claims", "claims_open"]] },
   { group: "Money", items: [["money", "Money"], ["cashouts", "Cash-out requests", "cashouts_waiting"], ["payouts", "Prize payouts", "prizes_waiting"], ["creators", "Creator payouts"], ["wallets", "Member money"]] },
-  { group: "Rounds", items: [["contest", "Weekly round"], ["rounds", "Round results"], ["drops", "Daily Drops"]] },
+  { group: "Rounds", items: [["contest", "Weekly round"], ["presets", "Upcoming weeks"], ["rounds", "Round results"], ["drops", "Daily Drops"]] },
   { group: "Community", items: [["people", "People"], ["staff", "Staff and settings"]] },
 ];
 
@@ -85,6 +85,7 @@ function Shell({ tab, setTab, isOwner }: { tab: Tab; setTab: (t: Tab) => void; i
           {tab === "gamertags" && <Gamertags />}
           {tab === "people" && <People />}
           {tab === "contest" && <ContestAdmin />}
+          {tab === "presets" && <RoundPresets />}
           {tab === "payouts" && <Table table="winnings" filter={["status", ["requested", "verifying", "held"]]} cols={["place", "amount_cents", "status", "owner_id"]}
             actions={[["verifying", "Checking gamertag"], ["sent", "Mark paid"], ["held", "Hold"]]} refField="payout_ref" />}
           {tab === "claims" && <Table table="claims" filter={["status", ["open"]]} cols={["clip_id", "claimant_id", "evidence"]} actions={[["approved", "Approve"], ["rejected", "Reject"]]} />}
@@ -561,6 +562,69 @@ function Keys({ onKey }: { onKey: (k: string) => void }) {
     addEventListener("keydown", h); return () => removeEventListener("keydown", h);
   }, [onKey]);
   return null;
+}
+
+/** The next year of weekly rounds, already named. They keep topping themselves up, so this is
+ *  only for renaming a week or opening one early. Rounds open Thursday noon, Eastern. */
+type Preset = { week_start: string; title: string; theme: string | null; edited: boolean };
+function RoundPresets() {
+  const [rows, setRows] = useState<Preset[] | null>(null);
+  const [made, setMade] = useState<Record<string, { id: string; state: string | null }>>({});
+  const [msg, setMsg] = useState("");
+  const tz = "America/Toronto";
+  const dayOf = (iso: string) => new Date(iso).toLocaleDateString("en-CA", { timeZone: tz });
+  const load = useCallback(async () => {
+    const c = sb();
+    if (!c) { setRows([]); return; }
+    const [p, k] = await Promise.all([
+      c.from("round_presets").select("week_start, title, theme, edited").order("week_start").limit(60),
+      c.from("contests").select("id, state, voting_opens").eq("kind", "weekly").not("timezone", "is", null),
+    ]);
+    setRows((p.data as Preset[]) ?? []);
+    const m: Record<string, { id: string; state: string | null }> = {};
+    for (const r of (k.data ?? []) as { id: string; state: string | null; voting_opens: string }[]) m[dayOf(r.voting_opens)] = { id: r.id, state: r.state };
+    setMade(m);
+  }, []);
+  useEffect(() => { load(); }, [load]);
+
+  async function rename(r: Preset, title: string) {
+    const t = title.trim(); const c = sb();
+    if (!c || !t || t === r.title) return;
+    const { error } = await c.from("round_presets").update({ title: t, edited: true }).eq("week_start", r.week_start);
+    if (error) { setMsg(error.message); return; }
+    const round = made[r.week_start];
+    if (round && round.state === "scheduled") await c.from("contests").update({ title: t }).eq("id", round.id);
+    setMsg(`Renamed ${r.week_start}.`); load();
+  }
+  async function openNow(r: Preset) {
+    const c = sb(); if (!c) return;
+    const { error } = await c.rpc("create_round_from_preset", { p_week: r.week_start });
+    setMsg(error ? error.message : "Round created. It opens at its normal time."); load();
+  }
+  const label = (d: string) => new Date(d + "T12:00:00").toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric", year: "numeric" });
+
+  return (
+    <section className="max-w-3xl">
+      <h2 className="display text-3xl">Upcoming weeks</h2>
+      <p className="mt-2 text-haze">The next year of weekly rounds is already named and scheduled for Thursday at 12:00 p.m. Eastern, with the themes rotating. New weeks are added on their own as time passes. Change a name and it sticks.</p>
+      {msg && <p role="status" className="mt-3 font-semibold text-gulf">{msg}</p>}
+      {rows === null ? <p className="mt-6 text-haze">Loading…</p> : rows.length === 0 ? <p className="mt-6 text-haze">No presets yet.</p> : (
+        <ul className="mt-6 grid gap-2">
+          {rows.map((r) => {
+            const m = made[r.week_start];
+            return (
+              <li key={r.week_start} className="grid items-center gap-2 rounded-xl border border-line p-3 sm:grid-cols-[9.5rem_1fr_auto]">
+                <span className="text-sm font-bold">{label(r.week_start)}</span>
+                <input defaultValue={r.title} aria-label={`Name for the week of ${r.week_start}`} onBlur={(e) => rename(r, e.target.value)} className="field font-normal" />
+                {m ? <span className="rounded-full bg-white/10 px-3 py-1 text-xs font-black">{m.state === "scheduled" ? "Scheduled" : "Round created"}</span>
+                   : <button type="button" onClick={() => openNow(r)} className="btn btn-ghost !py-1.5 text-sm">Create now</button>}
+              </li>
+            );
+          })}
+        </ul>
+      )}
+    </section>
+  );
 }
 
 function ContestAdmin() {

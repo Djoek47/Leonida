@@ -134,8 +134,7 @@ export default function Dashboard() {
           <h1 className="display text-[clamp(2.2rem,9vw,5.2rem)] leading-[0.95] break-words">{profile.display_name}</h1>
           <div className="mt-3 flex flex-wrap items-center gap-2">
             <Link href="/wallet" className="wallet-pill"><span>Wallet</span><b>{exactMoney(balance)}</b></Link>
-            {paying ? <span className="dash-plan">{credits} download{credits === 1 ? "" : "s"} left</span>
-              : <Link href="/pricing" className="dash-plan">Join</Link>}
+            {paying && <span className="dash-plan">{credits} download{credits === 1 ? "" : "s"} left</span>}
           </div>
         </div>
       </header>
@@ -152,16 +151,16 @@ export default function Dashboard() {
       <details className="deal deal-fold" open={firstVisit} onToggle={(e) => { try { if (!(e.currentTarget as HTMLDetailsElement).open) localStorage.setItem("lfl-deal-seen", "1"); } catch {} }}>
         <summary><h2 className="display text-3xl md:text-4xl">How your clips pay</h2><span className="deal-tog" aria-hidden /></summary>
         <ol className="deal-lanes">
-          <li><span className="deal-n">1</span><b>Send it</b><small>Up to {account?.daily_submissions ?? 2} a day. Staff approve it into the weekly vote.</small></li>
+          <li><span className="deal-n">1</span><b>Send it</b></li>
           <li><span className="deal-n">2</span><b>Win it</b><small>Top three each week, month and year split the prize pool.</small></li>
-          <li><span className="deal-n">3</span><b>Sell it</b><small>Every member download pays you most of the price, straight into your wallet.</small></li>
-          <li><span className="deal-n">4</span><b>Cash out</b><small>To your card or bank through Stripe, or by PayPal & co.</small></li>
+          <li><span className="deal-n">3</span><b>Sell it</b><small>Every member download can earn you up to $0.99, straight into your wallet.</small></li>
+          <li><span className="deal-n">4</span><b>Cash out</b><small>Only available with a minimum balance of $5</small></li>
         </ol>
         <p className="deal-foot">
           <b>Downloading other players&apos; clips:</b>{" "}
           {paying ? <>you have {credits} free download{credits === 1 ? "" : "s"} this month, then {exactMoney(DOWNLOAD.priceCents)} each.</>
             : <>members get free downloads every month, then {exactMoney(DOWNLOAD.priceCents)} each. Free accounts stream everything.</>}{" "}
-          Either way, the player who made the clip takes most of it. <Link href="/clips" className="underline">Browse clips</Link>
+          <Link href="/clips" className="underline">Browse clips</Link>
         </p>
       </details>
 

@@ -113,9 +113,9 @@ export async function clearVote(clipId: string): Promise<string | null> {
 export type Pool = { paying_users: number; weekly_cents: number; monthly_cents: number };
 export async function poolNow(): Promise<Pool> {
   const c = sb();
-  if (!c) return { paying_users: 0, weekly_cents: 2500, monthly_cents: 10000 };
+  if (!c) return { paying_users: 0, weekly_cents: 2500, monthly_cents: 5000 };
   const { data } = await c.from("pool_now").select("*").maybeSingle();
-  return (data as Pool) ?? { paying_users: 0, weekly_cents: 2500, monthly_cents: 10000 };
+  return (data as Pool) ?? { paying_users: 0, weekly_cents: 2500, monthly_cents: 5000 };
 }
 
 export type DownloadRow = {

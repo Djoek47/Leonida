@@ -118,7 +118,6 @@ export default function Login() {
           <ul className="login-perks">
             <li><b>Free</b> to join &amp; win</li>
             <li><b>Weekly</b> cash prizes</li>
-            <li><b>Your clips</b> pay you</li>
           </ul>
         </div>
         <div className="set-card login-panel">

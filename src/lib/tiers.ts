@@ -14,6 +14,7 @@ export type Tier = {
   dailySubmissions: number;
   adFree: boolean;
   pitch: string;
+  badge?: string;               // the one recommendation label on a card; never two on one card
   perks: string[];
 };
 
@@ -25,10 +26,7 @@ export const TIERS: Tier[] = [
     pitch: "Upload, compete and win. No card needed.",
     perks: [
       "Send 2 clips a day",
-      "Eligible for every prize: Week, Month and Year",
-      "Stream every clip",
-      "Daily Drop challenges",
-      "The Lobby, Clip talk and Trending chat",
+      "Access to all clips",
     ],
   },
   {
@@ -36,11 +34,14 @@ export const TIERS: Tier[] = [
     monthlyCents: 800, annualCents: 7500, votes: 2, creditsPerMonth: 3,
     dailySubmissions: 4, adFree: true,
     pitch: "For the regular. More shots on goal.",
+    badge: "BEST FOR REGULAR",
     perks: [
       "Upload up to 4 clips a day.",
       "3 clip downloads a month",
       "No ads",
-      "Members chat access.",
+      "Daily Drop challenges",
+      "Mission Briefing (TBD)*",
+      "Members all chat access.",
     ],
   },
   {
@@ -48,12 +49,13 @@ export const TIERS: Tier[] = [
     monthlyCents: 2000, annualCents: 19200, votes: 4, creditsPerMonth: 8,
     dailySubmissions: 6, adFree: true,
     pitch: "The working creator's plan. Know what's about to trend.",
+    badge: "BEST FOR CLIPPERS",
     perks: [
       "Upload up to 6 clips a day.",
       "8 clip downloads a month",
-      "Leonida Economist: live trends and money-making methods",
+      "Leonida Economist: live trends and money-making methods*",
       "Weekly Meta Brief",
-      "Feature 1 clip.",
+      "Feature a clip for 24 hours.",
       "Everything in Street",
     ],
   },
@@ -105,6 +107,9 @@ export const bracketFor = (payers: number): Bracket =>
   BRACKETS.find((b) => payers <= b.upTo) ?? BRACKETS[BRACKETS.length - 1];
 
 /** Clip of the Month runs at four times the week; Clip of the Year at twenty. */
+/** Clip of the Month prize, one total for now. Mirrors public.site_settings.monthly_prize_cents. */
+export const MONTHLY_PRIZE_CENTS = 5000;
+
 export const PERIOD_MULTIPLE = { week: 1, month: 4, year: 20 } as const;
 
 /** One star fills every four months subscribed; all six at two years. */

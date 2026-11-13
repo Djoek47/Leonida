@@ -1,7 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
 import Link from "@/components/A";
-import { DOWNLOAD, PERIOD_MULTIPLE, bracketFor } from "@/lib/tiers";
+import { DOWNLOAD, MONTHLY_PRIZE_CENTS, PERIOD_MULTIPLE, bracketFor } from "@/lib/tiers";
 import { poolNow, type Pool } from "@/lib/api";
 import { Vault } from "@/components/Vault";
 import { PrizeLadder } from "@/components/PrizeLadder";
@@ -23,7 +23,7 @@ export default function Earn() {
           <p className="inline-flex items-center gap-2 rounded-full bg-mango text-[#1c1710] px-3 py-1 text-sm font-black">Get paid</p>
           <h1 className="display mt-5 text-[clamp(2.4rem,7.5vw,5.5rem)] leading-[0.95]">How to earn real money<br />on Live From Leonida</h1>
           <p className="mt-5 max-w-2xl text-lg text-white/85">
-            Three ways, and you never pay to enter any of them. Free accounts can win every prize on this page.
+            Free accounts can win prizes too
           </p>
         </div>
       </section>
@@ -79,17 +79,6 @@ export default function Earn() {
           <div className="panel-enamel text-center">
             <p className="k">Every download</p>
             <p className="v">{usd(DOWNLOAD.priceCents / 100)}</p>
-            <p className="s">
-              most of it straight to the creator
-              <span className="ast">
-                <button type="button" aria-label="What most of it means" aria-describedby="dl-ast">*</button>
-                <span role="tooltip" id="dl-ast" className="ast-note">
-                  The creator&apos;s share is the large majority of each download. It isn&apos;t a fixed
-                  figure: card fees and the platform&apos;s cut come off first, so it can land a little
-                  under that. The exact amount shows on every sale.
-                </span>
-              </span>
-            </p>
           </div>
         </div>
       </section>
@@ -110,8 +99,11 @@ export default function Earn() {
              ["Year", PERIOD_MULTIPLE.year, "panel-enamel panel-enamel-gold"]] as const).map(([name, mult, panel]) => (
             <div key={name} className={panel}>
               <p className="k">Clip of the {name}</p>
-              <p className="v">{usd(live.pool * mult)}</p>
-              <p className="s">Gold {usd(live.gold * mult)}</p>
+              {name === "Month" ? (
+                <><p className="v">{usd(MONTHLY_PRIZE_CENTS / 100)}</p><p className="s">Total prize</p></>
+              ) : (
+                <><p className="v">{usd(live.pool * mult)}</p><p className="s">Gold {usd(live.gold * mult)}</p></>
+              )}
             </div>
           ))}
         </div>

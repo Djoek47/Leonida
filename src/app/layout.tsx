@@ -3,6 +3,8 @@ import localFont from "next/font/local";
 import Link from "@/components/A";
 import "./globals.css";
 import { Ticker } from "@/components/Ticker";
+import { NavLinks } from "@/components/NavLinks";
+import { WinCelebration } from "@/components/WinCelebration";
 import { NavAuth } from "@/components/NavAuth";
 import { ThemeToggle, themeScript } from "@/components/ThemeToggle";
 import { SkyBar } from "@/components/SkyBar";
@@ -67,18 +69,17 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
               <span className="sign-sm text-center leading-[1.08] max-sm:!px-2 max-sm:!py-1.5 max-sm:!text-[13px]"><span className="block sm:inline">Live From</span><span className="block sm:inline sm:ml-[0.3em]">Leonida</span></span>
             </Link>
             <nav className="hidden lg:flex gap-5 text-sm font-semibold text-haze">
-              {nav.map((n) => (
-                <Link key={n.href} href={n.href} className="sky-link">{n.label}</Link>
-              ))}
+              <NavLinks items={nav} className="sky-link" />
             </nav>
             <div className="ml-auto flex items-center gap-2"><ThemeToggle /><NavAuth /></div>
           </div>
           <nav className="lg:hidden flex gap-4 overflow-x-auto px-4 pb-2 text-sm font-semibold text-haze">
-            {nav.map((n) => <Link key={n.href} href={n.href} className="shrink-0 sky-link">{n.label}</Link>)}
+            <NavLinks items={nav} className="shrink-0 sky-link" />
           </nav>
           <Ticker />
         </header>
         <main className="flex-1">{children}</main>
+        <WinCelebration />
         <Radio />
         <footer className="bg-asphalt text-white/80 mt-24 [&_a:hover]:text-mango">
           <div className="mx-auto max-w-7xl px-4 py-12 grid gap-8 md:grid-cols-[2fr_1fr_1fr_1fr] text-sm">

@@ -19,8 +19,8 @@ const s = (v: unknown, fallback = "") => (v === null || v === undefined || v ===
 const tierName = (t: unknown) => ({ free: "Free", street: "Street", hustler: "Hustler", kingpin: "Kingpin" } as Record<string, string>)[s(t)] ?? s(t, "your plan");
 const RANK: Record<string, number> = { free: 0, street: 1, hustler: 2, kingpin: 3 };
 const PERKS: Record<string, string[]> = {
-  street: ["Upload up to 4 clips a day.", "3 clip downloads a month", "No ads", "Members chat access."],
-  hustler: ["Upload up to 6 clips a day.", "8 clip downloads a month", "Leonida Economist and the weekly Meta Brief", "Feature 1 clip."],
+  street: ["Upload up to 4 clips a day.", "3 clip downloads a month", "No ads", "Daily Drop challenges", "Members all chat access."],
+  hustler: ["Upload up to 6 clips a day.", "8 clip downloads a month", "Leonida Economist and the weekly Meta Brief", "Feature a clip for 24 hours."],
   kingpin: ["Upload up to 8 clips a day.", "20 clip downloads a month", "Feature 3 clips a month, 24 hours each", "Clip analytics"],
 };
 const PLACE = ["", "1st", "2nd", "3rd"];

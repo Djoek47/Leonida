@@ -208,7 +208,7 @@ export function ClipsHub({ cat }: { cat: Cat }) {
   async function vote(r: Row) {
     if (!user) { setMsg("Sign in to vote. It's free."); return; }
     if (r.owner_id === user.id) { setMsg("You can't vote for your own clip."); return; }
-    if (voted.includes(r.id)) { setMsg("You've already voted for this clip. One vote per clip, for good."); return; }
+    if (voted.includes(r.id)) { setMsg("You've already voted for this clip."); return; }
     if (votesLeft <= 0) { setMsg(`You have 0 votes left this weekly round. Your votes reset ${round ? at(round.voting_closes_at) : "next Thursday at noon"}.`); return; }
     const prev = voted; setVoted([...prev, r.id]);
     const err = await castVote(r.id);
@@ -346,10 +346,6 @@ export function ClipsHub({ cat }: { cat: Cat }) {
           </>
         )}
 
-        <p className="mt-12 text-sm text-haze">
-          One vote per clip, for good. Totals stay private. Views count once per viewer per hour.
-          Downloads are {exactMoney(DOWNLOAD.priceCents)}, and most of it goes to the creator.
-        </p>
       </div>
 
       {filterOpen && <FilterDialog stats={stats} sort={sort} tags={tags} onClose={() => setFilterOpen(false)}

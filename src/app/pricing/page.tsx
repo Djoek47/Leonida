@@ -18,7 +18,7 @@ export default function Pricing() {
   const [aim, setAim] = useState<number | null>(null);
   const [pool, setPool] = useState<Pool | null>(null);
   const [busy, setBusy] = useState<string | null>(null);
-  const [note, setNote] = useState(false);
+  const [note, setNote] = useState<string | null>(null);
   const [err, setErr] = useState("");
   const [ask, setAsk] = useState<Tier | null>(null);
 
@@ -106,10 +106,9 @@ export default function Pricing() {
         <div className="mx-auto max-w-7xl px-4 py-14 md:py-20">
           <DemoNote />
           <p className="inline-flex items-center gap-2 rounded-full bg-mango text-[#1c1710] px-3 py-1 text-sm font-black">Memberships</p>
-          <h1 className="display mt-5 text-[clamp(2.6rem,8vw,6rem)] leading-[0.95]">Back the channel.<br />Send more. Keep more.</h1>
+          <h1 className="display mt-5 text-[clamp(2.6rem,8vw,6rem)] leading-[0.95]">Show us the best Leonida has to offer.</h1>
           <p className="mt-5 max-w-2xl text-lg text-white/85">
-            You never have to pay to enter or to win. Members get more clips a day,
-            clip downloads and no ads — and their subscriptions are what grow the prize pool.
+            Members get plenty of perks - and their subscriptions are what grow the prize pool bigger every week.
           </p>
 
           <div className="mt-8 inline-flex rounded-full border-2 border-white/25 p-1 text-sm font-bold">
@@ -129,10 +128,10 @@ export default function Pricing() {
         {TIERS.map((t) => {
           const current = (profile?.tier ?? "free") === t.id && (t.id === "free" ? !paying : paying);
           const cents = annual ? t.annualCents : t.monthlyCents;
-          const best = t.id === "hustler";
+          const best = t.id === "hustler";   // keeps the highlighted frame; the label text comes from the tier's badge
           return (
             <div key={t.id} className={`plan plan-${t.id} ${best ? "plan-best" : ""}`}>
-              {best && <p className="plan-flag">Most take this one</p>}
+              {t.badge && <p className="plan-flag">{t.badge}</p>}
 
               <TierMedal tier={t.id} className="plan-medal" />
 
@@ -152,8 +151,8 @@ export default function Pricing() {
               <ul className="plan-perks">
                 {t.perks.map((p) => p.endsWith("*") ? (
                   <li key={p}><span aria-hidden /><span>{p.slice(0, -1)}{" "}
-                    <button type="button" onClick={() => setNote(true)} onMouseEnter={() => setNote(true)} onMouseLeave={() => setNote(false)} onFocus={() => setNote(true)} onBlur={() => setNote(false)} aria-expanded={note} aria-label="What is clip analytics?" className="info-star !ml-1 font-black">★</button>
-                    {note && <span className="mt-1 block text-xs font-normal opacity-80">See which clips perform best, then download the ones you want.</span>}
+                    <button type="button" onClick={() => setNote(note === p ? null : p)} onMouseEnter={() => setNote(p)} onMouseLeave={() => setNote(null)} onFocus={() => setNote(p)} onBlur={() => setNote(null)} aria-expanded={note === p} aria-label={p.startsWith("Clip analytics") ? "What is clip analytics?" : "Upcoming, not live yet"} className="info-star !ml-1 font-black">★</button>
+                    {note === p && <span className="mt-1 block text-xs font-normal opacity-80">{p.startsWith("Clip analytics") ? "See which clips perform best, then download the ones you want." : "Upcoming. Not live yet."}</span>}
                   </span></li>
                 ) : (
                   <li key={p}><span aria-hidden /><span>{p}</span></li>
@@ -177,10 +176,9 @@ export default function Pricing() {
 
       <section className="mx-auto max-w-7xl px-4 pb-16 grid gap-10 lg:grid-cols-2 [&>*]:min-w-0">
         <div>
-          <h2 className="display text-5xl">Where the prize money comes from</h2>
+          <h2 className="display text-5xl">Prize Pool</h2>
           <p className="mt-3 text-haze">
-            The weekly pool grows with the number of paying members. Whatever it is when a round
-            opens is locked in, so it can&apos;t shrink under you.
+            The weekly pool grows with the number of paying members. Whatever it is when a round opens is locked in.
           </p>
           <div className="mt-6"><PrizeLadder payers={pool?.paying_users ?? 0} onPick={setAim} /></div>
           <p className="mt-4 text-sm">
@@ -201,8 +199,7 @@ export default function Pricing() {
           <div className="panel-steel">
             <p className="k">Every download</p>
             <p className="v"><small className="text-[0.45em] align-middle mr-1">Up to</small>$0.99</p>
-            <p className="s">to the creator. Credits pay them too.</p>
-          </div>
+                      </div>
 
           <div className="panel-crate">
             <p className="k">Cancel</p>
