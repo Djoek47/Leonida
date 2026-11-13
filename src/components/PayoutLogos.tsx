@@ -7,7 +7,7 @@ const LOGOS = [
   { name: "PayPal", src: "/media/payouts/paypal.png", w: 44, h: 53 },
   { name: "Venmo", src: "/media/payouts/venmo.png", w: 132, h: 25 },
   { name: "Interac", src: "/media/payouts/interac.svg", w: 52, h: 52 },
-  { name: "Cash App", src: "https://static.afterpaycdn.com/en-US/integration/logo/squared-badge/color.svg", w: 52, h: 52 },
+  { name: "Cash App", src: "https://static.afterpaycdn.com/en-US/integration/logo/lockup/cashapp-color-black-32.svg", w: 120, h: 32 },
 ];
 
 export function PayoutLogos({ className = "" }: { className?: string }) {
