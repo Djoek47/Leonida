@@ -2147,3 +2147,8 @@ aside .trophy-shelf li { width: 4.1rem; }
 .res-dates{margin-top:.35rem;font-size:.85rem;opacity:.75}
 .res-sc{width:clamp(4.5rem,13vw,7.5rem)}.res-sc.p1{width:clamp(5.5rem,16vw,9.5rem)}
 .res-col .res-sc{animation-delay:var(--d,0s)}
+.sc-face img.sc-contain{object-fit:contain}
+.sc-sway .sc-3d{animation:scSway2 4s ease-in-out infinite}
+@keyframes scSway2{0%,100%{transform:rotateY(162deg) translateY(0)}50%{transform:rotateY(198deg) translateY(-8px)}}
+.sc-nopic.sc-open .sc-3d{animation:scReveal 1.7s cubic-bezier(.2,.9,.25,1) forwards,scSway2 4s ease-in-out 1.7s infinite}
+.sc-nopic .sc-rim{opacity:0}

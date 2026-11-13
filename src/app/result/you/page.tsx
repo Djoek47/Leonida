@@ -90,7 +90,7 @@ function Reveal() {
         </button>
 
         {!open ? (
-          <p className="yr-tap">That&apos;s your side. The votes are counted. <b>Tap to flip it.</b></p>
+          <p className="yr-tap">The votes are counted. <b>Tap to flip it.</b></p>
         ) : res.win && m ? (
           <div className="yr-reveal" aria-live="polite">
             <p className="yr-place">{ORD[res.win.place].toUpperCase()} PLACE · {m.name.toUpperCase()}</p>
