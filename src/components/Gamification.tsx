@@ -149,7 +149,7 @@ export function DailyDrop({ drop, look = "free" }: { drop: Drop; look?: string }
         <div className="min-w-0">
           <p className="drop-k"><span className="rec" aria-hidden />Daily Drop · {left}</p>
           <p className="drop-title">{drop.theme}</p>
-          <p className="drop-blurb">{drop.blurb ?? "Open to everyone. The winner is featured in Trending for a full week."}</p>
+          <p className="drop-blurb">{drop.blurb ?? "For Street, Hustler and Kingpin members. The winner is featured in Trending for a full week."}</p>
         </div>
         <Link href="/submit" className="drop-cta">Enter today&apos;s drop →</Link>
       </div>
