@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "@/components/A";
 import { sb } from "@/lib/supabase";
 import { useUser } from "@/lib/useUser";
@@ -8,6 +8,8 @@ import { contestClips, currentContest, openContests, mmss, platformName, type Cl
 import { TagPicker } from "@/components/TagPicker";
 import { slugTag } from "@/lib/tags";
 import { DemoNote } from "@/components/DemoNote";
+import { WeeklyQuota } from "@/components/WeeklyQuota";
+import { quotaOf, refreshQuota, useQuota } from "@/lib/quota";
 
 type Tab = "send" | "claim";
 
@@ -31,7 +33,7 @@ export default function SubmitPage() {
         <div className="min-w-0">
           <p className="dash-kicker">{paying ? `${tier.label} submission` : "Free submission"}</p>
           <h1 className="display text-6xl md:text-8xl leading-[0.9]">Send it in</h1>
-          {user && <p className="send-cap"><b>{Math.max(0, tier.dailySubmissions - (account?.submitted_today ?? 0))}</b> of {tier.dailySubmissions} left today{paying ? "" : <> · <a href="/pricing" className="underline">more with a plan</a></>}</p>}
+          {user && <WeeklyQuota allowance={tier.weeklySubmissions} used={account?.submitted_week ?? 0} resetsAt={account?.week_resets_at ?? null} paying={paying} />}
         </div>
       </header>
       <RoundWindow />
@@ -43,7 +45,7 @@ export default function SubmitPage() {
         ))}
       </div>
       {tab === "send"
-        ? <SendForm gamertag={profile?.gamertag ?? null} platform={profile?.platform ?? null} userId={user.id} cap={tier.dailySubmissions} usedToday={account?.submitted_today ?? 0} />
+        ? <SendForm gamertag={profile?.gamertag ?? null} platform={profile?.platform ?? null} userId={user.id} cap={tier.weeklySubmissions} usedWeek={account?.submitted_week ?? 0} resetsAt={account?.week_resets_at ?? null} />
         : <ClaimForm userId={user.id} />}
     </div>
     </div>
@@ -98,7 +100,10 @@ function RoundWindow() {
   );
 }
 
-function SendForm({ userId, cap, usedToday, gamertag, platform }: { userId: string; cap: number; usedToday: number; gamertag: string | null; platform: string | null }) {
+function SendForm({ userId, cap, usedWeek, resetsAt, gamertag, platform }: { userId: string; cap: number; usedWeek: number; resetsAt: string | null; gamertag: string | null; platform: string | null }) {
+  const quota = useQuota(quotaOf(cap, usedWeek, resetsAt));
+  // One key per send attempt: a retry of the same request can never take a second slot.
+  const idemKey = useRef(crypto.randomUUID());
   const [mode, setMode] = useState<"file" | "link">("file");
   const [state, setState] = useState<"idle" | "sending" | "sent" | "error">("idle");
   const [err, setErr] = useState("");
@@ -117,7 +122,7 @@ function SendForm({ userId, cap, usedToday, gamertag, platform }: { userId: stri
   const [coverAt, setCoverAt] = useState(1);
   const [tags, setTags] = useState<string[]>([]);
   const [agreed, setAgreed] = useState(false);
-  const atCap = usedToday >= cap;
+  const atCap = quota.remaining === 0;
 
   async function submit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -129,11 +134,11 @@ function SendForm({ userId, cap, usedToday, gamertag, platform }: { userId: stri
       let storage_path: string | null = null;
       const file = f.get("file") as File | null;
 
-      // Ask before uploading. The database enforces the daily cap anyway, but
+      // Ask before uploading. The database enforces the weekly cap anyway, but
       // only once the row goes in — by which point up to 600 MB is already in
       // storage, and a refused row would leave it there forever.
       const { data: allowed } = await c.rpc("can_submit");
-      if (allowed === false) throw new Error("DAILY_LIMIT");
+      if (allowed === false) throw new Error("WEEKLY_LIMIT");
 
       if (mode === "file" && file && file.size) {
         if (file.size >= MAX_BYTES) throw new Error("That file is 600 MB or over. Clips have to come in under 600 MB — trim it or paste a link instead.");
@@ -145,7 +150,7 @@ function SendForm({ userId, cap, usedToday, gamertag, platform }: { userId: stri
         contest_id: roundId || null, owner_id: userId, submitted_by: userId,
         title: f.get("title"), platform: f.get("platform"), gamertag: f.get("gamertag"),
         storage_path, source_url: mode === "link" ? f.get("url") : null,
-        for_contest: forContest, duration_seconds: len == null ? null : Math.round(len),
+        for_contest: forContest, duration_seconds: len == null ? null : Math.round(len), idem_key: idemKey.current,
       }).select("id, contest_id").single();
       if (error) {
         // The row was refused, so nothing will ever point at the file. Take it back.
@@ -173,10 +178,14 @@ function SendForm({ userId, cap, usedToday, gamertag, platform }: { userId: stri
         const r = ((rs ?? []) as { id: string; title: string; starts_at: string; timezone: string; state: string }[]).find((x) => x.id === clip.contest_id);
         if (r) setEntered(r);
       }
+      idemKey.current = crypto.randomUUID();
+      refreshQuota();
       setState("sent");
     } catch (x) {
       const m = (x as Error).message;
-      setErr(m.includes("DAILY_LIMIT") ? `That's your ${cap} clips for today. The limit resets at midnight.`
+      refreshQuota();
+      if (m.includes("DUPLICATE_SUBMISSION")) { idemKey.current = crypto.randomUUID(); setState("sent"); return; }
+      setErr(m.includes("WEEKLY_LIMIT") ? `You have used all ${quota.allowance} clips for this week. Your allowance resets Thursday at 12:00 p.m. Eastern Time.`
            : m.includes("CLIP_TOO_LONG") ? "That clip is too long."
            : m);
       setState("error");
@@ -301,7 +310,7 @@ function SendForm({ userId, cap, usedToday, gamertag, platform }: { userId: stri
       {state === "error" && <p role="alert" className="text-flamingo font-semibold">{err}</p>}
       {atCap && (
         <p role="alert" className="rounded-lg border-2 border-mango bg-mango/20 px-4 py-3 font-semibold">
-          That&apos;s your {cap} clips for today. The limit resets at midnight.{" "}
+          You have used all {quota.allowance} clips for this week. Your allowance resets Thursday at 12:00 p.m. Eastern Time.{" "}
           <Link href="/pricing" className="underline">Members get more</Link>.
         </p>
       )}

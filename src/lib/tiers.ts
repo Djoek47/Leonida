@@ -11,9 +11,8 @@ export type Tier = {
   annualCents: number;
   votes: number;              // private weekly allowance; never shown on pricing
   creditsPerMonth: number;    // free download credits each cycle, they don't roll over
-  dailySubmissions: number;
+  weeklySubmissions: number;  // clips per upload week (Thursday 12:00 p.m. Eastern to the next), one shared allowance
   adFree: boolean;
-  pitch: string;
   badge?: string;               // the one recommendation label on a card; never two on one card
   perks: string[];
 };
@@ -22,21 +21,19 @@ export const TIERS: Tier[] = [
   {
     id: "free", label: "Free", rank: 0,
     monthlyCents: 0, annualCents: 0, votes: 1, creditsPerMonth: 0,
-    dailySubmissions: 2, adFree: false,
-    pitch: "Upload, compete and win. No card needed.",
+    weeklySubmissions: 2, adFree: false,
     perks: [
-      "Send 2 clips a day",
+      "Submit up to 2 clips per week",
       "Access to all clips",
     ],
   },
   {
     id: "street", label: "Street", rank: 1,
     monthlyCents: 800, annualCents: 7500, votes: 2, creditsPerMonth: 3,
-    dailySubmissions: 4, adFree: true,
-    pitch: "For the regular. More shots on goal.",
+    weeklySubmissions: 4, adFree: true,
     badge: "BEST FOR REGULAR",
     perks: [
-      "Upload up to 4 clips a day.",
+      "Submit up to 4 clips per week",
       "3 clip downloads a month",
       "No ads",
       "Daily Drop challenges",
@@ -47,11 +44,10 @@ export const TIERS: Tier[] = [
   {
     id: "hustler", label: "Hustler", rank: 2,
     monthlyCents: 2000, annualCents: 19200, votes: 4, creditsPerMonth: 8,
-    dailySubmissions: 6, adFree: true,
-    pitch: "The working creator's plan. Know what's about to trend.",
-    badge: "BEST FOR CLIPPERS",
+    weeklySubmissions: 8, adFree: true,
+    badge: "BEST FOR GAMERS",
     perks: [
-      "Upload up to 6 clips a day.",
+      "Submit up to 8 clips per week",
       "8 clip downloads a month",
       "Leonida Economist: live trends and money-making methods*",
       "Weekly Meta Brief",
@@ -62,10 +58,10 @@ export const TIERS: Tier[] = [
   {
     id: "kingpin", label: "Kingpin", rank: 3,
     monthlyCents: 4500, annualCents: 43200, votes: 6, creditsPerMonth: 20,
-    dailySubmissions: 8, adFree: true,
-    pitch: "Top of the food chain.",
+    weeklySubmissions: 15, adFree: true,
+    badge: "BEST FOR CLIPPERS",
     perks: [
-      "Upload up to 8 clips a day.",
+      "Submit up to 15 clips per week",
       "20 clip downloads a month",
       "Feature 3 clips a month, 24 hours each",
       "Clip analytics*",
@@ -91,16 +87,16 @@ export function annualSaving(t: Tier): number {
 export type Bracket = { upTo: number; label: string; pool: number; gold: number; silver: number; bronze: number };
 
 export const BRACKETS: Bracket[] = [
-  { upTo: 100,    label: "0 – 100",        pool: 25,   gold: 15,   silver: 6.25, bronze: 3.75 },
-  { upTo: 200,    label: "100 – 200",      pool: 50,   gold: 30,   silver: 12.5, bronze: 7.5 },
-  { upTo: 400,    label: "200 – 400",      pool: 100,  gold: 60,   silver: 25,   bronze: 15 },
-  { upTo: 800,    label: "400 – 800",      pool: 200,  gold: 120,  silver: 50,   bronze: 30 },
-  { upTo: 1200,   label: "800 – 1,200",    pool: 300,  gold: 180,  silver: 75,   bronze: 45 },
-  { upTo: 2000,   label: "1,200 – 2,000",  pool: 500,  gold: 300,  silver: 125,  bronze: 75 },
-  { upTo: 4000,   label: "2,000 – 4,000",  pool: 1000, gold: 600,  silver: 250,  bronze: 150 },
-  { upTo: 6000,   label: "4,000 – 6,000",  pool: 1500, gold: 900,  silver: 375,  bronze: 225 },
-  { upTo: 10000,  label: "6,000 – 10,000", pool: 2500, gold: 1500, silver: 625,  bronze: 375 },
-  { upTo: Infinity, label: "10,000+",      pool: 3000, gold: 1800, silver: 750,  bronze: 450 },
+  { upTo: 99,     label: "0 – 99",         pool: 25,   gold: 15,   silver: 6.25,   bronze: 3.75 },
+  { upTo: 199,    label: "100 – 199",      pool: 50,   gold: 30,   silver: 12.5,   bronze: 7.5 },
+  { upTo: 399,    label: "200 – 399",      pool: 100,  gold: 60,   silver: 25,     bronze: 15 },
+  { upTo: 799,    label: "400 – 799",      pool: 200,  gold: 120,  silver: 50,     bronze: 30 },
+  { upTo: 1199,   label: "800 – 1,199",    pool: 300,  gold: 180,  silver: 75,     bronze: 45 },
+  { upTo: 1999,   label: "1,200 – 1,999",  pool: 500,  gold: 300,  silver: 125,    bronze: 75 },
+  { upTo: 3999,   label: "2,000 – 3,999",  pool: 1000, gold: 600,  silver: 250,    bronze: 150 },
+  { upTo: 5999,   label: "4,000 – 5,999",  pool: 1500, gold: 900,  silver: 375,    bronze: 225 },
+  { upTo: 9999,   label: "6,000 – 9,999",  pool: 1750, gold: 1050, silver: 437.5,  bronze: 262.5 },
+  { upTo: Infinity, label: "10,000+",      pool: 2000, gold: 1200, silver: 500,    bronze: 300 },
 ];
 
 export const bracketFor = (payers: number): Bracket =>

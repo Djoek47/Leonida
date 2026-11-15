@@ -10,7 +10,7 @@ import { BRACKETS, bracketFor } from "@/lib/tiers";
  *
  *  It never passes twenty-four straps. What grows instead is the strap: $25 at
  *  the bottom of the ladder, $250 at the top. The stack looks much the same at
- *  $500 and at $3,000 — the money just quietly gets denser. That is the joke,
+ *  $500 and at $2,000 — the money just quietly gets denser. That is the joke,
  *  and it is also the honest way to draw it, because a hundred identical
  *  tokens read as wallpaper rather than as money.
  */
@@ -84,16 +84,16 @@ function ladderPos(payers: number): number {
   const n = BRACKETS.length;
   const b = bracketFor(payers), i = BRACKETS.indexOf(b);
   if (i === n - 1) return 1;
-  const floor = i === 0 ? 0 : BRACKETS[i - 1].upTo;
-  const within = Math.min(1, Math.max(0, (payers - floor) / (b.upTo - floor)));
+  const floor = i === 0 ? 0 : BRACKETS[i - 1].upTo + 1;
+  const within = Math.min(1, Math.max(0, (payers - floor) / (b.upTo - floor + 1)));
   return (i + within) / (n - 1);
 }
 /** The payer count at a ladder position (inverse of ladderPos). */
 function payersAt(pos: number): number {
   const n = BRACKETS.length, x = Math.min(1, Math.max(0, pos)) * (n - 1);
   const i = Math.min(n - 2, Math.floor(x)), f = x - i;
-  const floor = i === 0 ? 0 : BRACKETS[i - 1].upTo;
-  return pos >= 1 ? BRACKETS[n - 2].upTo + 1 : Math.round(floor + f * (BRACKETS[i].upTo - floor));
+  const floor = i === 0 ? 0 : BRACKETS[i - 1].upTo + 1;
+  return pos >= 1 ? BRACKETS[n - 2].upTo + 1 : Math.round(floor + f * (BRACKETS[i].upTo - floor + 1));
 }
 const ease = (k: number) => (k < .5 ? 4 * k * k * k : 1 - Math.pow(-2 * k + 2, 3) / 2);
 

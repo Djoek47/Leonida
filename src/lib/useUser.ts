@@ -17,7 +17,7 @@ export type Profile = {
 /** What the member sees about their own account (public.my_account). */
 export type Account = {
   tier: TierId; credits_remaining: number; credits_per_month: number;
-  votes: number; daily_submissions: number; submitted_today: number;
+  votes: number; weekly_submissions: number; submitted_week: number; week_resets_at: string;
   pending_cents: number; lifetime_downloads: number; current_period_end: string | null;
   stars: number; badges: number;
 };
@@ -34,7 +34,7 @@ export const DEMO_PROFILE: Profile = {
 
 const DEMO_ACCOUNT: Account = {
   tier: "kingpin", credits_remaining: 14, credits_per_month: 20,
-  votes: 6, daily_submissions: 8, submitted_today: 1,
+  votes: 6, weekly_submissions: 15, submitted_week: 3, week_resets_at: new Date(Date.now() + 3 * 864e5).toISOString(),
   pending_cents: 1890, lifetime_downloads: 27,
   current_period_end: DEMO_PROFILE.current_period_end,
   

@@ -877,8 +877,6 @@ body:has(.overlay-root) > *:not(:has(.overlay-root)) { display: none; }
 .plan-hustler .plan-medal { width: 10rem; }
 .plan-kingpin .plan-medal { width: 11rem; }
 /* --haze is tuned for the light page; on the dark card it disappears. */
-.plan-pitch { margin-top: .35rem; text-align: center; font-size: .85rem; line-height: 1.35;
-  color: #b8ab91; min-height: 2.4rem; }
 
 .plan-price { text-align: center; margin-top: 1rem; }
 .plan-price .display { font-size: clamp(2.2rem, 7vw, 3rem); line-height: 1;
@@ -2152,3 +2150,20 @@ aside .trophy-shelf li { width: 4.1rem; }
 @keyframes scSway2{0%,100%{transform:rotateY(162deg) translateY(0)}50%{transform:rotateY(198deg) translateY(-8px)}}
 .sc-nopic.sc-open .sc-3d{animation:scReveal 1.7s cubic-bezier(.2,.9,.25,1) forwards,scSway2 4s ease-in-out 1.7s infinite}
 .sc-nopic .sc-rim{opacity:0}
+
+/* Prize ladder on phones: all five columns (members, pool, gold, silver, bronze) in every row, no overlapping badges. */
+@media (max-width: 719px) {
+  .tank-steps .tank-step {
+    width: 100% !important; display: grid !important; grid-template-columns: 1fr auto;
+    grid-template-areas: "m p" "f f" "c c"; align-items: center; row-gap: .3rem; padding: .55rem .75rem; min-height: 0;
+  }
+  .tank-steps .tank-members { grid-area: m; }
+  .tank-steps .tank-mid { grid-area: f; justify-content: flex-start; }
+  .tank-steps .tank-mid:empty { display: none; }
+  .tank-steps .tank-right { display: contents; }
+  .tank-steps .tank-pool { grid-area: p; justify-self: end; }
+  .tank-steps .tank-cuts { grid-area: c; display: grid !important; grid-template-columns: repeat(3, 1fr); max-width: none !important; opacity: 1 !important; gap: .3rem; }
+  .tank-steps .tank-cuts i { transform: none !important; text-align: center; padding: .15rem .1rem; white-space: nowrap; }
+  .tank-steps .tank-step:hover .tank-pool { opacity: 1; }
+  .tank-foot { overflow-wrap: anywhere; }
+}

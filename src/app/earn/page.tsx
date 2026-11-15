@@ -12,6 +12,7 @@ const usd = (n: number) => `$${n.toLocaleString("en-US", { minimumFractionDigits
 
 export default function Earn() {
   const [pool, setPool] = useState<Pool | null>(null);
+  const [aim, setAim] = useState<number | null>(null);   // the rung the pointer is on; the vault follows it
   useEffect(() => { poolNow().then(setPool); }, []);
   const payers = pool?.paying_users ?? 0;
   const live = bracketFor(payers);
@@ -44,7 +45,7 @@ export default function Earn() {
         </div>
 
         <div className="mt-8 grid gap-8 lg:grid-cols-[minmax(0,1fr)_minmax(0,22rem)] items-center [&>*]:min-w-0">
-          <Vault payers={payers} pool={live.pool} cycle />
+          <Vault payers={payers} pool={live.pool} cycle={aim == null} aim={aim} />
           <div className="sign sign-yellow">
             <p className="text-sm font-bold uppercase tracking-wide">This week&apos;s pool · bracket {live.label}</p>
             <dl className="mt-3 grid gap-3">
@@ -58,7 +59,7 @@ export default function Earn() {
         </div>
 
         <div className="mt-8">
-          <PrizeLadder payers={payers} variant="steps" />
+          <PrizeLadder payers={payers} variant="steps" onPick={setAim} />
         </div>
         <p className="mt-3 text-sm text-haze">
           Whatever the pool is when a round opens is locked in, so it can&apos;t shrink under you once you&apos;ve entered.

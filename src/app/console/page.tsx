@@ -233,7 +233,7 @@ function Gamertags() {
 type PersonRow = { id: string; display_name: string; gamertag: string | null; platform: string | null;
   gamertag_verified: boolean; verify_status: string; role: string; tier: string; subscription_status: string | null;
   credits_remaining: number; credits_per_month: number; votes_allowed: number; votes_used: number;
-  daily_submissions: number; submitted_today: number;
+  weekly_submissions: number; submitted_week: number;
   wallet_cents: number; pending_cents: number; lifetime_downloads: number; clips: number; created_at: string };
 function People() {
   const [rows, setRows] = useState<PersonRow[] | null>(null);
@@ -246,9 +246,9 @@ function People() {
     const c = sb();
     if (!c) {
       setRows([
-        { id: "d1", display_name: "ViceCityVandal", gamertag: "ViceCityVandal", platform: "ps5", gamertag_verified: true, verify_status: "approved", role: "owner", tier: "kingpin", subscription_status: "active", credits_remaining: 14, credits_per_month: 20, votes_allowed: 6, votes_used: 2, daily_submissions: 8, submitted_today: 1, wallet_cents: 4210, pending_cents: 1890, lifetime_downloads: 27, clips: 12, created_at: new Date(Date.now() - 60 * 864e5).toISOString() },
-        { id: "d2", display_name: "KeysKingpin", gamertag: "KeysKingpin", platform: "xbox", gamertag_verified: true, verify_status: "approved", role: "member", tier: "hustler", subscription_status: "active", credits_remaining: 3, credits_per_month: 8, votes_allowed: 4, votes_used: 4, daily_submissions: 6, submitted_today: 6, wallet_cents: 1500, pending_cents: 2310, lifetime_downloads: 33, clips: 8, created_at: new Date(Date.now() - 20 * 864e5).toISOString() },
-        { id: "d3", display_name: "SwampSaint", gamertag: "SwampSaint", platform: "ps5", gamertag_verified: false, verify_status: "pending", role: "member", tier: "free", subscription_status: null, credits_remaining: 0, credits_per_month: 0, votes_allowed: 1, votes_used: 0, daily_submissions: 2, submitted_today: 1, wallet_cents: 0, pending_cents: 0, lifetime_downloads: 2, clips: 4, created_at: new Date(Date.now() - 2 * 864e5).toISOString() },
+        { id: "d1", display_name: "ViceCityVandal", gamertag: "ViceCityVandal", platform: "ps5", gamertag_verified: true, verify_status: "approved", role: "owner", tier: "kingpin", subscription_status: "active", credits_remaining: 14, credits_per_month: 20, votes_allowed: 6, votes_used: 2, weekly_submissions: 15, submitted_week: 3, wallet_cents: 4210, pending_cents: 1890, lifetime_downloads: 27, clips: 12, created_at: new Date(Date.now() - 60 * 864e5).toISOString() },
+        { id: "d2", display_name: "KeysKingpin", gamertag: "KeysKingpin", platform: "xbox", gamertag_verified: true, verify_status: "approved", role: "member", tier: "hustler", subscription_status: "active", credits_remaining: 3, credits_per_month: 8, votes_allowed: 4, votes_used: 4, weekly_submissions: 8, submitted_week: 8, wallet_cents: 1500, pending_cents: 2310, lifetime_downloads: 33, clips: 8, created_at: new Date(Date.now() - 20 * 864e5).toISOString() },
+        { id: "d3", display_name: "SwampSaint", gamertag: "SwampSaint", platform: "ps5", gamertag_verified: false, verify_status: "pending", role: "member", tier: "free", subscription_status: null, credits_remaining: 0, credits_per_month: 0, votes_allowed: 1, votes_used: 0, weekly_submissions: 2, submitted_week: 1, wallet_cents: 0, pending_cents: 0, lifetime_downloads: 2, clips: 4, created_at: new Date(Date.now() - 2 * 864e5).toISOString() },
       ]);
       return;
     }
@@ -282,19 +282,19 @@ function People() {
         <div className="mt-4 overflow-x-auto">
           <table className="w-full text-sm whitespace-nowrap">
             <thead className="text-left text-haze">
-              <tr>{["Member", "Plan", "Gamertag", "Votes left", "Clips left today", "Downloads left", "Wallet", "Owed", "Clips", "Joined"].map((h) => <th key={h} className="py-2 pr-4 font-semibold">{h}</th>)}</tr>
+              <tr>{["Member", "Plan", "Gamertag", "Votes left", "Clips left this week", "Downloads left", "Wallet", "Owed", "Clips", "Joined"].map((h) => <th key={h} className="py-2 pr-4 font-semibold">{h}</th>)}</tr>
             </thead>
             <tbody className="divide-y divide-line">
               {rows.map((r) => {
                 const votesLeft = Math.max(0, r.votes_allowed - r.votes_used);
-                const clipsLeft = Math.max(0, r.daily_submissions - r.submitted_today);
+                const clipsLeft = Math.max(0, r.weekly_submissions - r.submitted_week);
                 return (
                   <tr key={r.id}>
                     <td className="py-2.5 pr-4"><b>{r.display_name}</b>{r.role !== "member" && <span className="ml-1.5 text-[10px] font-black uppercase text-white bg-gulf px-1.5 py-0.5 rounded">{r.role}</span>}</td>
                     <td className="py-2.5 pr-4">{r.tier}{r.subscription_status && r.subscription_status !== "active" ? ` (${r.subscription_status})` : ""}</td>
                     <td className="py-2.5 pr-4">{r.gamertag ?? "—"} {r.gamertag_verified ? "✓" : r.verify_status === "pending" ? "⏳" : ""}</td>
                     <td className="py-2.5 pr-4">{votesLeft} of {r.votes_allowed}</td>
-                    <td className="py-2.5 pr-4">{clipsLeft} of {r.daily_submissions}</td>
+                    <td className="py-2.5 pr-4">{clipsLeft} of {r.weekly_submissions}</td>
                     <td className="py-2.5 pr-4">{r.credits_remaining} of {r.credits_per_month}</td>
                     <td className="py-2.5 pr-4">{hide(money(r.wallet_cents))}</td>
                     <td className="py-2.5 pr-4">{hide(money(r.pending_cents))}</td>
@@ -308,7 +308,7 @@ function People() {
         </div>
       )}
       {rows && rows.length >= lim && lim < 200 && <button onClick={() => setLim((l) => Math.min(200, l + 60))} className="btn btn-ghost mt-4 !py-1.5 !px-4 text-sm">Show more people</button>}
-      <p className="mt-3 text-xs text-haze">Votes are for the current round. Clips reset at midnight; downloads with the plan month. Money moves live in Member money.</p>
+      <p className="mt-3 text-xs text-haze">Votes are for the current round. Clips reset Thursday at 12:00 p.m. Eastern; downloads with the plan month. Money moves live in Member money.</p>
     </div>
   );
 }

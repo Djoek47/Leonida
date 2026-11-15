@@ -18,7 +18,7 @@ const usd = (n: number) =>
 /** The pyramid.
  *
  *  Ten brackets stacked the way a pyramid stands: a broad base of small pools
- *  everybody starts on, narrowing course by course to the $3,000 capstone.
+ *  everybody starts on, narrowing course by course to the $2,000 capstone.
  *  The top of the pyramid is the top prize, which is the whole metaphor.
  *
  *  Gold is laid from the base upward, one course per bracket the site has
@@ -38,7 +38,7 @@ export function PrizeLadder({ payers, variant = "slope", onPick }: { payers: num
     <div className={`tank tank-v-${variant}${onPick ? " is-pickable" : ""}`} role={onPick ? "group" : "img"} onPointerLeave={() => onPick?.(null)}
          aria-label={`Prize pool ladder. Currently ${live.label} paying members, ${usd(live.pool)} a week.`}>
       <p className="tank-cap">
-        <span className="tank-cap-k">THE CAPSTONE</span>
+        <span className="tank-cap-k">THE CAPSTONE <span aria-hidden="true">-</span></span>
         <span className="tank-cap-v">{usd(top)} a week</span>
       </p>
 

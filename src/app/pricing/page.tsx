@@ -77,7 +77,7 @@ export default function Pricing() {
               <>
                 <p className="mt-3">{ask.id === "free" ? <>Your plan ends at the close of this billing period. After that you lose:</> : <>This takes effect <b>right away</b>. You&apos;re leaving {from.label}, so you lose:</>}</p>
                 <ul className="chg-list">
-                  {from.dailySubmissions > ask.dailySubmissions && <li>Daily uploads: {from.dailySubmissions} → {ask.dailySubmissions}</li>}
+                  {from.weeklySubmissions > ask.weeklySubmissions && <li>Clips per week: {from.weeklySubmissions} → {ask.weeklySubmissions}</li>}
                   {from.creditsPerMonth > ask.creditsPerMonth && <li>Free downloads a month: {from.creditsPerMonth} → {ask.creditsPerMonth}</li>}
                 </ul>
                 <p className="text-sm opacity-80">No refund for the rest of this period; the lower price starts at your next renewal. Your clips, badges, stars and wallet stay.</p>
@@ -136,7 +136,6 @@ export default function Pricing() {
               <TierMedal tier={t.id} className="plan-medal" />
 
               <h2 className="display text-4xl text-center">{t.label}</h2>
-              <p className="plan-pitch">{t.pitch}</p>
 
               <p className="plan-price">
                 <span className="display">{t.monthlyCents ? price(cents) : "Free"}</span>

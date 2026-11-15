@@ -73,7 +73,7 @@ function PayoutSetting() {
   }
   return (
     <section className="set-card !mt-0"><h3 className="font-black">Creator pays per download</h3>
-      <p className="text-sm text-haze">One number for everyone. Never below 70¢, never above 99¢. Public copy says "up to 99¢".{cur !== null && <> Right now: <b>{cur}¢</b>.</>}</p>
+      <p className="text-sm text-haze">One number for everyone. Never below 70¢, never above 99¢. Public copy says &quot;up to 99¢&quot;.{cur !== null && <> Right now: <b>{cur}¢</b>.</>}</p>
       <div className="mt-3 flex flex-wrap items-center gap-3">
         <input type="range" min={70} max={99} value={val} onChange={(e) => setVal(+e.target.value)} aria-label="Cents per download" className="w-48" />
         <b className="display text-2xl">{val}¢</b>
