@@ -36,9 +36,8 @@ export const TIERS: Tier[] = [
       "Submit up to 4 clips per week",
       "3 clip downloads a month",
       "No ads",
-      "Daily Drop challenges",
-      "Mission Briefing (TBD)*",
-      "Members all chat access.",
+      "Mission Briefing",
+      "Members all chat access",
     ],
   },
   {
@@ -49,26 +48,39 @@ export const TIERS: Tier[] = [
     perks: [
       "Submit up to 8 clips per week",
       "8 clip downloads a month",
-      "Leonida Economist: live trends and money-making methods*",
-      "Weekly Meta Brief",
-      "Feature a clip for 24 hours.",
+      "Leonida Economist",
+      "Feature 1 clip",
       "Everything in Street",
     ],
   },
   {
     id: "kingpin", label: "Kingpin", rank: 3,
     monthlyCents: 4500, annualCents: 43200, votes: 6, creditsPerMonth: 20,
-    weeklySubmissions: 15, adFree: true,
+    weeklySubmissions: 12, adFree: true,
     badge: "BEST FOR CLIPPERS",
     perks: [
-      "Submit up to 15 clips per week",
+      "Submit up to 12 clips per week",
       "20 clip downloads a month",
-      "Feature 3 clips a month, 24 hours each",
-      "Clip analytics*",
+      "Feature 3 clips",
+      "Clip Analytics TBD",
       "Everything in Hustler",
     ],
   },
 ];
+
+/** The short explanation behind a perk. Hidden until hovered, focused or tapped. */
+export const PERK_TIPS: Record<string, string> = {
+  "Submit up to 4 clips per week": "Increase your chances to win",
+  "3 clip downloads a month": "Download 3 clips from other members for free",
+  "Mission Briefing": "Get all insights into GTA VI Missions, don’t miss a thing.",
+  "Submit up to 8 clips per week": "More Submissions, Increase your chances to win",
+  "8 clip downloads a month": "Download 8 clips from other members for free",
+  "Leonida Economist": "Access every scheme to make money in Leonida",
+  "Feature 1 clip": "Featured Clips get more visibility to win Weekly Prizes",
+  "Submit up to 12 clips per week": "More Submissions, Increase your chances to win",
+  "20 clip downloads a month": "Download 20 clips from other members for free",
+  "Feature 3 clips": "Featured Clips get more visibility to win Weekly Prizes",
+};
 
 export const tierById = (id: string | null | undefined): Tier =>
   TIERS.find((t) => t.id === id) ?? TIERS[0];

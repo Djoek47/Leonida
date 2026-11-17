@@ -16,8 +16,8 @@ import { GamertagDialog } from "@/components/GamertagDialog";
 import { TierMedal } from "@/components/TierMedal";
 
 const clipState: Record<string, [string, string]> = {
-  pending: ["Pending", "wait"], approved: ["Approved", "live"], featured: ["Approved · Featured", "gold"],
-  rejected: ["Disapproved", "off"], suspended: ["Suspended", "off"], withdrawn: ["Withdrawn", "off"],
+  pending: ["Pending review", "wait"], approved: ["Approved · In the contest", "live"], featured: ["Approved · Featured", "gold"],
+  rejected: ["Not selected", "off"], suspended: ["Suspended", "off"], withdrawn: ["Withdrawn", "off"],
 };
 type Sale = { clip_id: string; downloads: number; earned_cents: number; last_sale: string | null };
 
@@ -65,24 +65,7 @@ export default function Dashboard() {
 
   // Taking a clip out of the running. The clip and its file stay with us —
   // that is what the terms say — it simply stops competing.
-  // Download-only clips can go into the open round whenever the owner likes.
-  const [entering, setEntering] = useState<string | null>(null);
-  const [enterErr, setEnterErr] = useState<{ id: string; text: string } | null>(null);
-  async function enterRound(c: Clip) {
-    const s = sb(); if (!s) return;
-    setEntering(c.id); setEnterErr(null);
-    const { data, error } = await s.rpc("enter_clip_in_round", { p_clip: c.id });
-    setEntering(null);
-    if (error) {
-      const m = error.message ?? "";
-      setEnterErr({ id: c.id, text: m.includes("NO_OPEN_ROUND") ? "No round is taking entries right now. We'll email you when the next one opens."
-        : m.includes("CLIP_TOO_LONG") ? "That clip could not be entered."
-        : m.includes("NOT_LIVE") ? "It has to be approved before it can enter."
-        : "That didn't go through. Try again." });
-      return;
-    }
-    setClips((cs) => cs.map((x) => (x.id === c.id ? { ...x, for_contest: true, contest_id: String(data) } : x)));
-  }
+  // Contest entry only happens through staff approval of a submission, so older download-only clips stay as they are.
   const downloadOnly = (c: Clip) => c.for_contest === false && !c.contest_id && ["approved", "featured"].includes(c.status);
 
   type Pull = { clip: Clip; votes: number | null; buyers: number | null; ack: boolean; state: "ask" | "busy" | "error"; err?: string };
@@ -241,7 +224,7 @@ export default function Dashboard() {
           ) : (
             <ul className="sales mt-4">
               {clips.map((c) => {
-                const s = sales[c.id]; const [label, kind] = clipState[c.status] ?? [c.status, "off"];
+                const s = sales[c.id]; const [label, kind] = c.status === "approved" && c.for_contest === false ? ["Approved", "live"] : clipState[c.status] ?? [c.status, "off"];
                 return (
                   <li key={c.id} className={c.id === best ? "is-best" : ""}>
                     <div className="min-w-0 flex-1">
@@ -249,15 +232,10 @@ export default function Dashboard() {
                       <span className={`clip-state ${kind}`}>{label}</span>
                       {downloadOnly(c) && <span className="clip-state off ml-2">Download only</span>}
                       {c.status === "withdrawn" && (s?.downloads ?? 0) > 0 && <span className="text-xs text-haze ml-2">{s?.downloads} can still download it</span>}
-                      {enterErr?.id === c.id && <p role="alert" className="mt-1 text-xs font-semibold text-flamingo">{enterErr.text}</p>}
                     </div>
                     <div className="sales-n" title={`${views[c.id]?.views_24h ?? 0} in the last 24 hours`}><b>{views[c.id]?.views ?? 0}</b><small>views</small></div>
                     <div className="sales-n" title="Downloads"><b>{s?.downloads ?? 0}</b><small>sold</small></div>
                     <div className="sales-n money" title="Earned from downloads"><b>{exactMoney(s?.earned_cents ?? 0)}</b><small>earned</small></div>
-                    {downloadOnly(c) && (
-                      <button onClick={() => enterRound(c)} disabled={entering === c.id} className="enter-round"
-                        title="Put this clip into the open round">{entering === c.id ? "Entering…" : "Enter a round"}</button>
-                    )}
                     {["approved", "featured", "pending"].includes(c.status) && c.for_contest !== false && (
                       <button onClick={() => pullOut(c)} className="pull-out"
                         title="Take this clip out of the competition">Withdraw</button>

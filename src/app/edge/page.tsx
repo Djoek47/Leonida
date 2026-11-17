@@ -1,10 +1,11 @@
 "use client";
 import { useEffect, useState } from "react";
+import Link from "@/components/A";
 import { LAUNCH } from "@/lib/content";
 
 /** The Edge is behind a roadblock until the game is. Nothing to read here
  *  yet, deliberately: a closed road, a counter, and the one date that
- *  matters. The tools (Economist, Meta Brief, Performance Lab) move in the
+ *  matters. The tools (Leonida Economist, Mission Briefing) move in the
  *  day Leonida opens.
  *
  *  Drop a file at public/media/video/edge-loop.mp4 and it becomes the
@@ -14,9 +15,8 @@ const BACKDROP = "/media/video/edge-loop.mp4";
 const POSTER = "/media/art/jason_lucia_motel_portrait.webp";
 
 const BEHIND = [
-  ["Leonida Economist", "What's actually making money this week, tracked live."],
-  ["Weekly Meta Brief", "One page every Monday: what won, and why."],
-  ["Clip Performance Lab", "Watch-through, drop-off and the download curve, clip by clip."],
+  ["Leonida Economist", "Access every scheme to make money in Leonida.", null],
+  ["Mission Briefing", "Get all insights into GTA VI Missions, don\u2019t miss a thing. Street, Hustler and Kingpin.", "/edge/briefing"],
 ] as const;
 
 function parts(ms: number) {
@@ -82,8 +82,8 @@ export default function Edge() {
         )}
 
         <ul className="edge-behind">
-          {BEHIND.map(([name, what]) => (
-            <li key={name}><b>{name}</b><span>{what}</span></li>
+          {BEHIND.map(([name, what, href]) => (
+            <li key={name}><b>{href ? <Link href={href}>{name}</Link> : name}</b><span>{what}</span></li>
           ))}
         </ul>
         <p className="edge-foot">Built from real play, not rumours. That&apos;s why it waits for the game.</p>

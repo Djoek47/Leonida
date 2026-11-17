@@ -9,7 +9,7 @@ import { TagPicker } from "@/components/TagPicker";
 import { slugTag } from "@/lib/tags";
 import { DemoNote } from "@/components/DemoNote";
 import { WeeklyQuota } from "@/components/WeeklyQuota";
-import { quotaOf, refreshQuota, useQuota } from "@/lib/quota";
+import { quotaOf, refreshQuota, resetLabel, useQuota } from "@/lib/quota";
 
 type Tab = "send" | "claim";
 
@@ -93,7 +93,7 @@ function RoundWindow() {
       </dl>
       <p className="rw-note">
         {takingClips
-          ? "Send it before entries close and it goes into this round. Staff approve it, then it is in the vote the moment voting opens."
+          ? "Send it before entries close to submit it for this round. Staff review every submission, and only approved clips make the final contest cut."
           : "This round has stopped taking clips. Anything you send now waits for the next one."}
       </p>
     </section>
@@ -101,20 +101,18 @@ function RoundWindow() {
 }
 
 function SendForm({ userId, cap, usedWeek, resetsAt, gamertag, platform }: { userId: string; cap: number; usedWeek: number; resetsAt: string | null; gamertag: string | null; platform: string | null }) {
-  const quota = useQuota(quotaOf(cap, usedWeek, resetsAt));
-  // One key per send attempt: a retry of the same request can never take a second slot.
+    // One key per send attempt: a retry of the same request can never take a second slot.
   const idemKey = useRef(crypto.randomUUID());
   const [mode, setMode] = useState<"file" | "link">("file");
   const [state, setState] = useState<"idle" | "sending" | "sent" | "error">("idle");
   const [err, setErr] = useState("");
-  // Which round this clip is going into. "" means none — they just want it
-  // on the site, earning from downloads.
+  // Which contest week this clip is submitted to. Every upload is a contest submission.
   const [rounds, setRounds] = useState<Contest[] | null>(null);
   const [roundId, setRoundId] = useState<string>("");
+  const quota = useQuota(quotaOf(cap, usedWeek, resetsAt), roundId || null);
   useEffect(() => {
     openContests().then((rs) => { setRounds(rs); setRoundId(rs[0]?.id ?? ""); }).catch(() => setRounds([]));
   }, []);
-  const forContest = roundId !== "";
   const [entered, setEntered] = useState<{ title: string; starts_at: string; timezone: string; state: string } | null>(null);
   const [len, setLen] = useState<number | null>(null);
   // The cover: a moment the creator scrubs to. It's what voters see first.
@@ -137,8 +135,9 @@ function SendForm({ userId, cap, usedWeek, resetsAt, gamertag, platform }: { use
       // Ask before uploading. The database enforces the weekly cap anyway, but
       // only once the row goes in — by which point up to 600 MB is already in
       // storage, and a refused row would leave it there forever.
-      const { data: allowed } = await c.rpc("can_submit");
-      if (allowed === false) throw new Error("WEEKLY_LIMIT");
+      if (!roundId) throw new Error("NO_OPEN_ROUND");
+      const { data: q } = await c.rpc("my_submission_quota", { p_contest: roundId });
+      if (q && (q as { remaining: number }).remaining <= 0) throw new Error("WEEKLY_LIMIT");
 
       if (mode === "file" && file && file.size) {
         if (file.size >= MAX_BYTES) throw new Error("That file is 600 MB or over. Clips have to come in under 600 MB — trim it or paste a link instead.");
@@ -147,10 +146,10 @@ function SendForm({ userId, cap, usedWeek, resetsAt, gamertag, platform }: { use
         if (up.error) throw up.error;
       }
       const { data: clip, error } = await c.from("clips").insert({
-        contest_id: roundId || null, owner_id: userId, submitted_by: userId,
+        contest_id: roundId, owner_id: userId, submitted_by: userId,
         title: f.get("title"), platform: f.get("platform"), gamertag: f.get("gamertag"),
         storage_path, source_url: mode === "link" ? f.get("url") : null,
-        for_contest: forContest, duration_seconds: len == null ? null : Math.round(len), idem_key: idemKey.current,
+        for_contest: true, duration_seconds: len == null ? null : Math.round(len), idem_key: idemKey.current,
       }).select("id, contest_id").single();
       if (error) {
         // The row was refused, so nothing will ever point at the file. Take it back.
@@ -185,7 +184,9 @@ function SendForm({ userId, cap, usedWeek, resetsAt, gamertag, platform }: { use
       const m = (x as Error).message;
       refreshQuota();
       if (m.includes("DUPLICATE_SUBMISSION")) { idemKey.current = crypto.randomUUID(); setState("sent"); return; }
-      setErr(m.includes("WEEKLY_LIMIT") ? `You have used all ${quota.allowance} clips for this week. Your allowance resets Thursday at 12:00 p.m. Eastern Time.`
+      setErr(m.includes("WEEKLY_LIMIT") ? `You have used all ${quota.allowance} submissions for this contest week. Your next allowance starts ${resetLabel(quota.resets_at)}.`
+           : m.includes("ROUND_CLOSED") ? "Entries for that contest week have just closed. Pick the next one and send it again."
+           : m.includes("NO_OPEN_ROUND") ? "No contest week is taking entries right now. Try again soon."
            : m.includes("CLIP_TOO_LONG") ? "That clip is too long."
            : m);
       setState("error");
@@ -198,11 +199,11 @@ function SendForm({ userId, cap, usedWeek, resetsAt, gamertag, platform }: { use
       {entered && (
         <p className="mt-2 font-bold">
           {entered.state === "scheduled"
-            ? <>Entered for the next weekly round. Voting opens {new Date(entered.starts_at).toLocaleString(undefined, { weekday: "long", month: "short", day: "numeric", hour: "numeric", minute: "2-digit", timeZone: entered.timezone })} ({entered.timezone.replace("_", " ")} time).</>
-            : <>Entered for {entered.title}. Status: Pending review.</>}
+            ? <>Submitted for the next weekly round. Status: Pending review. Voting opens {new Date(entered.starts_at).toLocaleString(undefined, { weekday: "long", month: "short", day: "numeric", hour: "numeric", minute: "2-digit", timeZone: entered.timezone })} ({entered.timezone.replace("_", " ")} time).</>
+            : <>Submitted for {entered.title}. Status: Pending review.</>}
         </p>
       )}
-      <p className="mt-2 text-haze">It&apos;s in the review queue now. Staff watch every clip before it goes live — usually within a day, and you&apos;ll get an email either way. Until then it shows as <b className="text-foam">under review</b> on your dashboard.</p>
+      <p className="mt-2 text-haze">It&apos;s in the review queue now. Staff review every submission, and only approved clips make the final contest cut. You&apos;ll get an email either way, usually within a day. Until then it shows as <b className="text-foam">Pending review</b> on your dashboard.</p>
       <div className="mt-5 flex gap-3"><Link href="/dashboard" className="btn btn-hot">Open my dashboard</Link><button className="btn btn-ghost" onClick={() => setState("idle")}>Send another</button></div>
     </div>
   );
@@ -262,7 +263,7 @@ function SendForm({ userId, cap, usedWeek, resetsAt, gamertag, platform }: { use
       </div>
       <TagPicker value={tags} onChange={setTags} />
       <fieldset className="round-pick">
-        <legend>Which competition?</legend>
+        <legend>Which contest week?</legend>
         {rounds === null ? <p className="text-sm text-haze">Looking up the rounds…</p> : (
           <div className="grid gap-2">
             {rounds.map((r) => (
@@ -272,7 +273,7 @@ function SendForm({ userId, cap, usedWeek, resetsAt, gamertag, platform }: { use
                 <span>
                   <b>{r.title}</b>
                   <small>
-                    Weekly entries go to the round open when your upload finishes. Entries close {new Date(r.submissions_close).toLocaleString(undefined,
+                    Entries close {new Date(r.submissions_close).toLocaleString(undefined,
                       { weekday: "short", month: "short", day: "numeric", hour: "numeric", minute: "2-digit", timeZone: "America/Toronto", timeZoneName: "short" })}
                     {" · voting "}
                     {new Date(r.voting_opens).toLocaleDateString(undefined, { month: "short", day: "numeric" })}
@@ -282,19 +283,11 @@ function SendForm({ userId, cap, usedWeek, resetsAt, gamertag, platform }: { use
                 </span>
               </label>
             ))}
-            <label className={`round-opt${roundId === "" ? " on" : ""}`}>
-              <input type="radio" name="round" value="" checked={roundId === ""} onChange={() => setRoundId("")} />
-              <span>
-                <b>No competition — just put it up</b>
-                <small>It goes on the site and earns from downloads. You can enter it in a round later.</small>
-              </span>
-            </label>
           </div>
         )}
         {rounds !== null && rounds.length === 0 && (
           <p className="text-sm text-haze mt-1">
-            No round is taking entries right now. Send it anyway — it goes up to earn, and you can
-            enter it when the next round opens.
+            No contest week is taking entries right now. Check back soon: a new week opens every Thursday.
           </p>
         )}
       </fieldset>
@@ -310,7 +303,7 @@ function SendForm({ userId, cap, usedWeek, resetsAt, gamertag, platform }: { use
       {state === "error" && <p role="alert" className="text-flamingo font-semibold">{err}</p>}
       {atCap && (
         <p role="alert" className="rounded-lg border-2 border-mango bg-mango/20 px-4 py-3 font-semibold">
-          You have used all {quota.allowance} clips for this week. Your allowance resets Thursday at 12:00 p.m. Eastern Time.{" "}
+          You have used all {quota.allowance} submissions for this contest week. Your next allowance starts {resetLabel(quota.resets_at)}.{" "}
           <Link href="/pricing" className="underline">Members get more</Link>.
         </p>
       )}
@@ -320,7 +313,7 @@ function SendForm({ userId, cap, usedWeek, resetsAt, gamertag, platform }: { use
           Tick the box above to send your clip — we can&apos;t publish it without your say-so.
         </p>
       )}
-      <button disabled={state === "sending" || atCap || !agreed}
+      <button disabled={state === "sending" || atCap || !agreed || !roundId}
         className="btn btn-hot w-fit disabled:opacity-60">
         {state === "sending" ? "Sending…" : "Send clip"}
       </button>

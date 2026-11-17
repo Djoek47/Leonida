@@ -893,7 +893,7 @@ body:has(.overlay-root) > *:not(:has(.overlay-root)) { display: none; }
 }
 .plan-votes strong { font-weight: 900; letter-spacing: -0.02em; font-size: 1.5rem; color: #fff; margin-right: .3rem; }
 
-.plan-perks { margin-top: 1.1rem; display: grid; gap: .55rem; flex: 1; font-size: .9rem; }
+.plan-perks { margin-top: 1.1rem; display: grid; gap: .55rem; flex: 1; align-content: start; font-size: .9rem; }
 .plan-perks li { display: flex; gap: .6rem; line-height: 1.4; color: #cfc3a9; }
 .plan-perks li > span:first-child {
   margin-top: .45rem; width: .4rem; height: .4rem; flex: none; border-radius: 1px;
@@ -2381,3 +2381,31 @@ aside .trophy-shelf li { width: 4.1rem; }
   .mz-tools button, .mz-total { padding: .4rem .65rem; }
 }
 @media (prefers-reduced-motion: reduce) { .mz-hint, .mz-card, .mz-spin { animation: none; } }
+
+/* Plan perk explanations: hidden by default; hover or keyboard focus on desktop, tap on touch. */
+.perk-tip { position: relative; display: inline; }
+.perk-tip-btn { display: inline; text-align: left; font: inherit; color: inherit; cursor: help; border-bottom: 1px dotted currentColor; }
+.perk-tip-btn i { display: inline-grid; place-items: center; width: 1.05em; height: 1.05em; margin-left: .35em; border-radius: 50%; font-size: .72em; font-style: normal; font-weight: 900; vertical-align: .12em; background: var(--mango); color: #140d03; }
+.perk-tip-pop { position: absolute; z-index: 30; left: 0; top: calc(100% + .45rem); width: max-content; max-width: min(16rem, 70vw); padding: .5rem .7rem; border-radius: 10px; font-size: .8rem; font-weight: 700; line-height: 1.35;
+  background: var(--asphalt); color: #fff5e6; box-shadow: 0 10px 24px -10px rgba(0,0,0,.6); opacity: 0; visibility: hidden; transform: translateY(-3px); transition: opacity .15s, transform .15s, visibility .15s; pointer-events: none; }
+.perk-tip-pop::before { content: ""; position: absolute; left: .9rem; top: -5px; border: 5px solid transparent; border-top: 0; border-bottom-color: var(--asphalt); }
+.perk-tip.is-open .perk-tip-pop, .perk-tip:focus-within .perk-tip-pop { opacity: 1; visibility: visible; transform: none; }
+@media (hover: hover) { .perk-tip:hover .perk-tip-pop { opacity: 1; visibility: visible; transform: none; } }
+
+/* Mission Briefing */
+.brief { border-radius: 14px; border: 2px solid var(--line); background: var(--ink); overflow: hidden; }
+.brief.is-open { border-color: var(--flamingo); }
+.brief-head { width: 100%; display: flex; align-items: flex-start; justify-content: space-between; gap: 1rem; padding: 1rem 1.15rem; text-align: left; }
+.brief-head > span:first-child { display: grid; gap: .15rem; }
+.brief-mission { font-size: .66rem; font-weight: 900; letter-spacing: .2em; text-transform: uppercase; color: var(--flamingo); }
+.brief-title { font-size: 1.15rem; font-weight: 900; line-height: 1.2; }
+.brief-sum { color: var(--haze); font-size: .9rem; }
+.brief-date { flex: none; font-size: .78rem; font-weight: 800; color: var(--haze); }
+.brief-body { padding: 0 1.15rem 1.15rem; display: grid; gap: .8rem; line-height: 1.6; border-top: 1px dashed var(--line); padding-top: 1rem; white-space: pre-line; }
+.brief-locked { border-radius: 16px; border: 2px solid var(--line); background: var(--ink); overflow: hidden; }
+.brief-lock-head { display: flex; flex-wrap: wrap; align-items: center; gap: 1rem; padding: 1.2rem; }
+.brief-lock-ico { font-size: 1.6rem; }
+.brief-teasers { display: grid; border-top: 1px solid var(--line); }
+.brief-teasers li { display: flex; justify-content: space-between; gap: 1rem; padding: .75rem 1.2rem; border-bottom: 1px solid var(--line); filter: blur(.4px); opacity: .75; }
+.brief-teasers li span { color: var(--haze); font-size: .8rem; flex: none; }
+.edge-behind a { text-decoration: underline; text-underline-offset: 3px; }

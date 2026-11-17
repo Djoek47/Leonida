@@ -1,4 +1,5 @@
 "use client";
+import { Perk } from "@/components/PerkTip";
 import { useEffect, useState } from "react";
 import Link from "@/components/A";
 import { TIERS, annualSaving, DOWNLOAD, tierById, type Tier } from "@/lib/tiers";
@@ -18,7 +19,6 @@ export default function Pricing() {
   const [aim, setAim] = useState<number | null>(null);
   const [pool, setPool] = useState<Pool | null>(null);
   const [busy, setBusy] = useState<string | null>(null);
-  const [note, setNote] = useState<string | null>(null);
   const [err, setErr] = useState("");
   const [ask, setAsk] = useState<Tier | null>(null);
 
@@ -148,14 +148,7 @@ export default function Pricing() {
               </p>
 
               <ul className="plan-perks">
-                {t.perks.map((p) => p.endsWith("*") ? (
-                  <li key={p}><span aria-hidden /><span>{p.slice(0, -1)}{" "}
-                    <button type="button" onClick={() => setNote(note === p ? null : p)} onMouseEnter={() => setNote(p)} onMouseLeave={() => setNote(null)} onFocus={() => setNote(p)} onBlur={() => setNote(null)} aria-expanded={note === p} aria-label={p.startsWith("Clip analytics") ? "What is clip analytics?" : "Upcoming, not live yet"} className="info-star !ml-1 font-black">★</button>
-                    {note === p && <span className="mt-1 block text-xs font-normal opacity-80">{p.startsWith("Clip analytics") ? "See which clips perform best, then download the ones you want." : "Upcoming. Not live yet."}</span>}
-                  </span></li>
-                ) : (
-                  <li key={p}><span aria-hidden /><span>{p}</span></li>
-                ))}
+                {t.perks.map((p) => <li key={p}><span aria-hidden /><span><Perk text={p} /></span></li>)}
               </ul>
 
               {t.id === "free" ? (

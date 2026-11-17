@@ -24,9 +24,9 @@ export const metadata: Metadata = {
 const FAQ: [string, string][] = [
   ["Where can I find GTA 6 clips?", "Live From Leonida has a library of GTA VI clips sent in by players. Browse this week's clips, every clip, or the featured ones, and filter by tag or by views."],
   ["Can I buy GTA 6 clips for my own videos?", "Yes. Members download clips with the monthly download credits that come with their plan. Creators agree to let members download their clips for their own videos when they send them in."],
-  ["How do I sell my GTA 6 clips?", "Send your clip to the weekly round. Once staff approve it, it goes live in the library. Every time a member downloads it, you earn a share of that download."],
+  ["How do I sell my GTA 6 clips?", "Submit your clip for a weekly round. Only clips staff approve go live in the library. Every time a member downloads it, you earn a share of that download."],
   ["Is there a GTA 6 clip contest?", "Yes. A new round opens every week. Everyone can vote, the top three clips split the weekly prize pool, and free accounts can win too."],
-  ["Which clips are performing best?", "Kingpin members get Clip analytics: a ranking of clips by views, downloads and how often a view turns into a download, so they can pick clips that perform."],
+  ["Which clips are performing best?", "Clip Analytics for Kingpin members is still being built (Clip Analytics TBD). It isn't live yet."],
   ["Is Live From Leonida affiliated with Rockstar Games?", "No. Live From Leonida is a fan-run community. It is not affiliated with, endorsed or sponsored by Rockstar Games or Take-Two Interactive."],
 ];
 
@@ -81,7 +81,7 @@ export default function Gta6Clips() {
         <p className="mt-3 text-haze">
           Making a TikTok, a YouTube video, a montage or a stream highlight? Members download clips with the monthly download credits that come with their plan,
           and creators agree to let members download their clips for their own videos. Higher plans include more downloads a month.
-          Kingpin members also get Clip analytics, a live ranking of the clips performing best, so you can pick clips people actually watch.
+          Clip Analytics for Kingpin members is on the way (TBD).
         </p>
         <p className="mt-3"><Link href="/pricing" className="font-black underline">Compare memberships</Link></p>
       </section>
@@ -89,7 +89,7 @@ export default function Gta6Clips() {
       <section className="mt-10">
         <h2 className="display text-3xl">Sell your GTA 6 clips</h2>
         <p className="mt-3 text-haze">
-          Send your clip into the weekly round. Once staff approve it, it goes live in the library and into the contest.
+          Submit your clip for a weekly round. Only clips staff approve go live in the library and make the final contest cut.
           Every time a member downloads it you earn a share of that download. You can earn up to 99¢ per download.
           Free accounts can enter, vote and win prizes too.
         </p>

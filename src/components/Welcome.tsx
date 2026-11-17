@@ -1,4 +1,5 @@
 "use client";
+import { Perk } from "@/components/PerkTip";
 import { useEffect, useState } from "react";
 import { sb } from "@/lib/supabase";
 import { TierMedal } from "@/components/TierMedal";
@@ -49,7 +50,7 @@ export function Welcome({ onLanded }: { onLanded: () => void }) {
           <p className="mt-5 text-xs font-black uppercase tracking-[0.3em] text-mango">Payment confirmed</p>
           <h2 id="wel-t" className="display mt-2 text-5xl">Welcome to {tier.label}.</h2>
           <ul className="mt-5 grid gap-1.5 text-left text-sm text-white/85">
-            {tier.perks.slice(0, 4).map((p) => <li key={p} className="flex gap-2"><span className="text-mango">★</span>{p}</li>)}
+            {tier.perks.slice(0, 4).map((p) => <li key={p} className="flex gap-2"><span className="text-mango">★</span><Perk text={p} /></li>)}
           </ul>
           <p className="mt-4 text-sm text-white/65">Your receipt is on its way to your email.</p>
           <button autoFocus onClick={() => setWant(null)} className="btn btn-hot mt-6 w-full">Let&apos;s go</button>

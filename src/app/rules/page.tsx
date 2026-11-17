@@ -1,5 +1,5 @@
 
-const UPDATED = "November 9, 2026";
+const UPDATED = "November 16, 2026";
 
 /** The short version people actually read. */
 const PLAIN: [string, string][] = [
@@ -18,7 +18,7 @@ const TERMS: [number, string, string][] = [
   [1, "Who runs it", "Organized by Live From Leonida. Live From Leonida is a fan community, not affiliated with or endorsed by Rockstar Games or Take-Two Interactive."],
   [2, "Entering", "A free account, that's it."],
   [3, "What we won't take", "Other people's footage, mods, cheats, code glitches, anything breaking Rockstar's terms, hate, harassment, sexual content, personal information, or music laid over the top."],
-  [4, "Review", "All clips are reviewed before being automatically uploaded on the website"],
+  [4, "Review", "Every clip you send is a contest submission, and all clips are reviewed. Only clips approved by an administrator make the final contest cut and are uploaded on the website."],
   [5, "Voting", "Each video can be voted on once, even for users with multiple votes."],
   [6, "Winning", "Most votes wins. If there is a tie, the winner is the user with the most views on their videos."],
   [7, "Payment", "Give us a working payout account and you will receive your winnings after the announcement."],

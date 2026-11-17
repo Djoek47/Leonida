@@ -8,7 +8,7 @@ import { DemoNote } from "@/components/DemoNote";
 import NotFound from "@/app/not-found";
 import { MoneyPanel } from "./Money";
 
-type Tab = "overview" | "cashouts" | "review" | "gamertags" | "contest" | "payouts" | "creators" | "wallets" | "people" | "claims" | "drops" | "staff" | "support" | "rounds" | "money" | "presets";
+type Tab = "overview" | "cashouts" | "review" | "gamertags" | "contest" | "payouts" | "creators" | "wallets" | "people" | "claims" | "drops" | "staff" | "support" | "rounds" | "money" | "presets" | "briefings";
 type Row = Record<string, unknown> & { id: string };
 
 export default function Admin() {
@@ -32,6 +32,7 @@ const NAV: { group: string; items: [Tab, string, string?][] }[] = [
   { group: "Today", items: [["overview", "Overview"], ["review", "Clip queue", "clips_pending"], ["support", "Support", "support_open"], ["gamertags", "Gamertags", "gamertags_pending"], ["claims", "Claims", "claims_open"]] },
   { group: "Money", items: [["money", "Money"], ["cashouts", "Cash-out requests", "cashouts_waiting"], ["payouts", "Prize payouts", "prizes_waiting"], ["creators", "Creator payouts"], ["wallets", "Member money"]] },
   { group: "Rounds", items: [["contest", "Weekly round"], ["presets", "Upcoming weeks"], ["rounds", "Round results"], ["drops", "Daily Drops"]] },
+  { group: "Content", items: [["briefings", "Mission Briefing"]] },
   { group: "Community", items: [["people", "People"], ["staff", "Staff and settings"]] },
 ];
 
@@ -92,6 +93,7 @@ function Shell({ tab, setTab, isOwner }: { tab: Tab; setTab: (t: Tab) => void; i
           {tab === "staff" && <Staff isOwner={isOwner} />}
           {tab === "creators" && <CreatorPayouts />}
           {tab === "drops" && <Drops />}
+          {tab === "briefings" && <Briefings />}
           {tab === "support" && <SupportDesk />}
           {tab === "rounds" && <RoundResults />}
           {tab === "wallets" && <><LedgerCheck /><Wallets /></>}
@@ -386,7 +388,7 @@ function Review() {
   const load = useCallback(async () => {
     const c = sb();
     if (!c) { setClips(DEMO_CLIPS.map((x) => ({ ...x, status: "pending" }))); return; }
-    const { data } = await c.from("clips").select("*").eq("status", "pending").order("created_at");
+    const { data } = await c.from("clips").select("*, contest:contests(title)").eq("status", "pending").order("created_at");
     setClips((data as Clip[]) ?? []);
   }, []);
   useEffect(() => { load(); }, [load]);
@@ -421,14 +423,26 @@ function Review() {
     if (!cur || busy) return;
     setBusy(true);
     const c = sb();
-    const patch: Record<string, unknown> = { status };
-    if (f) { patch.edited_url = f.get("edited") || null; patch.youtube_timestamp = f.get("ts") ? Number(f.get("ts")) : null; patch.reject_reason = f.get("reason") || null; }
-    if (c) { const { error } = await c.from("clips").update(patch).eq("id", cur.id);
-      if (error) { setBusy(false); setNote(error.message); return; } }
+    // One decision per clip, recorded with who made it and when. The database refuses a second one.
+    if (c) {
+      const { error } = await c.rpc("review_clip", {
+        p_clip: cur.id, p_decision: status, p_reason: (f?.get("reason") as string) || null,
+        p_edited_url: (f?.get("edited") as string) || null, p_ts: f?.get("ts") ? Number(f.get("ts")) : null,
+      });
+      if (error) {
+        const m = error.message;
+        setBusy(false);
+        setNote(m.includes("ALREADY_REVIEWED") ? `Someone already decided "${cur.title}". Refresh the queue.`
+          : m.includes("ROUND_OVER") ? `"${cur.title}" can't be approved: its round has already finished.`
+          : m.includes("NOT_ALLOWED") ? "Your staff role can't review clips." : m);
+        if (m.includes("ALREADY_REVIEWED")) setClips((cs) => cs.filter((x) => x.id !== cur.id));
+        return;
+      }
+    }
     setClips((cs) => cs.filter((x) => x.id !== cur.id));
     setI((n) => Math.min(n, clips.length - 2 < 0 ? 0 : clips.length - 2));
     setDone((n) => n + 1);
-    setNote(`${status === "approved" ? "Approved" : "Rejected"}: ${cur.title}`);
+    setNote(`${status === "approved" ? "Approved for the contest" : "Not selected"}: ${cur.title}`);
     setBusy(false);
   }, [clips, i, busy]);
 
@@ -524,10 +538,11 @@ function Review() {
             {clip.duration_seconds ? ` · ${clip.duration_seconds}s` : ""}
             {clip.for_contest === false ? " · not for the contest" : ""}
           </p>
+          {clip.for_contest !== false && <p className="text-sm font-bold">Entered for: <span className="text-gulf">{(clip as { contest?: { title?: string } | null }).contest?.title ?? "next weekly round"}</span>. Approve puts it in that contest; Disapprove keeps it out.</p>}
           <p className="text-xs text-haze">In {waited < 1 ? "under an hour" : `${waited} hours`} · sent {new Date(clip.created_at).toLocaleString()}</p>
           <label className="grid gap-1 text-sm font-bold">Edited version link (Higgsfield or FFmpeg cut)<input name="edited" className="field font-normal" placeholder="https://" defaultValue={clip.edited_url ?? ""} /></label>
           <label className="grid gap-1 text-sm font-bold">Seconds into the compilation video<input name="ts" type="number" min={0} className="field font-normal" defaultValue={clip.youtube_timestamp ?? ""} /></label>
-          <label className="grid gap-1 text-sm font-bold">Reason if rejecting<input name="reason" className="field font-normal" placeholder="Not GTA VI, too short, someone else's footage…" /></label>
+          <label className="grid gap-1 text-sm font-bold">Note if not selecting (sent to the member)<input name="reason" className="field font-normal" placeholder="Not GTA VI, too short, someone else's footage…" /></label>
           <div className="flex flex-wrap gap-2 mt-2">
             <button disabled={busy} className="btn btn-hot disabled:opacity-60">Approve</button>
             <button type="button" disabled={busy} onClick={(e) => decide("rejected", new FormData(e.currentTarget.form!))} className="stop-btn"><span>Disapprove</span></button>
@@ -1250,5 +1265,82 @@ function RoundResults() {
         <ol className="mt-2 text-sm">{r.tally.slice(0, 5).map((t, i) => <li key={t.clip}>{i + 1}. {t.clip.slice(0, 8)} — {t.votes} votes</li>)}</ol>
       </li>
     ))}</ul>
+  );
+}
+
+/** Mission Briefing posts. Drafts stay here; published ones show to Street, Hustler and Kingpin members on The Edge. */
+type BriefRow = { id: string; title: string; mission: string | null; summary: string | null; body: string; published: boolean; published_at: string | null; updated_at: string };
+function Briefings() {
+  const [rows, setRows] = useState<BriefRow[]>([]);
+  const [edit, setEdit] = useState<BriefRow | null>(null);
+  const [note, setNote] = useState("");
+  const load = useCallback(async () => {
+    const s = sb(); if (!s) { setRows([]); return; }
+    const { data } = await s.from("mission_briefings").select("*").order("created_at", { ascending: false });
+    setRows((data ?? []) as BriefRow[]);
+  }, []);
+  useEffect(() => { load(); }, [load]);
+
+  async function save(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault();
+    const f = new FormData(e.currentTarget), s = sb();
+    if (!s) { setNote("Demo mode: nothing was written."); return; }
+    const row = { title: String(f.get("title") ?? "").trim(), mission: String(f.get("mission") ?? "").trim() || null,
+      summary: String(f.get("summary") ?? "").trim() || null, body: String(f.get("body") ?? "").trim(), published: f.get("published") === "on" };
+    const { error } = edit ? await s.from("mission_briefings").update(row).eq("id", edit.id) : await s.from("mission_briefings").insert(row);
+    setNote(error ? error.message : row.published ? "Saved and published. Street members and up can read it now." : "Saved as a draft.");
+    if (!error) { setEdit(null); (e.target as HTMLFormElement).reset(); load(); }
+  }
+  async function toggle(r: BriefRow) {
+    const s = sb(); if (!s) return;
+    const { error } = await s.from("mission_briefings").update({ published: !r.published }).eq("id", r.id);
+    setNote(error ? error.message : r.published ? `Unpublished: ${r.title}` : `Published: ${r.title}`); load();
+  }
+  async function remove(r: BriefRow) {
+    if (!confirm(`Delete "${r.title}" for good?`)) return;
+    const s = sb(); if (!s) return;
+    const { error } = await s.from("mission_briefings").delete().eq("id", r.id);
+    setNote(error ? error.message : `Deleted: ${r.title}`); load();
+  }
+
+  return (
+    <div className="grid gap-8">
+      <section className="rounded-lg border-2 border-line bg-ink p-5">
+        <h2 className="text-xl font-extrabold">{edit ? `Edit: ${edit.title}` : "Write a briefing"}</h2>
+        <p className="text-sm text-haze mt-1">Shown on The Edge to Street, Hustler and Kingpin members. Leave a blank line between paragraphs.</p>
+        <form key={edit?.id ?? "new"} onSubmit={save} className="mt-4 grid gap-3">
+          <div className="grid gap-3 sm:grid-cols-2">
+            <label className="grid gap-1 text-sm font-bold">Title<input name="title" required minLength={3} maxLength={140} defaultValue={edit?.title} className="field font-normal" placeholder="Everything worth knowing before the first heist" /></label>
+            <label className="grid gap-1 text-sm font-bold">Mission (optional)<input name="mission" maxLength={80} defaultValue={edit?.mission ?? ""} className="field font-normal" placeholder="Mission name" /></label>
+          </div>
+          <label className="grid gap-1 text-sm font-bold">One-line summary (optional)<input name="summary" maxLength={200} defaultValue={edit?.summary ?? ""} className="field font-normal" /></label>
+          <label className="grid gap-1 text-sm font-bold">Briefing<textarea name="body" required rows={10} defaultValue={edit?.body} className="field font-normal" /></label>
+          <label className="flex items-center gap-2 text-sm font-bold"><input type="checkbox" name="published" defaultChecked={edit?.published ?? false} /> Publish now</label>
+          <div className="flex gap-3">
+            <button className="btn btn-hot">{edit ? "Save changes" : "Save"}</button>
+            {edit && <button type="button" className="btn btn-ghost" onClick={() => setEdit(null)}>Cancel</button>}
+          </div>
+        </form>
+        {note && <p role="status" className="mt-3 text-sm font-semibold">{note}</p>}
+      </section>
+      <section>
+        <h2 className="text-xl font-extrabold">All briefings</h2>
+        {rows.length === 0 ? <p className="text-haze mt-2">None yet.</p> : (
+          <ul className="mt-3 grid gap-2">
+            {rows.map((r) => (
+              <li key={r.id} className="flex flex-wrap items-center gap-3 rounded-lg border-2 border-line bg-ink p-3">
+                <div className="min-w-0 flex-1">
+                  <p className="font-extrabold truncate">{r.title}</p>
+                  <p className="text-xs text-haze">{r.published ? `Published ${r.published_at ? new Date(r.published_at).toLocaleDateString() : ""}` : "Draft"}{r.mission ? ` · ${r.mission}` : ""}</p>
+                </div>
+                <button className="text-sm font-bold underline" onClick={() => { setEdit(r); window.scrollTo({ top: 0, behavior: "smooth" }); }}>Edit</button>
+                <button className="text-sm font-bold underline" onClick={() => toggle(r)}>{r.published ? "Unpublish" : "Publish"}</button>
+                <button className="text-sm font-bold underline text-flamingo" onClick={() => remove(r)}>Delete</button>
+              </li>
+            ))}
+          </ul>
+        )}
+      </section>
+    </div>
   );
 }

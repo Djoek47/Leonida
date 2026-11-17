@@ -19,9 +19,9 @@ const s = (v: unknown, fallback = "") => (v === null || v === undefined || v ===
 const tierName = (t: unknown) => ({ free: "Free", street: "Street", hustler: "Hustler", kingpin: "Kingpin" } as Record<string, string>)[s(t)] ?? s(t, "your plan");
 const RANK: Record<string, number> = { free: 0, street: 1, hustler: 2, kingpin: 3 };
 const PERKS: Record<string, string[]> = {
-  street: ["Submit up to 4 clips per week", "3 clip downloads a month", "No ads", "Daily Drop challenges", "Members all chat access."],
-  hustler: ["Submit up to 8 clips per week", "8 clip downloads a month", "Leonida Economist and the weekly Meta Brief", "Feature a clip for 24 hours."],
-  kingpin: ["Submit up to 15 clips per week", "20 clip downloads a month", "Feature 3 clips a month, 24 hours each", "Clip analytics"],
+  street: ["Submit up to 4 clips per week", "3 clip downloads a month", "No ads", "Mission Briefing", "Members all chat access"],
+  hustler: ["Submit up to 8 clips per week", "8 clip downloads a month", "Leonida Economist", "Feature 1 clip", "Everything in Street"],
+  kingpin: ["Submit up to 12 clips per week", "20 clip downloads a month", "Feature 3 clips", "Clip Analytics TBD", "Everything in Hustler"],
 };
 const PLACE = ["", "1st", "2nd", "3rd"];
 const PERIOD: Record<string, string> = { week: "Clip of the Week", month: "Clip of the Month", year: "Clip of the Year" };
@@ -311,13 +311,13 @@ export function eventEmail(kind: string, d: D, name: string): Email | null {
       ], [`${name}, "${s(d.title)}" was downloaded. +${money(d.amount)} in your wallet. Balance: ${money(d.balance)}.`], "You're getting this because one of your clips earned money.");
 
     case "clip_approved":
-      return sign("Your clip has been approved", "Your clip has been approved and is now live.", [
+      return sign("Your clip has been approved", "Congratulations! Your clip has been approved and selected for the contest.", [
         heading("Approved.", L),
-        led([["Status", "LIVE"], ["Views", "0"], ["Round", esc(s(d.round, "WEEK"))]]),
-        para(`${hi(name)} your clip has been approved and is now live.`, L),
-        rows([["Clip", esc(s(d.title, "Your clip"))], ["Status", "Approved"]], L),
+        led([["Status", "IN THE CONTEST"], ["Round", esc(s(d.round, "WEEK"))]]),
+        para(`${hi(name)} Congratulations! Your clip has been approved and selected for the contest.`, L),
+        rows([["Clip", esc(s(d.title, "Your clip"))], ["Contest", esc(s(d.round, "This week's round"))], ["Status", "Approved"]], L),
         button("See it on your dashboard", `${SITE}/dashboard`, L),
-      ], [`${name}, your clip has been approved and is now live.`, `${SITE}/dashboard`]);
+      ], [`${name}, congratulations! Your clip has been approved and selected for the contest.`, `${SITE}/dashboard`]);
 
     case "account_deleted":
       return sign("Your account has been deleted", "Your Live From Leonida account is closed.", [
@@ -364,12 +364,13 @@ export function eventEmail(kind: string, d: D, name: string): Email | null {
       ], [`Support replied to ${s(d.subject)}:`, s(d.reply), `${SITE}/support`]);
 
     case "clip_disapproved":
-      return sign("Your clip has been disapproved", "Your clip has been disapproved.", [
-        heading("Disapproved.", L),
-        para(`${hi(name)} your clip has been disapproved.`, L),
-        rows([["Clip", esc(s(d.title, "Your clip"))], ["Status", "Disapproved"]], L),
+      return sign("Your clip was not selected", "Your clip was reviewed but was not selected for this contest.", [
+        heading("Not selected.", L),
+        para(`${hi(name)} your clip was reviewed but was not selected for this contest.`, L),
+        rows([["Clip", esc(s(d.title, "Your clip"))], ["Contest", esc(s(d.round, "This week's round"))], ["Status", "Not selected"], ...(d.reason ? [["Note from the team", esc(s(d.reason))] as [string, string]] : [])], L),
         button("See your dashboard", `${SITE}/dashboard`, L),
-      ], [`${name}, your clip has been disapproved.`, `${SITE}/dashboard`]);
+        small("It still counts toward that week's submissions. Check the contest rules before your next one.", L),
+      ], [`${name}, your clip was reviewed but was not selected for this contest.`, `${SITE}/dashboard`]);
 
     case "prize_won": {
       const place = Math.min(3, Math.max(1, Number(d.place ?? 1)));
