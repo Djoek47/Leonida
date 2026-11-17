@@ -20,16 +20,24 @@ export async function POST(req: NextRequest) {
   const { clipId } = (await req.json()) as { clipId: string };
   const db = admin();
 
+  const owned = async () => {
+    const { data } = await db.from("downloads").select("id").eq("clip_id", clipId).eq("downloader_id", me.id).limit(1);
+    return Boolean(data?.length);
+  };
+
   const { data: clip } = await db.from("clips")
     .select("id, title, owner_id, status, storage_path, watermark_path, source_url").eq("id", clipId).single();
-  if (!clip || !["approved", "featured"].includes(clip.status)) {
+  // A creator can withdraw a clip. It then leaves the site for everyone, except the people who already
+  // downloaded it: they keep it and can fetch it again, free, from their library.
+  const keptByBuyer = clip?.status === "withdrawn" && (await owned());
+  if (!clip || !(["approved", "featured"].includes(clip.status) || keptByBuyer)) {
     return Response.json({ error: "That clip is not available." }, { status: 404 });
   }
 
   // Once its week has closed a clip is archived. It stays available, but the
   // archive is a Kingpin room — including for people who bought it when it
   // was current.
-  const { data: archived } = await db.rpc("clip_archived", { p_clip: clipId });
+  const { data: archived } = keptByBuyer ? { data: false } : await db.rpc("clip_archived", { p_clip: clipId });
   if (archived) {
     const { data: p } = await db.from("profiles").select("tier, subscription_status").eq("id", me.id).single();
     const kingpin = p?.tier === "kingpin" && ["active", "trialing", "past_due"].includes(p.subscription_status ?? "");
@@ -40,11 +48,6 @@ export async function POST(req: NextRequest) {
       }, { status: 403 });
     }
   }
-
-  const owned = async () => {
-    const { data } = await db.from("downloads").select("id").eq("clip_id", clipId).eq("downloader_id", me.id).limit(1);
-    return Boolean(data?.length);
-  };
 
   if (!(await owned())) {
     const { data: prof } = await db.from("profiles").select("tier, subscription_status, stripe_customer_id").eq("id", me.id).single();

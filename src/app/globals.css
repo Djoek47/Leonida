@@ -2250,3 +2250,25 @@ aside .trophy-shelf li { width: 4.1rem; }
   .tank-steps .tank-step:hover .tank-pool { opacity: 1; }
   .tank-foot { overflow-wrap: anywhere; }
 }
+
+/* Withdraw a clip: what happens, in plain words, and an explicit tick before the red button works. */
+.pull-sheet { width: min(100%, 38rem); }
+.pull-list { display: grid; gap: .5rem; margin-top: 1rem; }
+.pull-list li { display: grid; gap: .1rem; padding: .65rem .85rem .65rem 1rem; border-radius: 12px; border: 1px solid var(--line); position: relative; font-size: .92rem; line-height: 1.4; }
+.pull-list li::before { content: ""; position: absolute; left: 0; top: .6rem; bottom: .6rem; width: 4px; border-radius: 4px; }
+.pull-list li b { font-weight: 900; }
+.pull-list li span { color: var(--haze); }
+.pull-list .is-lose { background: color-mix(in srgb, var(--flamingo) 9%, transparent); }
+.pull-list .is-lose::before { background: var(--flamingo); }
+.pull-list .is-keep { background: color-mix(in srgb, var(--gulf) 10%, transparent); }
+.pull-list .is-keep::before { background: var(--gulf); }
+.pull-ack { display: flex; gap: .65rem; align-items: flex-start; margin-top: 1rem; padding: .7rem .85rem; border-radius: 12px; border: 2px dashed var(--line); cursor: pointer; font-weight: 700; font-size: .92rem; }
+.pull-ack input { margin-top: .2rem; width: 1.1rem; height: 1.1rem; accent-color: var(--flamingo); flex: none; }
+.stop-btn:disabled { opacity: .45; cursor: not-allowed; filter: grayscale(.4); }
+.pull-done { display: flex; align-items: flex-start; gap: .75rem; margin-top: 1rem; padding: .8rem 1rem; border-radius: 12px; background: color-mix(in srgb, var(--gulf) 14%, var(--ink)); border: 1px solid color-mix(in srgb, var(--gulf) 50%, var(--line)); }
+.pull-done button { margin-left: auto; font-size: 1.3rem; line-height: 1; opacity: .7; }
+
+/* Your downloads */
+.dl-list { display: grid; gap: .5rem; margin-top: 1rem; }
+.dl-list li { display: flex; align-items: center; gap: .8rem; padding: .7rem 1rem; border-radius: 12px; background: var(--ink); border: 1px solid var(--line); }
+.dl-flag { display: block; margin-top: .15rem; color: var(--flamingo); font-weight: 700; }

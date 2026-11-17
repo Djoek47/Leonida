@@ -10,6 +10,7 @@ import { TrophyCase } from "@/components/TrophyCase";
 import { FeaturedClips } from "@/components/FeaturedClips";
 import { DemoNote } from "@/components/DemoNote";
 import { GetStarted } from "@/components/GetStarted";
+import { DownloadLibrary } from "@/components/DownloadLibrary";
 import { Welcome } from "@/components/Welcome";
 import { GamertagDialog } from "@/components/GamertagDialog";
 import { TierMedal } from "@/components/TierMedal";
@@ -84,23 +85,37 @@ export default function Dashboard() {
   }
   const downloadOnly = (c: Clip) => c.for_contest === false && !c.contest_id && ["approved", "featured"].includes(c.status);
 
-  const [pull, setPull] = useState<{ clip: Clip; votes: number | null; state: "ask" | "busy" | "error"; err?: string } | null>(null);
+  type Pull = { clip: Clip; votes: number | null; buyers: number | null; ack: boolean; state: "ask" | "busy" | "error"; err?: string };
+  const [pull, setPull] = useState<Pull | null>(null);
+  const [pulled, setPulled] = useState<{ title: string; votes: number; views: number; keep: number } | null>(null);
   async function pullOut(c: Clip) {
-    setPull({ clip: c, votes: null, state: "ask" });
+    setPull({ clip: c, votes: null, buyers: null, ack: false, state: "ask" });
     const s = sb();
-    if (s) { const { data } = await s.rpc("my_clip_votes", { p_clip: c.id }); setPull((p) => (p && p.clip.id === c.id ? { ...p, votes: Number(data ?? 0) } : p)); }
-    else setPull((p) => (p ? { ...p, votes: 3 } : p));
+    if (s) {
+      const [v, b] = await Promise.all([s.rpc("my_clip_votes", { p_clip: c.id }), s.rpc("my_clip_buyers", { p_clip: c.id })]);
+      setPull((p) => (p && p.clip.id === c.id ? { ...p, votes: Number(v.data ?? 0), buyers: Number(b.data ?? 0) } : p));
+    } else setPull((p) => (p ? { ...p, votes: 3, buyers: 2 } : p));
   }
   async function confirmPull() {
-    if (!pull) return;
+    if (!pull || !pull.ack) return;
     const c = pull.clip;
     setPull({ ...pull, state: "busy" });
     const s = sb();
+    let out = { votes_removed: pull.votes ?? 0, views_removed: views[c.id]?.views ?? 0, keep_access: pull.buyers ?? 0 };
     if (s) {
-      const { error } = await s.rpc("withdraw_my_clip", { p_clip: c.id, p_reason: null });
-      if (error) { setPull({ ...pull, state: "error", err: "That didn't go through. Try again." }); return; }
+      const { data, error } = await s.rpc("withdraw_my_clip", { p_clip: c.id, p_reason: null });
+      if (error) {
+        const m = error.message ?? "";
+        setPull({ ...pull, state: "error", err: m.includes("ALREADY_PLACED") ? "This clip already placed in a round, so it can't be withdrawn."
+          : m.includes("ROUND_CLOSED") ? "Voting on this round has closed, so the clip can't be withdrawn now."
+          : "That didn't go through. Try again." });
+        return;
+      }
+      if (data) out = data as typeof out;
     }
     setClips((cs) => cs.map((x) => (x.id === c.id ? { ...x, status: "withdrawn" } : x)));
+    setViews((v) => ({ ...v, [c.id]: { views: 0, views_24h: 0 } }));
+    setPulled({ title: c.title, votes: out.votes_removed, views: out.views_removed, keep: out.keep_access });
     setPull(null);
   }
 
@@ -167,25 +182,44 @@ export default function Dashboard() {
 
       {pull && (
         <div className="hub-scrim" onClick={() => pull.state !== "busy" && setPull(null)} onKeyDown={(e) => e.key === "Escape" && pull.state !== "busy" && setPull(null)}>
-          <div role="dialog" aria-modal="true" aria-labelledby="pull-t" className="hub-sheet" onClick={(e) => e.stopPropagation()}>
+          <div role="dialog" aria-modal="true" aria-labelledby="pull-t" className="hub-sheet pull-sheet" onClick={(e) => e.stopPropagation()}>
             <p className="dash-kicker flex items-center gap-2"><i className="stop-mark" aria-hidden>!</i>Withdraw from competition</p>
-            <h2 id="pull-t" className="display text-3xl mt-1">Take “{pull.clip.title}” out?</h2>
-            <dl className="dash-stats !grid-cols-2 !mt-5">
-              <div className="dash-stat"><dt>Votes so far</dt><dd className="text-3xl">{pull.votes ?? "…"}</dd></div>
+            <h2 id="pull-t" className="display text-3xl mt-1">Withdraw “{pull.clip.title}”?</h2>
+            <p className="mt-2 text-haze">This can&apos;t be undone. Here is exactly what happens.</p>
+
+            <dl className="dash-stats !grid-cols-3 !mt-4">
+              <div className="dash-stat"><dt>Votes</dt><dd className="text-3xl">{pull.votes ?? "…"}</dd></div>
               <div className="dash-stat"><dt>Views</dt><dd className="text-3xl">{views[pull.clip.id]?.views ?? 0}</dd></div>
+              <div className="dash-stat"><dt>Bought by</dt><dd className="text-3xl">{pull.buyers ?? "…"}</dd></div>
             </dl>
-            <p className="mt-4 text-haze">
-              {(pull.votes ?? 0) > 0 ? <>People are already backing this clip. Withdrawing throws those votes away and it can&apos;t win this round.</>
-                : <>Withdrawing means it can&apos;t win this round — and it can&apos;t be entered again.</>}
-              {" "}It stays on the site and keeps earning from downloads; we keep the file, as the terms set out.
-            </p>
+
+            <ul className="pull-list">
+              <li className="is-lose"><b>Lost for good</b><span>Every vote on this clip is deleted and its views go back to zero. If you ever re-upload it, it starts from nothing.</span></li>
+              <li className="is-lose"><b>Out of the competition</b><span>It can&apos;t win this round and can&apos;t be entered again. Nobody can vote on it.</span></li>
+              <li className="is-lose"><b>Off the site</b><span>Other people can no longer find it, watch it or buy it, so it stops earning new sales.</span></li>
+              <li className="is-keep"><b>Kept by buyers</b><span>{pull.buyers ? `The ${pull.buyers} ${pull.buyers === 1 ? "person who" : "people who"} already downloaded it` : "Anyone who already downloaded it"} keep it and can download it again from their account. Nobody else can.</span></li>
+              <li className="is-keep"><b>Your earnings stay</b><span>Money from past downloads is yours and stays in your wallet. We keep the file, as the terms set out.</span></li>
+            </ul>
+
+            <label className="pull-ack">
+              <input type="checkbox" checked={pull.ack} onChange={(e) => setPull({ ...pull, ack: e.target.checked })} disabled={pull.state === "busy"} />
+              <span>I understand the votes and views on this clip will be removed and can&apos;t be restored.</span>
+            </label>
             {pull.state === "error" && <p role="alert" className="mt-3 font-semibold text-flamingo">{pull.err}</p>}
-            <div className="mt-6 flex flex-wrap gap-3">
+            <div className="mt-5 flex flex-wrap gap-3">
               <button autoFocus className="btn btn-hot flex-1 justify-center" onClick={() => setPull(null)} disabled={pull.state === "busy"}>Keep it in</button>
-              <button className="stop-btn" onClick={confirmPull} disabled={pull.state === "busy"}><span>{pull.state === "busy" ? "Withdrawing…" : "Withdraw it"}</span></button>
+              <button className="stop-btn" onClick={confirmPull} disabled={!pull.ack || pull.state === "busy"} aria-disabled={!pull.ack}><span>{pull.state === "busy" ? "Withdrawing…" : "Withdraw it"}</span></button>
             </div>
           </div>
         </div>
+      )}
+
+      {pulled && (
+        <p role="status" className="pull-done">
+          <b>“{pulled.title}” is withdrawn.</b> {pulled.votes} vote{pulled.votes === 1 ? "" : "s"} and {pulled.views} view{pulled.views === 1 ? "" : "s"} were removed.
+          {pulled.keep > 0 ? ` The ${pulled.keep} ${pulled.keep === 1 ? "person who" : "people who"} bought it can still download it.` : " Nobody had bought it, so no one else can get it."}
+          <button onClick={() => setPulled(null)} aria-label="Dismiss">×</button>
+        </p>
       )}
 
       <div className="mt-10 grid gap-10 lg:grid-cols-[1.5fr_1fr] items-start">
@@ -214,6 +248,7 @@ export default function Dashboard() {
                       <p className="font-extrabold truncate">{c.id === best && <span className="best-tag">Best seller</span>}{c.title}</p>
                       <span className={`clip-state ${kind}`}>{label}</span>
                       {downloadOnly(c) && <span className="clip-state off ml-2">Download only</span>}
+                      {c.status === "withdrawn" && (s?.downloads ?? 0) > 0 && <span className="text-xs text-haze ml-2">{s?.downloads} can still download it</span>}
                       {enterErr?.id === c.id && <p role="alert" className="mt-1 text-xs font-semibold text-flamingo">{enterErr.text}</p>}
                     </div>
                     <div className="sales-n" title={`${views[c.id]?.views_24h ?? 0} in the last 24 hours`}><b>{views[c.id]?.views ?? 0}</b><small>views</small></div>
@@ -256,6 +291,8 @@ export default function Dashboard() {
           ladder beside a short list of clips, which left the page half
           empty for anyone who hasn't filled it yet; across the page the
           shelves lay out as shelves. */}
+      <DownloadLibrary />
+
       <FeaturedClips clips={clips} />
 
       <div className="mt-10"><TrophyCase /></div>
