@@ -2272,3 +2272,112 @@ aside .trophy-shelf li { width: 4.1rem; }
 .dl-list { display: grid; gap: .5rem; margin-top: 1rem; }
 .dl-list li { display: flex; align-items: center; gap: .8rem; padding: .7rem 1rem; border-radius: 12px; background: var(--ink); border: 1px solid var(--line); }
 .dl-flag { display: block; margin-top: .15rem; color: var(--flamingo); font-weight: 700; }
+
+/* ── Trophy summary (dashboard) ── */
+.t-ring { position: relative; display: inline-grid; place-items: center; flex: none; }
+.t-ring svg { position: absolute; inset: 0; width: 100%; height: 100%; }
+.t-ring > span { font-size: .72rem; font-weight: 900; }
+.tsum { border-radius: 18px; padding: 1.25rem; border: 1px solid var(--line); background:
+  radial-gradient(120% 140% at 100% 0%, color-mix(in srgb, var(--mango) 22%, transparent), transparent 55%), var(--ink); }
+.tsum-head { display: flex; align-items: flex-end; justify-content: space-between; gap: 1rem; flex-wrap: wrap; }
+.tsum-new { margin-left: .5rem; padding: .1rem .5rem; border-radius: 99px; background: var(--flamingo); color: #fff; letter-spacing: .08em; }
+.tsum-rooms { display: grid; grid-template-columns: repeat(9, minmax(0, 1fr)); gap: .4rem; margin-top: 1rem; }
+.tsum-rooms a { display: grid; justify-items: center; gap: .3rem; padding: .55rem .2rem; border-radius: 12px; text-align: center; transition: background .2s, transform .2s; }
+.tsum-rooms a:hover { background: color-mix(in srgb, var(--mango) 18%, transparent); transform: translateY(-2px); }
+.tsum-rooms a > span:last-child { font-size: .66rem; font-weight: 800; line-height: 1.1; color: var(--haze); }
+.tsum-foot { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: .6rem 1.2rem; margin-top: .9rem; padding-top: .9rem; border-top: 1px dashed var(--line); }
+.tsum-latest { display: flex; flex-wrap: wrap; align-items: center; gap: .4rem; }
+.tsum-chip { display: inline-flex; align-items: center; gap: .35rem; padding: .15rem .6rem .15rem .2rem; border-radius: 99px; border: 1px solid var(--line); font-size: .75rem; font-weight: 800; }
+@media (max-width: 720px) { .tsum-rooms { grid-template-columns: repeat(5, minmax(0, 1fr)); } }
+
+/* ── Trophy museum (3D) ── */
+.mz { position: relative; height: min(78svh, 820px); min-height: 460px; border-radius: 20px; overflow: hidden; isolation: isolate;
+  border: 1px solid var(--line); background: #140a26; color: #fff1e8; outline: none; box-shadow: 0 24px 60px -30px rgba(0,0,0,.7); }
+.mz:focus-visible { box-shadow: 0 0 0 3px var(--mango); }
+.mz.is-full, .mz:fullscreen { height: 100vh; border-radius: 0; border: 0; }
+.mz-canvas { position: absolute; inset: 0; cursor: grab; }
+.mz-canvas:active { cursor: grabbing; }
+.mz-loading { position: absolute; inset: 0; display: grid; place-content: center; justify-items: center; gap: .8rem; font-weight: 800; letter-spacing: .04em;
+  background: radial-gradient(circle at 50% 120%, #ff3d8b55, transparent 60%), #140a26; z-index: 5; }
+.mz-spin { width: 2.4rem; height: 2.4rem; border-radius: 50%; border: 3px solid #ffffff22; border-top-color: #ffc23d; animation: mz-spin 0.9s linear infinite; }
+@keyframes mz-spin { to { transform: rotate(1turn); } }
+.mz-skel { display: block; }
+.mz-glass, .mz-title, .mz-tools button, .mz-total, .mz-side, .mz-card, .mz-nav, .mz-map, .mz-hint {
+  background: rgba(16, 8, 30, .62); backdrop-filter: blur(10px) saturate(1.3); -webkit-backdrop-filter: blur(10px) saturate(1.3); border: 1px solid rgba(255, 255, 255, .12); }
+.mz-top { position: absolute; z-index: 3; top: .8rem; left: .8rem; right: .8rem; display: flex; justify-content: space-between; align-items: flex-start; gap: .6rem; pointer-events: none; }
+.mz-top > * { pointer-events: auto; }
+.mz-title { padding: .55rem .9rem; border-radius: 14px; }
+.mz-kicker { font-size: .62rem; font-weight: 900; letter-spacing: .22em; text-transform: uppercase; color: #ffc23d; }
+.mz-room { font-family: var(--font-display, inherit); font-size: 1.35rem; font-weight: 900; line-height: 1.1; }
+.mz-room span { font-size: .85rem; color: #bfaedc; margin-left: .3rem; white-space: nowrap; }
+.mz-tools { display: flex; gap: .4rem; align-items: center; flex-wrap: wrap; justify-content: flex-end; }
+.mz-tools button, .mz-total { padding: .45rem .8rem; border-radius: 99px; font-size: .78rem; font-weight: 800; color: #fff1e8; }
+.mz-tools button:hover { background: rgba(255, 61, 139, .35); }
+.mz-total b { color: #ffc23d; font-size: 1rem; }
+.mz-hint { position: absolute; z-index: 3; left: 50%; top: 5.2rem; transform: translateX(-50%); padding: .45rem .9rem; border-radius: 99px; font-size: .78rem; white-space: nowrap; animation: mz-fade 9s ease forwards; pointer-events: none; }
+.mz-hint b { color: #ffc23d; }
+@keyframes mz-fade { 0%, 80% { opacity: 1; } 100% { opacity: 0; } }
+
+.mz-side { position: absolute; z-index: 3; left: .8rem; top: 5.6rem; bottom: 6.2rem; width: 15.5rem; border-radius: 16px; display: flex; flex-direction: column; overflow: hidden; }
+.mz-side-toggle { display: none; }
+.mz-side-body { overflow-y: auto; padding: .4rem; scrollbar-width: thin; }
+.mz-list { display: grid; gap: .2rem; }
+.mz-list button { width: 100%; display: flex; align-items: center; gap: .55rem; padding: .4rem .5rem; border-radius: 10px; text-align: left; font-size: .8rem; font-weight: 800; color: #fff1e8; transition: background .15s; }
+.mz-list button:hover, .mz-list button[aria-pressed="true"] { background: rgba(255, 194, 61, .16); }
+.mz-list button > span:not(.t-ring) { flex: 1; min-width: 0; line-height: 1.2; }
+.mz-list button.is-locked > span:not(.t-ring) { color: #bfaedc; }
+.mz-list em { font-style: normal; font-size: .7rem; color: #bfaedc; }
+.mz-list button.is-earned em { color: #5ef0a8; }
+.mz-list .badge-coin { animation: none; }
+.mz-new { margin-left: .35rem; padding: 0 .35rem; border-radius: 99px; background: #ff3d8b; color: #fff; font-style: normal; font-size: .6rem; vertical-align: 1px; }
+
+.mz-card { position: absolute; z-index: 4; right: .8rem; top: 5.6rem; width: min(21rem, calc(100% - 1.6rem)); padding: .9rem 1rem; border-radius: 16px; border-color: color-mix(in srgb, var(--c) 60%, transparent);
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--c) 30%, transparent), 0 18px 40px -18px var(--c); pointer-events: none; animation: mz-in .25s ease; }
+.mz-card.is-open { pointer-events: auto; }
+@keyframes mz-in { from { opacity: 0; transform: translateY(6px); } }
+.mz-card-cat { font-size: .62rem; font-weight: 900; letter-spacing: .18em; text-transform: uppercase; color: var(--c); filter: brightness(1.5); }
+.mz-card-name { font-size: 1.15rem; font-weight: 900; line-height: 1.15; }
+.mz-x { margin-left: auto; align-self: flex-start; font-size: 1.4rem; line-height: 1; opacity: .7; color: #fff; }
+.mz-bar { margin-top: .7rem; height: 8px; border-radius: 99px; background: rgba(255, 255, 255, .12); overflow: hidden; }
+.mz-bar span { display: block; height: 100%; border-radius: inherit; background: linear-gradient(90deg, var(--c), #ffc23d); }
+.mz-dim { color: #bfaedc; }
+.mz-cta { display: inline-block; margin-top: .7rem; padding: .4rem .85rem; border-radius: 99px; background: #ff3d8b; color: #fff; font-size: .8rem; font-weight: 900; }
+
+.mz-bottom { position: absolute; z-index: 3; left: .8rem; right: .8rem; bottom: .8rem; display: flex; justify-content: center; align-items: flex-end; gap: .8rem; pointer-events: none; }
+.mz-bottom > * { pointer-events: auto; }
+.mz-nav { display: flex; align-items: center; gap: .3rem; padding: .3rem; border-radius: 99px; }
+.mz-nav span { min-width: 9.5rem; text-align: center; font-weight: 900; font-size: .9rem; }
+.mz-nav button { width: 2.4rem; height: 2.4rem; border-radius: 50%; font-size: 1.5rem; line-height: 1; color: #fff; background: rgba(255, 61, 139, .3); transition: background .15s, transform .15s; }
+.mz-nav button:hover { background: #ff3d8b; transform: scale(1.06); }
+.mz-map { position: absolute; right: 0; bottom: 0; width: 15rem; height: auto; padding: .35rem; border-radius: 14px; }
+.mz-map-hall { fill: rgba(255, 255, 255, .08); stroke: rgba(255, 255, 255, .25); stroke-width: .25; cursor: pointer; }
+.mz-map-hall.is-here { fill: rgba(255, 194, 61, .2); }
+.mz-map-bay { cursor: pointer; }
+.mz-map-bay rect { stroke: rgba(255, 255, 255, .3); stroke-width: .25; transition: stroke .2s; }
+.mz-map-bay.is-here rect { stroke: #ffc23d; stroke-width: .6; }
+.mz-map-me { fill: #ff3d8b; stroke: #fff; stroke-width: .3; }
+
+.mz-joy { display: none; position: absolute; z-index: 3; left: 1rem; bottom: 1rem; width: 7rem; height: 7rem; border-radius: 50%; touch-action: none;
+  background: radial-gradient(circle, rgba(255,255,255,.08), rgba(16,8,30,.55)); border: 1px solid rgba(255,255,255,.2); }
+.mz-joy span { position: absolute; left: 50%; top: 50%; width: 2.8rem; height: 2.8rem; margin: -1.4rem 0 0 -1.4rem; border-radius: 50%; background: radial-gradient(circle at 35% 30%, #ff8fbd, #ff3d8b); box-shadow: 0 4px 14px rgba(255, 61, 139, .6); }
+.mz-empty { border-radius: 20px; padding: 3rem 1.5rem; text-align: center; border: 1px dashed var(--line); background: var(--ink); }
+
+@media (pointer: coarse) { .mz-joy { display: block; } .mz-hint { display: none; } }
+@media (max-width: 860px) {
+  .mz { height: 76svh; }
+  .mz-side { top: auto; bottom: 9.2rem; left: auto; right: .8rem; width: auto; max-width: calc(100% - 1.6rem); background: transparent; border: 0; backdrop-filter: none; -webkit-backdrop-filter: none; align-items: flex-end; }
+  .mz-side-toggle { display: block; padding: .45rem .85rem; border-radius: 99px; font-size: .78rem; font-weight: 900; color: #fff; background: rgba(16, 8, 30, .7); border: 1px solid rgba(255,255,255,.2); }
+  .mz-side-body { display: none; }
+  .mz-side.is-open { background: rgba(16, 8, 30, .85); border: 1px solid rgba(255,255,255,.14); backdrop-filter: blur(10px); width: min(18rem, calc(100% - 1.6rem)); max-height: 55%; top: 5.6rem; }
+  .mz-side.is-open .mz-side-body { display: block; }
+  .mz-side.is-open .mz-side-toggle { align-self: stretch; border-radius: 0; background: transparent; border: 0; border-bottom: 1px solid rgba(255,255,255,.12); }
+  .mz-bottom { flex-direction: column; align-items: flex-end; }
+  .mz-map { position: static; width: 11rem; }
+  .mz-nav span { min-width: 6.5rem; font-size: .8rem; }
+  .mz-card { top: auto; bottom: 9.2rem; left: .8rem; right: auto; }
+  .mz-kicker { display: none; }
+  .mz-room { font-size: 1.05rem; }
+  .mz-fs { display: none; }
+  .mz-tools button, .mz-total { padding: .4rem .65rem; }
+}
+@media (prefers-reduced-motion: reduce) { .mz-hint, .mz-card, .mz-spin { animation: none; } }
