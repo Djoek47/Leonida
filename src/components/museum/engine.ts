@@ -12,11 +12,14 @@ const sideOf = (ci: number) => (ci % 2 === 0 ? -1 : 1);
 
 export type Palette = { wall: string; trim: string; floor: string; neonA: string; neonB: string; neonC: string; dark: boolean };
 export type MuseumOpts = {
-  palette: Palette; reduced: boolean; startRoom: number;
+  palette: Palette; reduced: boolean; startRoom: number; look?: LookSettings;
   onRoom(i: number): void; onSelect(id: string | null): void; onHover(id: string | null): void;
   onPose(x: number, z: number, yaw: number): void; onReady(): void;
 };
+export type LookSettings = { invertX: boolean; invertY: boolean; sensitivity: number; speed: number; fov: number };
+export const DEFAULT_LOOK: LookSettings = { invertX: false, invertY: false, sensitivity: 1, speed: 1, fov: 62 };
 export type MuseumApi = {
+  setLook(s: LookSettings): void;
   goRoom(i: number): void; focus(id: string): void; unfocus(): void; setMove(x: number, y: number): void;
   setPalette(p: Palette): void; dispose(): void;
 };
@@ -414,6 +417,7 @@ export function createMuseum(host: HTMLElement, keyTarget: HTMLElement, rows: Tr
   resizeNow();
   flyTo(station(opts.startRoom), opts.startRoom ? 2.4 : 1.8);
 
+  let look: LookSettings = { ...DEFAULT_LOOK, ...(opts.look ?? {}) };
   const keys = new Set<string>();
   let joy = { x: 0, y: 0 };
   const onKey = (e: KeyboardEvent) => {
@@ -442,7 +446,7 @@ export function createMuseum(host: HTMLElement, keyTarget: HTMLElement, rows: Tr
     pointer = { x: e.clientX, y: e.clientY };
     if (!drag || e.pointerId !== drag.id) return;
     const dx = e.clientX - drag.x, dy = e.clientY - drag.y; drag.x = e.clientX; drag.y = e.clientY; drag.moved += Math.abs(dx) + Math.abs(dy);
-    if (drag.moved > 4) { tween = null; const k = e.pointerType === "touch" ? 0.006 : 0.0042; pose.yaw += dx * k; pose.pitch = Math.max(-0.7, Math.min(0.6, pose.pitch + dy * k)); }
+    if (drag.moved > 4) { tween = null; const k = (e.pointerType === "touch" ? 0.006 : 0.0042) * look.sensitivity; pose.yaw -= dx * k * (look.invertX ? -1 : 1); pose.pitch = Math.max(-0.7, Math.min(0.6, pose.pitch - dy * k * (look.invertY ? -1 : 1))); }
   };
   const up = (e: PointerEvent) => {
     if (!drag || e.pointerId !== drag.id) return;
@@ -452,7 +456,7 @@ export function createMuseum(host: HTMLElement, keyTarget: HTMLElement, rows: Tr
   const leave = () => { pointer = null; };
   el.addEventListener("pointerdown", down); el.addEventListener("pointermove", move); el.addEventListener("pointerup", up); el.addEventListener("pointercancel", up); el.addEventListener("pointerleave", leave);
 
-  const resize = () => { const w = host.clientWidth, h = host.clientHeight; if (!w || !h) return; renderer.setSize(w, h, false); camera.aspect = w / h; camera.fov = w / h < 0.8 ? 74 : 62; camera.updateProjectionMatrix(); };
+  const resize = () => { const w = host.clientWidth, h = host.clientHeight; if (!w || !h) return; renderer.setSize(w, h, false); camera.aspect = w / h; camera.fov = w / h < 0.8 ? look.fov + 12 : look.fov; camera.updateProjectionMatrix(); };
   const ro = new ResizeObserver(resize); ro.observe(host); resize();
 
   const roomAt = () => {
@@ -483,7 +487,7 @@ export function createMuseum(host: HTMLElement, keyTarget: HTMLElement, rows: Tr
       const sd = (keys.has("d") ? 1 : 0) - (keys.has("a") ? 1 : 0) + joy.x;
       pose.yaw += ((keys.has("arrowleft") ? 1 : 0) - (keys.has("arrowright") ? 1 : 0)) * dt * 1.8;
       if (f || sd) {
-        const sp = (keys.has("shift") ? 6 : 3.2) * dt;
+        const sp = (keys.has("shift") ? 6 : 3.2) * look.speed * dt;
         fwd.set(-Math.sin(pose.yaw), 0, -Math.cos(pose.yaw)); right.set(Math.cos(pose.yaw), 0, -Math.sin(pose.yaw));
         const nx = pose.p.x + (fwd.x * f + right.x * sd) * sp, nz = pose.p.z + (fwd.z * f + right.z * sd) * sp;
         if (walkable(nx, nz)) { pose.p.x = nx; pose.p.z = nz; }
@@ -526,6 +530,7 @@ export function createMuseum(host: HTMLElement, keyTarget: HTMLElement, rows: Tr
   loop();
 
   const api: MuseumApi = {
+    setLook(n) { look = { ...n }; resize(); },
     goRoom(i) { if (focused) { focused = null; before = null; opts.onSelect(null); } flyTo(station(i)); },
     focus(id) {
       const it = items.find((x) => x.id === id); if (!it) return;

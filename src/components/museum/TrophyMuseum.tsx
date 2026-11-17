@@ -3,7 +3,11 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Link from "@/components/A";
 import { Medal, Ring, TrophyList } from "@/components/TrophyCase";
 import { ACTION, HUE, ROOMS, WINGS, fmt, pct, roomOf, statusLine, type Trophy } from "@/lib/trophies";
-import type { MuseumApi, Palette } from "./engine";
+import type { LookSettings, MuseumApi, Palette } from "./engine";
+
+const LOOK0: LookSettings = { invertX: false, invertY: false, sensitivity: 1, speed: 1, fov: 62 };
+const LOOK_KEY = "lfl:museum-look";
+const loadLook = (): LookSettings => { try { return { ...LOOK0, ...JSON.parse(localStorage.getItem(LOOK_KEY) ?? "{}") }; } catch { return LOOK0; } };
 
 const css = (n: string) => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
 function readPalette(): Palette {
@@ -59,6 +63,7 @@ export function TrophyMuseum({ rows }: { rows: Trophy[] }) {
   const [mode, setMode] = useState<"3d" | "list">("3d");
   const [ready, setReady] = useState(false), [failed, setFailed] = useState(false);
   const [room, setRoom] = useState(0), [sel, setSel] = useState<string | null>(null), [hover, setHover] = useState<string | null>(null);
+  const [look, setLook] = useState<LookSettings>(LOOK0), [gear, setGear] = useState(false);
   const [panel, setPanel] = useState(false), [hint, setHint] = useState(true), [full, setFull] = useState(false);
 
   useEffect(() => {
@@ -72,7 +77,7 @@ export function TrophyMuseum({ rows }: { rows: Trophy[] }) {
       if (!live || !host.current || !wrap.current) return;
       try {
         m = createMuseum(host.current, wrap.current, rows, {
-          palette: readPalette(), reduced, startRoom,
+          palette: readPalette(), reduced, startRoom, look: loadLook(),
           onRoom: setRoom, onSelect: setSel, onHover: setHover, onReady: () => setReady(true),
           onPose: (x, z, yaw) => dot.current?.setAttribute("transform", `translate(${-z} ${x}) rotate(${(-yaw * 180) / Math.PI})`),
         });
@@ -86,6 +91,8 @@ export function TrophyMuseum({ rows }: { rows: Trophy[] }) {
     return () => { live = false; m?.dispose(); api.current = null; mo.disconnect(); mq.removeEventListener("change", onMq); clearTimeout(tm); setReady(false); };
   }, [rows, mode]);
 
+  useEffect(() => { setLook(loadLook()); }, []);
+  const changeLook = (p: Partial<LookSettings>) => setLook((l) => { const n = { ...l, ...p }; try { localStorage.setItem(LOOK_KEY, JSON.stringify(n)); } catch { /* private mode */ } api.current?.setLook(n); return n; });
   useEffect(() => { const f = () => setFull(document.fullscreenElement === wrap.current); document.addEventListener("fullscreenchange", f); return () => document.removeEventListener("fullscreenchange", f); }, []);
 
   const go = useCallback((i: number) => { api.current?.goRoom((i + 10) % 10); setHint(false); }, []);
@@ -122,10 +129,23 @@ export function TrophyMuseum({ rows }: { rows: Trophy[] }) {
         </div>
         <div className="mz-tools">
           <span className="mz-total"><b>{got}</b> / {rows.length}</span>
+          <button onClick={() => setGear((v) => !v)} aria-expanded={gear} title="Camera settings">Settings</button>
           <button onClick={() => setMode("list")} title="Show as a list">List</button>
           <button className="mz-fs" onClick={() => (full ? document.exitFullscreen() : wrap.current?.requestFullscreen?.())} title={full ? "Exit full screen" : "Full screen"}>{full ? "Exit" : "Full screen"}</button>
         </div>
       </div>
+
+      {gear && (
+        <div className="mz-gear" role="dialog" aria-label="Camera settings">
+          <div className="flex items-center justify-between"><p className="mz-card-name">Camera settings</p><button className="mz-x" onClick={() => setGear(false)} aria-label="Close">×</button></div>
+          <label><input type="checkbox" checked={look.invertX} onChange={(e) => changeLook({ invertX: e.target.checked })} /> Invert horizontal look</label>
+          <label><input type="checkbox" checked={look.invertY} onChange={(e) => changeLook({ invertY: e.target.checked })} /> Invert vertical look</label>
+          <label>Look sensitivity <b>{look.sensitivity.toFixed(1)}×</b><input type="range" min={0.3} max={2.5} step={0.1} value={look.sensitivity} onChange={(e) => changeLook({ sensitivity: Number(e.target.value) })} /></label>
+          <label>Walk speed <b>{look.speed.toFixed(1)}×</b><input type="range" min={0.5} max={2} step={0.1} value={look.speed} onChange={(e) => changeLook({ speed: Number(e.target.value) })} /></label>
+          <label>Field of view <b>{look.fov}°</b><input type="range" min={50} max={90} step={1} value={look.fov} onChange={(e) => changeLook({ fov: Number(e.target.value) })} /></label>
+          <button className="mz-reset" onClick={() => changeLook(LOOK0)}>Reset to defaults</button>
+        </div>
+      )}
 
       {hint && ready && <p className="mz-hint">Drag to look around · <b>WASD</b> or the stick to walk · click a trophy to inspect it</p>}
 

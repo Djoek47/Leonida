@@ -2440,3 +2440,11 @@ a.edge-card:hover b i { transform: translateX(4px); }
 .brief-teasers li { display: flex; justify-content: space-between; gap: 1rem; padding: .75rem 1.2rem; border-bottom: 1px solid var(--line); filter: blur(.4px); opacity: .75; }
 .brief-teasers li span { color: var(--haze); font-size: .8rem; flex: none; }
 
+.mz-gear { position: absolute; z-index: 5; right: .8rem; top: 5.6rem; width: min(18rem, calc(100% - 1.6rem)); display: grid; gap: .7rem; padding: .9rem 1rem; border-radius: 16px;
+  background: rgba(16, 8, 30, .82); backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,.14); font-size: .82rem; font-weight: 700; }
+.mz-gear label { display: grid; gap: .3rem; }
+.mz-gear label:has(input[type=checkbox]) { display: flex; align-items: center; gap: .5rem; }
+.mz-gear b { color: #ffc23d; float: right; }
+.mz-gear input[type=range] { accent-color: #ff3d8b; width: 100%; }
+.mz-gear input[type=checkbox] { accent-color: #ff3d8b; width: 1rem; height: 1rem; }
+.mz-reset { justify-self: start; font-size: .75rem; text-decoration: underline; color: #bfaedc; }
