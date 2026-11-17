@@ -1,7 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
 import Link from "@/components/A";
-import { LAUNCH } from "@/lib/content";
+import { EDGE_OPENS, LAUNCH } from "@/lib/content";
 
 /** The Edge is behind a roadblock until the game is. Nothing to read here
  *  yet, deliberately: a closed road, a counter, and the one date that
@@ -35,8 +35,11 @@ export default function Edge() {
     fetch(BACKDROP, { method: "HEAD" }).then((r) => setFilm(r.ok)).catch(() => {});
     return () => clearInterval(id);
   }, []);
-  const open = now !== null && now >= new Date(LAUNCH).getTime();
-  const [d, h, m, s] = parts(now === null ? 0 : new Date(LAUNCH).getTime() - now);
+  const opens = new Date(EDGE_OPENS).getTime();
+  const open = now !== null && now >= opens;
+  const gameOut = now !== null && now >= new Date(LAUNCH).getTime();
+  const [d, h, m, s] = parts(now === null ? 0 : opens - now);
+  const longDay = (iso: string) => new Date(iso).toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric", timeZone: "America/Toronto" });
 
   return (
     <div className={`edge-road${film ? " has-film" : ""}`}>
@@ -47,16 +50,17 @@ export default function Edge() {
       <div className="edge-horizon" aria-hidden />
       <div className="edge-lane" aria-hidden><i /><i /><i /><i /><i /><i /></div>
       <div className="edge-beam" aria-hidden />
+      <div className="edge-motes" aria-hidden>{Array.from({ length: 14 }, (_, i) => <i key={i} style={{ "--m": i } as React.CSSProperties} />)}</div>
       <div className="edge-vig" aria-hidden />
 
       <main className="edge-scene">
         <p className="edge-k"><i className="edge-dot" aria-hidden />State route 6 · Leonida</p>
 
         <div className="edge-barrier">
-          <div className="edge-sign" role="img" aria-label="Road closed until the game launches">
+          <div className="edge-sign" role="img" aria-label="Road closed until two days after the game launches">
             <span className="edge-stripe t" aria-hidden />
             <h1>ROAD<br />CLOSED</h1>
-            <p>THE EDGE OPENS WITH THE GAME</p>
+            <p>{gameOut ? "THE GAME IS OUT · THE EDGE OPENS IN 2 DAYS" : "THE EDGE OPENS 2 DAYS AFTER THE GAME"}</p>
             <span className="edge-stripe b" aria-hidden />
           </div>
           <span className="edge-leg l" aria-hidden /><span className="edge-leg r" aria-hidden />
@@ -70,20 +74,23 @@ export default function Edge() {
             <div className="edge-timer" role="timer" aria-label={`${+d} days ${+h} hours ${+m} minutes ${+s} seconds until launch`}>
               {([["DAYS", d], ["HRS", h], ["MIN", m], ["SEC", s]] as const).map(([k, v]) => (
                 <span key={k} className="edge-cell">
-                  <b suppressHydrationWarning>{now === null ? "--" : v}</b>
+                  <b key={v} className="edge-digit" suppressHydrationWarning>{now === null ? "--" : v}</b>
                   <small>{k}</small>
                 </span>
               ))}
             </div>
             <p className="edge-when">
-              {new Date(LAUNCH).toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric" })} · PS5 and Xbox Series X|S
+              {gameOut ? "GTA VI is out" : `GTA VI lands ${longDay(LAUNCH)}`} · The Edge opens {longDay(EDGE_OPENS)}
             </p>
           </>
         )}
 
         <ul className="edge-behind">
-          {BEHIND.map(([name, what, href]) => (
-            <li key={name}><b>{href ? <Link href={href}>{name}</Link> : name}</b><span>{what}</span></li>
+          {BEHIND.map(([name, what, href], i) => (
+            <li key={name} style={{ "--i": i } as React.CSSProperties}>
+              {href ? <Link href={href} className="edge-card"><b>{name}<i aria-hidden>→</i></b><span>{what}</span></Link>
+                : <div className="edge-card"><b>{name}</b><span>{what}</span></div>}
+            </li>
           ))}
         </ul>
         <p className="edge-foot">Built from real play, not rumours. That&apos;s why it waits for the game.</p>

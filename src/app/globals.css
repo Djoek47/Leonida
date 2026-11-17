@@ -1597,14 +1597,45 @@ aside .trophy-shelf li { width: 4.1rem; }
 .edge-when { font-size: .78rem; font-weight: 900; letter-spacing: .14em; text-transform: uppercase; color: #d8b36a; }
 .edge-open { max-width: 34rem; font-weight: 700; font-size: 1.1rem; color: #f2e7d2; }
 /* what's waiting on the other side */
-.edge-behind { display: grid; gap: .5rem; margin-top: .6rem; width: min(100%, 44rem); text-align: left; }
-@media (min-width: 760px) { .edge-behind { grid-template-columns: repeat(3, 1fr); } }
-.edge-behind li { border: 1px solid rgba(217,180,106,.3); border-left: 3px solid #d9b46a; border-radius: 8px;
-  padding: .7rem .9rem; background: rgba(8,6,4,.62); }
-.edge-behind b { display: block; font-size: .85rem; color: #f2e7d2; }
+.edge-behind { display: grid; gap: .75rem; margin: .6rem auto 0; width: min(100%, 38rem); text-align: left; justify-self: center; }
+@media (min-width: 640px) { .edge-behind { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+.edge-behind li { display: flex; animation: edge-pop .6s cubic-bezier(.2,1.4,.4,1) both; animation-delay: calc(1.25s + var(--i, 0) * .15s); }
+.edge-card { flex: 1; display: block; border: 1px solid rgba(217,180,106,.3); border-left: 3px solid #d9b46a; border-radius: 10px;
+  padding: .85rem 1rem; background: rgba(8,6,4,.66); transition: transform .25s cubic-bezier(.2,1.4,.4,1), border-color .25s, box-shadow .25s; }
+a.edge-card:hover, a.edge-card:focus-visible { transform: translateY(-4px); border-color: #e8842b; box-shadow: 0 14px 30px -14px rgba(232,132,43,.7); }
+.edge-card b i { font-style: normal; margin-left: .4rem; display: inline-block; transition: transform .25s; color: #e8842b; }
+a.edge-card:hover b i { transform: translateX(4px); }
+.edge-behind b { display: block; font-size: .9rem; color: #f2e7d2; }
 .edge-behind span { display: block; margin-top: .2rem; font-size: .76rem; line-height: 1.5; color: #a9977a; }
 .edge-foot { font-size: .78rem; color: #8d7c62; }
-@media (prefers-reduced-motion: reduce) { .edge-dot, .edge-lamp { animation: none; } .edge-film { display: none; } }
+/* Life: the scene assembles itself, then keeps breathing. */
+@keyframes edge-pop { from { opacity: 0; transform: translateY(18px) scale(.94); } }
+@keyframes edge-drop { 0% { opacity: 0; transform: translateY(-140px) rotate(-6deg); } 60% { opacity: 1; transform: translateY(8px) rotate(-.4deg); } 80% { transform: translateY(-4px) rotate(-1.6deg); } 100% { transform: none; } }
+@keyframes edge-sway { 0%, 100% { transform: rotate(-1.2deg); } 50% { transform: rotate(-.3deg); } }
+@keyframes edge-tick { from { transform: translateY(-35%); opacity: .2; filter: blur(1px); } }
+@keyframes edge-breathe { 0%, 100% { opacity: .75; } 50% { opacity: 1.15; } }
+@keyframes edge-dash { 0%, 100% { opacity: .35; } 50% { opacity: 1; } }
+@keyframes edge-float { from { transform: translate3d(0, 0, 0); opacity: 0; } 15% { opacity: .9; } to { transform: translate3d(var(--dx), -42vh, 0); opacity: 0; } }
+.edge-k { animation: edge-pop .5s ease both .1s; }
+.edge-barrier { animation: edge-drop 1s cubic-bezier(.3,.9,.4,1) both .25s; }
+.edge-sign { animation: edge-sway 6s ease-in-out infinite 1.4s; transform-origin: 50% 0; }
+.edge-timer { animation: edge-pop .6s cubic-bezier(.2,1.4,.4,1) both .85s; }
+.edge-when, .edge-open { animation: edge-pop .5s ease both 1.05s; }
+.edge-foot { animation: edge-pop .5s ease both 1.6s; }
+.edge-digit { display: inline-block; animation: edge-tick .35s cubic-bezier(.2,1.2,.4,1); }
+.edge-beam { animation: edge-breathe 5s ease-in-out infinite; }
+.edge-lane i { animation: edge-dash 2.4s ease-in-out infinite; }
+.edge-lane i:nth-child(1) { animation-delay: 0s; } .edge-lane i:nth-child(2) { animation-delay: .25s; } .edge-lane i:nth-child(3) { animation-delay: .5s; }
+.edge-lane i:nth-child(4) { animation-delay: .75s; } .edge-lane i:nth-child(5) { animation-delay: 1s; } .edge-lane i:nth-child(6) { animation-delay: 1.25s; }
+.edge-motes { position: absolute; inset: 0; pointer-events: none; z-index: 1; }
+.edge-motes i { position: absolute; bottom: 12%; left: calc(30% + var(--m) * 3%); width: 4px; height: 4px; border-radius: 50%;
+  background: #ffb35a; box-shadow: 0 0 8px 2px rgba(255,150,60,.6); --dx: calc((var(--m) - 7) * 6px);
+  animation: edge-float calc(7s + var(--m) * .45s) linear infinite; animation-delay: calc(var(--m) * -.9s); }
+.edge-motes i:nth-child(3n) { width: 3px; height: 3px; background: #ffd79a; }
+@media (prefers-reduced-motion: reduce) {
+  .edge-dot, .edge-lamp, .edge-k, .edge-barrier, .edge-sign, .edge-timer, .edge-when, .edge-open, .edge-foot, .edge-digit, .edge-beam, .edge-lane i, .edge-behind li { animation: none; }
+  .edge-sign { transform: rotate(-1.2deg); } .edge-motes, .edge-film { display: none; }
+}
 
 /* ——— Console: the review queue, built for volume ——— */
 .q-bar { display: flex; flex-wrap: wrap; gap: 1.2rem; align-items: baseline; border: 2px solid var(--line);
@@ -2408,4 +2439,4 @@ aside .trophy-shelf li { width: 4.1rem; }
 .brief-teasers { display: grid; border-top: 1px solid var(--line); }
 .brief-teasers li { display: flex; justify-content: space-between; gap: 1rem; padding: .75rem 1.2rem; border-bottom: 1px solid var(--line); filter: blur(.4px); opacity: .75; }
 .brief-teasers li span { color: var(--haze); font-size: .8rem; flex: none; }
-.edge-behind a { text-decoration: underline; text-underline-offset: 3px; }
+

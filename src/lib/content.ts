@@ -2,6 +2,8 @@
 // Update this file whenever Rockstar publishes new information.
 
 export const LAUNCH = "2026-11-19T00:00:00-05:00"; // PS5 & Xbox Series X|S
+/** The Edge stays closed for two days after launch, so the first briefings come from real play. */
+export const EDGE_OPENS = "2026-11-21T00:00:00-05:00";
 
 /** Each place's sign colour, sampled from that place's own screenshots.
  *  Not picked by eye: the hue is the one that place carries far more of than
