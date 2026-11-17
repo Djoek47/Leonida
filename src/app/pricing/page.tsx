@@ -137,10 +137,12 @@ export default function Pricing() {
 
               <h2 className="display text-4xl text-center">{t.label}</h2>
 
-              <p className="plan-price">
-                <span className="display">{t.monthlyCents ? price(cents) : "$0"}</span>
-                {t.monthlyCents > 0 && <span className="plan-per">/{annual ? "year" : "month"}</span>}
-              </p>
+              {t.monthlyCents > 0 && (
+                <p className="plan-price">
+                  <span className="display">{price(cents)}</span>
+                  <span className="plan-per">/{annual ? "year" : "month"}</span>
+                </p>
+              )}
               <p className="plan-sub">
                 {t.monthlyCents === 0 ? "No card needed"
                   : annual ? `${annualSaving(t)}% off the monthly price`
