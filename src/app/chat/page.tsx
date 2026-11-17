@@ -1,5 +1,5 @@
 "use client";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { Fragment, useCallback, useEffect, useRef, useState } from "react";
 import Link from "@/components/A";
 import { sb } from "@/lib/supabase";
 import { useUser } from "@/lib/useUser";
@@ -23,22 +23,46 @@ const FALLBACK: Channel[] = [
 const DEMO: Message[] = [
   { id: 1, channel_id: "lobby", author_id: "a", body: "that bridge jump into the Keys is the clip of the year already", created_at: new Date(Date.now() - 42e5).toISOString(), display_name: "KeysKingpin", tier: "hustler", stars: 2, verified: true, top_badge: "week_gold", top_badge_label: "Clip of the Week", badge_count: 4, is_staff: false },
   { id: 2, channel_id: "lobby", author_id: "b", body: "nah the airboat one. he never touches the brake once", created_at: new Date(Date.now() - 39e5).toISOString(), display_name: "SwampSaint", tier: "free", stars: 0, verified: false, top_badge: "clipper_1", top_badge_label: "First Clip", badge_count: 1, is_staff: false },
+  { id: 3, channel_id: "lobby", author_id: "b", body: "watch the third second, the whole thing lands on one wheel", created_at: new Date(Date.now() - 385e4).toISOString(), display_name: "SwampSaint", tier: "free", stars: 0, verified: false, top_badge: "clipper_1", top_badge_label: "First Clip", badge_count: 1, is_staff: false },
+  { id: 4, channel_id: "lobby", author_id: "c", body: "welcome in. votes lock when the round opens, so pick early", created_at: new Date(Date.now() - 12e5).toISOString(), display_name: "Smugg", tier: "kingpin", stars: 3, verified: true, top_badge: "week_gold", top_badge_label: "Clip of the Week", badge_count: 6, is_staff: true },
 ];
 
-/** Rendered only after mount: the server has no idea what timezone the reader is in,
- *  and formatting it during SSR makes React throw a hydration mismatch. */
 const TONE: Record<string, string> = { lobby: "#00704a", clips: "#c7248a", trending: "#e8590c", members: "#2f6fe0", kingpins: "#b8860b" };
 const tone = (id: string) => TONE[id] ?? "#00704a";
 
-function Time({ iso }: { iso: string }) {
+/** Rendered only after mount: the server has no idea what timezone the reader is in,
+ *  and formatting it during SSR makes React throw a hydration mismatch. */
+function Time({ iso, className = "cx-time" }: { iso: string; className?: string }) {
   const [text, setText] = useState("");
   useEffect(() => { setText(new Date(iso).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" })); }, [iso]);
-  return <span className="text-xs text-haze" suppressHydrationWarning>{text}</span>;
+  return <time dateTime={iso} className={className} suppressHydrationWarning>{text}</time>;
 }
+
+const dayKey = (iso: string) => new Date(iso).toDateString();
+function dayLabel(iso: string) {
+  const d = new Date(iso), now = new Date();
+  if (d.toDateString() === now.toDateString()) return "Today";
+  const y = new Date(now); y.setDate(now.getDate() - 1);
+  if (d.toDateString() === y.toDateString()) return "Yesterday";
+  return d.toLocaleDateString([], { weekday: "long", month: "short", day: "numeric" });
+}
+const GROUP_MS = 5 * 60 * 1000;   // same author within five minutes reads as one run
+
+/** Starters for an empty room, so nobody stares at a blank box. */
+const STARTERS: Record<string, string[]> = {
+  lobby: ["Hey everyone", "What are you playing right now?", "First time here"],
+  clips: ["Which clip are you backing this week?", "Best clip you've seen today?"],
+  voting: ["Who's got my vote this week?", "That last clip deserves first place"],
+  trending: ["What's climbing today?", "Daily Drop winner looks unbeatable"],
+  members: ["Hello from the members' room"],
+};
 
 export default function Chat() {
   const { user, profile, paying, demo, loading } = useUser();
-  const myRank = paying ? tierById(profile?.tier).rank : 0;
+  const [preview, setPreview] = useState(false);   // dev only: ?preview shows the members' view without signing in
+  useEffect(() => { if (process.env.NODE_ENV !== "production") setPreview(location.search.includes("preview")); }, []);
+  const previewRef = useRef(false); previewRef.current = preview;
+  const myRank = paying || preview ? Math.max(1, tierById(profile?.tier).rank) : 0;
 
   const [channels, setChannels] = useState<Channel[]>(FALLBACK);
   const [active, setActive] = useState("lobby");
@@ -47,7 +71,10 @@ export default function Chat() {
   const [draft, setDraft] = useState("");
   const [err, setErr] = useState("");
   const [here, setHere] = useState(0);
-  const endRef = useRef<HTMLDivElement>(null);
+  const [away, setAway] = useState(false);          // scrolled up, with newer messages below
+  const listRef = useRef<HTMLOListElement>(null);
+  const stick = useRef(true);                       // follow the newest message while the reader is at the bottom
+  const lastId = useRef<number | null>(null);
 
   const channel = channels.find((c) => c.id === active) ?? channels[0];
   const locked = channel.members_only && myRank < channel.min_rank;
@@ -61,15 +88,16 @@ export default function Chat() {
 
   const load = useCallback(async () => {
     const c = sb();
-    if (!c) { setMsgs(DEMO.filter((m) => m.channel_id === active)); return; }
+    if (!c || preview) { setMsgs(DEMO.filter((m) => m.channel_id === active)); setErr(""); setLoaded(true); return; }
     // chat_feed carries each author's public face: plan, stars, best badge.
     const { data, error } = await c.rpc("chat_feed", { p_channel: active, p_limit: 80 });
+    if (previewRef.current) return;   // dev preview switched on while this was in flight
     if (error) setErr("Couldn't load messages. Try again in a moment.");
     setMsgs((data ?? []) as Message[]);
     setLoaded(true);
-  }, [active]);
+  }, [active, preview]);
 
-  useEffect(() => { setLoaded(false); load(); }, [load]);
+  useEffect(() => { setLoaded(false); stick.current = true; lastId.current = null; setAway(false); load(); }, [load]);
 
   // Live fan-out, so a message shows up without a refresh.
   useEffect(() => {
@@ -84,13 +112,30 @@ export default function Chat() {
     return () => { c.removeChannel(sub); };
   }, [active, load, user?.id]);
 
-  useEffect(() => { endRef.current?.scrollIntoView({ block: "end" }); }, [msgs]);
+  // Stay at the bottom only if the reader is there; otherwise offer a way down.
+  useEffect(() => {
+    const el = listRef.current; if (!el) return;
+    const newest = msgs[msgs.length - 1]?.id ?? null;
+    const fresh = newest !== lastId.current;
+    const mine = msgs[msgs.length - 1]?.author_id === user?.id;
+    if (stick.current || (fresh && mine)) { el.scrollTop = el.scrollHeight; setAway(false); }
+    else if (fresh && lastId.current !== null) setAway(true);
+    lastId.current = newest;
+  }, [msgs, user?.id]);
+
+  function onScroll() {
+    const el = listRef.current; if (!el) return;
+    const atBottom = el.scrollHeight - el.scrollTop - el.clientHeight < 80;
+    stick.current = atBottom;
+    if (atBottom) setAway(false);
+  }
+  const toBottom = () => { const el = listRef.current; if (el) el.scrollTo({ top: el.scrollHeight, behavior: "smooth" }); };
 
   async function send(e: React.FormEvent) {
     e.preventDefault();
     const body = draft.trim();
     if (!body || !user) return;
-    setDraft(""); setErr("");
+    setDraft(""); setErr(""); stick.current = true;
     const c = sb();
     if (!c) {
       setMsgs((m) => [...m, { id: Date.now(), channel_id: active, author_id: user.id, body, created_at: new Date().toISOString(),
@@ -103,86 +148,130 @@ export default function Chat() {
     load();
   }
 
+  const starters = STARTERS[active] ?? STARTERS.lobby;
+  const near = draft.length > 1800;
+
   return (
     <div className="mx-auto max-w-7xl px-4 py-10">
       <DemoNote />
-      <h1 className="display text-6xl md:text-7xl">Chat</h1>
-      <p className="text-haze mt-2">{user && profile ? <>You&apos;re in as <strong className="text-foam">{profile.display_name}</strong>. Your plan and best badge show next to your name.</> : "Read along signed out. Sign in to talk; your plan and badges show next to your name."}</p>
+      <header className="cx-hero">
+        <div>
+          <h1 className="display text-6xl md:text-7xl">Chat</h1>
+          <p className="cx-sub">{user && profile
+            ? <>You&apos;re in as <strong>{profile.display_name}</strong>. Your plan and stars show next to your name.</>
+            : "Read along signed out. Sign in to talk; your plan and stars show next to your name."}</p>
+        </div>
+        <span className="cx-pulse"><span className="rec" aria-hidden />{here > 0 ? `${here} here now` : "Live"}</span>
+      </header>
 
-      <div className="mt-8 grid gap-5 md:grid-cols-[15rem_1fr] items-start">
-        <nav aria-label="Channels" className="grid gap-1.5 md:sticky md:top-24">
-          {channels.map((ch) => {
-            const shut = ch.members_only && myRank < ch.min_rank;
-            return (
-              <button key={ch.id} onClick={() => setActive(ch.id)} aria-current={ch.id === active}
-                style={{ "--tone": tone(ch.id) } as React.CSSProperties}
-                className={`chat-room ${ch.id === active ? "is-on" : ""}`}>
-                <span className="flex items-center gap-2">
-                  <span className="text-haze" aria-hidden>#</span>
-                  <span className="flex-1 min-w-0 truncate">{ch.label}</span>
-                  {shut && <span className="text-xs text-haze" title="Members only" aria-label="Members only">🔒</span>}
-                </span>
-                {ch.description && <span className="block text-xs font-normal text-haze mt-0.5 truncate">{ch.description}</span>}
-              </button>
-            );
-          })}
+      <div className="cx-shell">
+        <nav aria-label="Channels" className="cx-rail">
+          <p className="cx-rail-k">Rooms</p>
+          <div className="cx-rooms">
+            {channels.map((ch) => {
+              const shut = ch.members_only && myRank < ch.min_rank;
+              return (
+                <button key={ch.id} onClick={() => setActive(ch.id)} aria-current={ch.id === active}
+                  style={{ "--tone": tone(ch.id) } as React.CSSProperties}
+                  className={`cx-room ${ch.id === active ? "is-on" : ""}`}>
+                  <span className="cx-room-dot" aria-hidden>#</span>
+                  <span className="cx-room-txt">
+                    <b>{ch.label}</b>
+                    {ch.description && <small>{ch.description}</small>}
+                  </span>
+                  {shut && <span className="cx-lock" title="Members only" aria-label="Members only">🔒</span>}
+                </button>
+              );
+            })}
+          </div>
         </nav>
 
-        <section className="chat-panel flex flex-col min-h-[32rem]" style={{ "--tone": tone(channel.id) } as React.CSSProperties}>
-          <header className="chat-head">
+        <section className="cx-panel" style={{ "--tone": tone(channel.id) } as React.CSSProperties}>
+          <header className="cx-head">
+            <span className="cx-head-dot" aria-hidden>#</span>
             <div className="min-w-0">
-              <h2 className="display text-2xl md:text-3xl truncate"># {channel.label}</h2>
-              {channel.description && <p className="text-sm opacity-85 truncate">{channel.description}</p>}
+              <h2 className="display truncate">{channel.label}</h2>
+              {channel.description && <p>{channel.description}</p>}
             </div>
-            <span className="chat-live"><span className="rec" aria-hidden />{here > 0 ? `${here} here now` : "Live"}</span>
           </header>
 
           {locked ? (
-            <div className="flex-1 grid place-items-center p-8 text-center">
+            <div className="cx-locked">
               <div>
                 <p className="display text-4xl">{needed?.label} and up</p>
-                <p className="text-haze mt-2 max-w-sm">Chat is for Street, Hustler and Kingpin members.</p>
+                <p className="text-haze mt-2 max-w-sm mx-auto">Chat is for Street, Hustler and Kingpin members.</p>
                 <Link href="/pricing" className="btn btn-hot mt-5">See the plans</Link>
               </div>
             </div>
           ) : (
             <>
-              <ol className="flex-1 overflow-y-auto max-h-[28rem] px-5 py-4 grid gap-3.5 content-start">
-                {!loaded && !demo && <li className="text-haze">Loading…</li>}
-                {loaded && msgs.length === 0 && <li className="text-haze">Nothing here yet. Say something.</li>}
-                {msgs.map((m) => {
-                  const t = tierById(m.tier);
-                  const me = user?.id === m.author_id;
-                  return (
-                    <li key={m.id} className={`chat-msg ${me ? "is-me" : ""}`}>
-                      <TierMedal tier={t.id} className="chat-medal" />
-                      <div className="min-w-0">
-                        <p className="text-sm flex flex-wrap items-center gap-x-2 gap-y-1">
-                          <span className="font-black">{m.display_name}</span>
-                          {m.verified && <span className="chat-check" title="Gamertag verified" aria-label="Gamertag verified">✓</span>}
-                          {m.is_staff && <span className="chat-chip chip-staff">Staff</span>}
-                          {t.rank > 0 && <span className={`chat-chip chip-${t.id}`}>{t.label}{m.stars > 0 && <> {"★".repeat(m.stars)}</>}</span>}
-                          {m.top_badge_label && <span className={`chat-chip chip-badge ${/_gold$/.test(m.top_badge ?? "") ? "is-gold" : ""}`}
-                            title={`${m.badge_count} badge${m.badge_count === 1 ? "" : "s"}`}>{m.top_badge_label}{m.badge_count > 1 && <span className="opacity-70"> +{m.badge_count - 1}</span>}</span>}
-                          <Time iso={m.created_at} />
-                        </p>
-                        <p className="break-words">{m.body}</p>
-                      </div>
+              <div className="cx-stage">
+                <ol ref={listRef} onScroll={onScroll} className="cx-list" role="log" aria-live="polite" aria-label={`${channel.label} messages`}>
+                  {!loaded && !demo && <li className="cx-note">Loading…</li>}
+                  {loaded && msgs.length === 0 && (
+                    <li className="cx-empty">
+                      <span className="cx-empty-mark" aria-hidden>#</span>
+                      <p className="display text-3xl">Quiet in here</p>
+                      <p className="text-haze">Be the first to say something in {channel.label}.</p>
+                      {user && <div className="cx-starters">
+                        {starters.map((t) => <button key={t} type="button" onClick={() => setDraft(t)}>{t}</button>)}
+                      </div>}
                     </li>
-                  );
-                })}
-                <div ref={endRef} />
-              </ol>
+                  )}
+                  {msgs.map((m, i) => {
+                    const prev = msgs[i - 1];
+                    const newDay = !prev || dayKey(prev.created_at) !== dayKey(m.created_at);
+                    const run = !!prev && !newDay && prev.author_id === m.author_id
+                      && new Date(m.created_at).getTime() - new Date(prev.created_at).getTime() < GROUP_MS;
+                    const t = tierById(m.tier);
+                    const me = user?.id === m.author_id;
+                    return (
+                      <Fragment key={m.id}>
+                        {newDay && <li className="cx-day" aria-hidden><span>{dayLabel(m.created_at)}</span></li>}
+                        <li className={`cx-msg ${me ? "is-me" : ""} ${run ? "is-run" : ""}`}>
+                          {run
+                            ? <Time iso={m.created_at} className="cx-time cx-time-side" />
+                            : <TierMedal tier={t.id} className="cx-medal" />}
+                          <div className="min-w-0">
+                            {!run && (
+                              <p className="cx-who">
+                                <span className="cx-name">{m.display_name}</span>
+                                {m.verified && <span className="chat-check" title="Gamertag verified" aria-label="Gamertag verified">✓</span>}
+                                {m.is_staff && <span className="chat-chip chip-staff">Staff</span>}
+                                {t.rank > 0 && <span className={`chat-chip chip-${t.id}`}>{t.label}</span>}
+                                {m.stars > 0
+                                  ? <span className="chat-chip chip-stars" title={`${m.stars} star${m.stars === 1 ? "" : "s"}`} aria-label={`${m.stars} star${m.stars === 1 ? "" : "s"}`}>
+                                      <span aria-hidden>★</span> {m.stars}
+                                    </span>
+                                  : m.top_badge_label && <span className={`chat-chip chip-badge ${/_gold$/.test(m.top_badge ?? "") ? "is-gold" : ""}`}
+                                      title={`${m.badge_count} badge${m.badge_count === 1 ? "" : "s"}`}>{m.top_badge_label}{m.badge_count > 1 && <span className="opacity-70"> +{m.badge_count - 1}</span>}</span>}
+                                <Time iso={m.created_at} />
+                              </p>
+                            )}
+                            <p className="cx-body">{m.body}</p>
+                          </div>
+                        </li>
+                      </Fragment>
+                    );
+                  })}
+                </ol>
+                {away && <button type="button" className="cx-jump" onClick={toBottom}>New messages ↓</button>}
+              </div>
 
-              <form onSubmit={send} className="border-t border-line p-3 flex gap-2">
-                <input value={draft} onChange={(e) => setDraft(e.target.value)} maxLength={2000}
-                  disabled={!user} className="field" aria-label={`Message #${channel.label}`}
-                  placeholder={loading ? "Checking your account…" : user ? `Message #${channel.label} as ${profile?.display_name ?? "you"}` : "Sign in to chat"} />
-                <button disabled={!user || !draft.trim()} className="btn btn-hot shrink-0 disabled:opacity-60">Send</button>
+              <form onSubmit={send} className="cx-composer">
+                <div className="cx-box">
+                  <input value={draft} onChange={(e) => setDraft(e.target.value)} maxLength={2000}
+                    disabled={!user} aria-label={`Message #${channel.label}`} autoComplete="off"
+                    placeholder={loading ? "Checking your account…" : user ? `Message #${channel.label}` : "Sign in to chat"} />
+                  {near && <span className="cx-count" aria-live="polite">{2000 - draft.length}</span>}
+                  <button disabled={!user || !draft.trim()} className="cx-send" aria-label="Send message">
+                    <span>Send</span>
+                    <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path d="M3.4 20.4 21 12 3.4 3.6 3.3 10l12 2-12 2z" fill="currentColor" /></svg>
+                  </button>
+                </div>
+                {!loading && !user && <p className="cx-fine"><Link href="/login?next=/chat" className="underline">Sign in</Link> to join in. It&apos;s free.</p>}
+                {err && <p role="alert" className="cx-fine text-flamingo font-semibold">{err}</p>}
               </form>
-              {!loading && !user && <p className="px-4 pb-3 text-sm text-haze"><Link href="/login?next=/chat" className="text-gulf underline">Sign in</Link> to join in. It&apos;s free.</p>}
-              {err && <p role="alert" className="px-4 pb-3 text-sm text-flamingo font-semibold">{err}</p>}
-              
             </>
           )}
         </section>
