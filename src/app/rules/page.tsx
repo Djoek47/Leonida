@@ -11,7 +11,7 @@ const PLAIN: [string, string][] = [
   ["Top three split the pool", "Gold 60%, Silver 25%, Bronze 15%."],
   ["Get paid", "PayPal, Venmo, Cash App or Interac. 60 days to claim."],
   ["You keep your clip", "Your clip could earn up to $0.99 per download."],
-  ["Winners can't re-enter", "A clip that has won a weekly or monthly prize can't be submitted again."],
+  ["Winners can't re-enter", "A clip that has won any prize (gold, silver or bronze) can't be submitted again."],
   ["Didn't win? Try again", "A clip that hasn't won can be resubmitted by choosing the next available week in the menu."],
 ];
 
@@ -24,7 +24,7 @@ const TERMS: [number, string, string][] = [
   [5, "Voting", "Each video can be voted on once, even for users with multiple votes."],
   [6, "Winning", "Most votes wins. If there is a tie, the winner is the user with the most views on their videos."],
   [7, "Payment", "Give us a working payout account and you will receive your winnings after the announcement."],
-  [8, "Resubmission", "Clips that have won any weekly or monthly prize become ineligible for resubmission. Clips that have not won can still be resubmitted by selecting the next available week in the menu. A resubmitted clip counts toward that week's submission allowance and is reviewed again."],
+  [8, "Resubmission", "Clips that have won any weekly or monthly prize, at gold, silver or bronze, become ineligible for resubmission. Clips that have not won can still be resubmitted by selecting the next available week in the menu. A resubmitted clip counts toward that week's submission allowance and is reviewed again."],
   [9, "Your rights", "You own your clip. Every clip download makes you $0.99. The user may edit and publish it, credited to your gamertag."],
   [11, "Privacy", "Account details run the contest, pay winners and keep voting honest. We don't sell your data."],
 ];

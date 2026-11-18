@@ -1,16 +1,15 @@
 -- v44: Resubmission rules (Contest Rules, Nov 17 2026)
 --
--- * A clip that has won a weekly or monthly prize can never be submitted again.
+-- * A clip that has won any prize (gold, silver or bronze) can never be submitted again.
 -- * A clip that has not won can be resubmitted into the next open weekly round the member picks.
 --   It counts toward that round's allowance, goes back to "pending" and is reviewed again.
 -- * Enforced here, not only in the UI. Run after v43.
 
--- 1. Has this clip ever won a weekly or monthly prize? (winnings rows exist only for paid top-three places.)
+-- 1. Has this clip ever won (gold, silver or bronze, any round)? Winnings rows exist only for top-three places.
 create or replace function public.clip_has_won(p_clip uuid)
 returns boolean language sql stable security definer set search_path = public as $$
   select exists (
-    select 1 from winnings w join contests k on k.id = w.contest_id
-     where w.clip_id = p_clip and k.kind in ('weekly','monthly')
+    select 1 from winnings w where w.clip_id = p_clip and w.place between 1 and 3
   )
 $$;
 grant execute on function public.clip_has_won(uuid) to authenticated;
