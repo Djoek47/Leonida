@@ -824,7 +824,20 @@ body:has(.overlay-root) > *:not(:has(.overlay-root)) { display: none; }
     0 18px 40px -22px rgba(0,0,0,.65);
 }
 
+/* Cast name tag: an interstate sign hung over the foot of the portrait,
+   same panel and border as the place signs, in the site's own display type. */
+.name-tag {
+  position: relative; z-index: 1; display: inline-block; max-width: calc(100% - .75rem);
+  margin: -1.2rem 0 0 .6rem; padding: .62rem .95rem .56rem; border-radius: 10px;
+  background: var(--gulf); color: #fff; font-size: clamp(1.05rem, 4.4vw, 1.55rem);
+  box-shadow: inset 0 0 0 2px var(--gulf), inset 0 0 0 4px #fff, 0 14px 28px -14px rgba(0,0,0,.65);
+  transition: transform .2s ease;
+}
+.cast-card:hover .name-tag { transform: translateY(-3px) rotate(-.6deg); }
+
 @media (prefers-reduced-motion: reduce) {
+  .name-tag { transition: none; }
+  .cast-card:hover .name-tag { transform: none; }
   .place-stage img.is-on { animation: none; transform: scale(1); }
   .place-stage img { transition: none; }
 }

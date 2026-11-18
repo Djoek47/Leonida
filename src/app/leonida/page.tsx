@@ -70,12 +70,12 @@ export default function Guide() {
           <h2 className="display text-6xl md:text-7xl">People</h2>
           <div className="mt-10 grid gap-6 grid-cols-2 lg:grid-cols-4">
             {people.map((p) => (
-              <article key={p.slug}>
+              <article key={p.slug} className="cast-card">
                 <div className="relative aspect-square rounded-md overflow-hidden bg-ink-2">
                   <PortraitClip clip={p.video} name={p.name} />
                 </div>
-                <h3 className="mt-3 text-xl font-extrabold">{p.name}</h3>
-                <p className="text-haze text-[15px]">{p.line}</p>
+                <h3 className="name-tag display">{p.name}</h3>
+                <p className="mt-3 text-haze text-[15px]">{p.line}</p>
               </article>
             ))}
           </div>
