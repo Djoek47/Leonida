@@ -3,6 +3,7 @@ import Link from "@/components/A";
 import { useUser } from "@/lib/useUser";
 import { Wallet } from "@/components/Wallet";
 import { Receipts } from "@/components/Receipts";
+import { ManageCard } from "@/components/ManageCard";
 import { GetPaid, Winnings } from "@/components/MoneyDesk";
 import { TierMedal } from "@/components/TierMedal";
 import { tierById } from "@/lib/tiers";
@@ -52,6 +53,11 @@ export default function WalletPage() {
             {paying && <Link href="/settings" className="btn btn-ghost !py-2">Cancel</Link>}
           </div>
         </div>
+
+        {paying && (<>
+          <h2 className="money-h">Payment method</h2>
+          <ManageCard />
+        </>)}
 
         <Winnings userId={profile.id} />
 

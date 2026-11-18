@@ -178,8 +178,8 @@ export function eventEmail(kind: string, d: D, name: string): Email | null {
         heading("That payment didn't go through.", L),
         para(`${hi(name)} we couldn't take the payment for your <strong>${esc(tierName(d.tier))}</strong> plan. Your perks stay on for now while the card is retried.`, L),
         para("Usually it's an expired card or a bank check. Updating your payment method fixes it.", L),
-        button("Update payment", `${SITE}/settings`, L),
-      ], [`${name}, the payment for your ${tierName(d.tier)} plan didn't go through.`, `Update it: ${SITE}/settings`]);
+        button("Update payment", `${SITE}/wallet#card`, L),
+      ], [`${name}, the payment for your ${tierName(d.tier)} plan didn't go through.`, `Update it: ${SITE}/wallet#card`]);
 
     case "badge_earned":
       return sign(`Badge unlocked: ${s(d.label, "New badge")}`, s(d.blurb, "A new badge for your wall."), [

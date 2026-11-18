@@ -7,6 +7,7 @@ import { plainAuthError } from "@/lib/authErrors";
 import { TierMedal } from "@/components/TierMedal";
 import { CoinAvatar } from "@/components/CoinAvatar";
 import { NotificationCenter } from "@/components/NotificationCenter";
+import { ManageCard } from "@/components/ManageCard";
 import type { TierId } from "@/lib/tiers";
 
 const METHODS: [string, string][] = [
@@ -278,6 +279,13 @@ export default function Settings() {
           </div>
         </div>
       </section>
+
+      {paying && (
+        <section className="set-card">
+          <h2>Payment method</h2>
+          <ManageCard />
+        </section>
+      )}
 
       <section className="set-card">
         <h2>Email</h2>
