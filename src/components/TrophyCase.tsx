@@ -1,6 +1,8 @@
 "use client";
 import { useMemo, useState } from "react";
 import Link from "@/components/A";
+import { HoverTip } from "@/components/HoverTip";
+import { BadgeWall, type Badge } from "@/components/Gamification";
 import { ACTION, HUE, ROOMS, WINGS, fmt, pct, statusLine, useTrophies, type Trophy } from "@/lib/trophies";
 
 export function Medal({ t, earned, size }: { t: Pick<Trophy, "id" | "category">; earned: boolean; size?: string }) {
@@ -48,7 +50,7 @@ export function TrophySummary({ rows }: { rows: Trophy[] }) {
           <p className="dash-kicker">Trophy museum{fresh ? <span className="tsum-new">{fresh} new</span> : null}</p>
           <h3 id="tsum-t" className="display text-3xl">{got} of {rows.length} unlocked</h3>
         </div>
-        <Link href="/trophies" className="btn btn-hot">Walk the museum →</Link>
+        <Link href="/trophies" className="btn btn-hot">Walk the trophy room →</Link>
       </div>
       <ul className="tsum-rooms">
         {(["Podium", ...WINGS] as string[]).map((cat) => {
@@ -68,7 +70,7 @@ export function TrophySummary({ rows }: { rows: Trophy[] }) {
         {latest.length > 0 && (
           <div className="tsum-latest">
             <span className="trophy-label">Latest</span>
-            {latest.map((t) => <span key={t.id} className="tsum-chip is-earned" title={t.description}><Medal t={t} earned size="1.6rem" />{t.name}</span>)}
+            {latest.map((t) => <HoverTip key={t.id} tip={t.description} className="!inline-block"><span className="tsum-chip is-earned"><Medal t={t} earned size="1.6rem" />{t.name}</span></HoverTip>)}
           </div>
         )}
         {next && (
@@ -106,10 +108,12 @@ export function TrophyList({ rows }: { rows: Trophy[] }) {
       </div>
       <ul className="trophy-grid mt-4" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill,minmax(7.5rem,1fr))", gap: ".9rem" }}>
         {list.map((t) => (
-          <li key={t.id} className={`text-center ${t.earned_at ? "is-earned" : "is-locked"}`} title={t.description}>
-            <Medal t={t} earned={!!t.earned_at} />
-            <span className="block text-xs font-bold mt-1">{t.name}{t.earned_at && !t.seen_at ? " · New" : ""}</span>
-            <span className="block text-[11px] text-haze">{statusLine(t)}</span>
+          <li key={t.id} className={`text-center ${t.earned_at ? "is-earned" : "is-locked"}`}>
+            <HoverTip tip={`${t.earned_at ? "" : "Locked. "}${t.description}`}>
+              <Medal t={t} earned={!!t.earned_at} />
+              <span className="block text-xs font-bold mt-1">{t.name}{t.earned_at && !t.seen_at ? " · New" : ""}</span>
+              <span className="block text-[11px] text-haze">{statusLine(t)}</span>
+            </HoverTip>
           </li>
         ))}
       </ul>
@@ -121,4 +125,34 @@ export function TrophyList({ rows }: { rows: Trophy[] }) {
 export function TrophyCase() {
   const rows = useTrophies();
   return rows?.length ? <TrophySummary rows={rows} /> : null;
+}
+
+/** One tidy "Trophies" section for the dashboard: pick a tab to see trophies or badges, instead of several stacked panels. */
+export function TrophiesSection({ badges }: { badges: Badge[] }) {
+  const rows = useTrophies();
+  const [tab, setTab] = useState<"trophies" | "badges">("trophies");
+  const hasTrophies = !!rows?.length;
+  if (!hasTrophies && !badges.length) return null;
+  const tabs = [...(hasTrophies ? [["trophies", "Trophies"] as const] : []), ...(badges.length ? [["badges", "Badges"] as const] : [])];
+  const active = tabs.some(([k]) => k === tab) ? tab : tabs[0][0];
+  return (
+    <section className="mt-10" aria-label="Trophies">
+      <div className="flex items-end justify-between gap-3 flex-wrap mb-3">
+        <div>
+          <p className="dash-kicker">Your collection</p>
+          <h2 className="display text-3xl">Trophies</h2>
+        </div>
+        {hasTrophies && <Link href="/trophies" className="btn btn-hot !py-2 !px-4 text-sm">Walk the trophy room →</Link>}
+      </div>
+      <div role="tablist" className="inline-flex rounded border border-line p-1 bg-ink">
+        {tabs.map(([k, l]) => (
+          <button key={k} role="tab" aria-selected={active === k} onClick={() => setTab(k)}
+            className={`px-4 py-2 rounded font-bold text-sm ${active === k ? "bg-foam text-dusk" : "text-haze"}`}>{l}</button>
+        ))}
+      </div>
+      <div role="tabpanel" className="mt-4">
+        {active === "trophies" && rows ? <><TrophySummary rows={rows} /><div className="mt-6"><TrophyList rows={rows} /></div></> : <BadgeWall badges={badges} />}
+      </div>
+    </section>
+  );
 }

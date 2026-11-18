@@ -5,8 +5,9 @@ import { sb } from "@/lib/supabase";
 import { useUser, type Profile } from "@/lib/useUser";
 import { DEMO_CLIPS, exactMoney, type Clip } from "@/lib/api";
 import { tierById, DOWNLOAD } from "@/lib/tiers";
-import { StatusStrip, BadgeWall, type Badge } from "@/components/Gamification";
-import { TrophyCase } from "@/components/TrophyCase";
+import { StatusStrip, type Badge } from "@/components/Gamification";
+import { TrophiesSection } from "@/components/TrophyCase";
+import { ResubmitClip, useResubmitInfo } from "@/components/ResubmitClip";
 import { FeaturedClips } from "@/components/FeaturedClips";
 import { DemoNote } from "@/components/DemoNote";
 import { GetStarted } from "@/components/GetStarted";
@@ -70,6 +71,7 @@ export default function Dashboard() {
 
   type Pull = { clip: Clip; votes: number | null; buyers: number | null; ack: boolean; state: "ask" | "busy" | "error"; err?: string };
   const [pull, setPull] = useState<Pull | null>(null);
+  const { won: wonClips, over: overClips } = useResubmitInfo(clips, user?.id);
   const [pulled, setPulled] = useState<{ title: string; votes: number; views: number; keep: number } | null>(null);
   async function pullOut(c: Clip) {
     setPull({ clip: c, votes: null, buyers: null, ack: false, state: "ask" });
@@ -236,6 +238,10 @@ export default function Dashboard() {
                     <div className="sales-n" title={`${views[c.id]?.views_24h ?? 0} in the last 24 hours`}><b>{views[c.id]?.views ?? 0}</b><small>views</small></div>
                     <div className="sales-n" title="Downloads"><b>{s?.downloads ?? 0}</b><small>sold</small></div>
                     <div className="sales-n money" title="Earned from downloads"><b>{exactMoney(s?.earned_cents ?? 0)}</b><small>earned</small></div>
+                    {wonClips.has(c.id) && <span className="clip-state gold" title="Prize winners can't be resubmitted">Prize winner · can&apos;t resubmit</span>}
+                    {!wonClips.has(c.id) && overClips.has(c.id) && c.status !== "withdrawn" && (
+                      <ResubmitClip clip={c} onDone={() => location.reload()} />
+                    )}
                     {["approved", "featured", "pending"].includes(c.status) && c.for_contest !== false && (
                       <button onClick={() => pullOut(c)} className="pull-out"
                         title="Take this clip out of the competition">Withdraw</button>
@@ -273,8 +279,7 @@ export default function Dashboard() {
 
       <FeaturedClips clips={clips} />
 
-      <div className="mt-10"><TrophyCase /></div>
-      {badges.some((b) => !/^(week|month|year)_/.test(b.id)) && <div className="mt-10"><BadgeWall badges={badges.filter((b) => !/^(week|month|year)_/.test(b.id))} /></div>}
+      <TrophiesSection badges={badges.filter((b) => !/^(week|month|year)_/.test(b.id))} />
     </div>
     </div>
   );

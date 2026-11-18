@@ -37,9 +37,8 @@ export default function Earn() {
           <div className="min-w-0">
             <h2 className="display text-5xl md:text-6xl">Win Clip of the Week</h2>
             <p className="mt-3 max-w-2xl text-haze">
-              Send your best clip. The ones that make the cut go into one compilation, Leonida votes,
-              and the top three split the pool. The pool grows with the number of paying members —
-              so the bigger the site gets, the more there is to win.
+              Send your best clips. Leonida voters pick their winners and the top three splits the pool.
+              The pool grows with the number of paying members — so the bigger the audience, the more there is to win.
             </p>
           </div>
         </div>

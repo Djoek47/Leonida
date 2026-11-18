@@ -19,7 +19,7 @@ export default function TrophiesPage() {
       </div>
       {!preview && !loading && !user ? (
         <div className="mz-empty">
-          <p className="display text-2xl">Sign in to walk your museum</p>
+          <p className="display text-2xl">Sign in to walk the trophy room</p>
           <p className="text-haze mt-1">Every trophy you unlock gets its own spot in the hall.</p>
           <Link href="/login?next=/trophies" className="btn btn-hot mt-4">Sign in</Link>
         </div>
@@ -30,7 +30,7 @@ export default function TrophiesPage() {
       ) : (
         <TrophyMuseum rows={rows} />
       )}
-      <p className="mt-4 text-xs text-haze">Trophies are achievements only. They never pay money, votes or credits. Money, votes given and votes received stay private to you.</p>
+      <p className="mt-4 text-xs text-haze">Trophies are achievements only. They never pay money, votes or credits for the time being. This could change in the future.</p>
     </main>
   );
 }

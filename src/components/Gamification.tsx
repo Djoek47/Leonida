@@ -4,6 +4,23 @@ import Link from "@/components/A";
 import { sb } from "@/lib/supabase";
 import { MAX_STARS, STAR_MONTHS, tierById } from "@/lib/tiers";
 import type { Account } from "@/lib/useUser";
+import { HoverTip } from "@/components/HoverTip";
+
+const STAR_NOTE = "Stars equals the user’s longevity in the community, stay longer and earn all 6";
+
+/** What each badge means, in plain words. Falls back to the stored blurb. */
+const BADGE_INFO: Record<string, string> = {
+  clipper_1: "Awarded when you send your first clip.",
+  clipper_10: "Awarded after you have sent 10 clips.",
+  clipper_25: "Awarded after you have sent 25 clips.",
+  clipper_50: "Awarded after you have sent 50 clips.",
+  clipper_100: "Awarded after you have sent 100 clips.",
+  clipper_250: "Awarded after you have sent 250 clips.",
+  drop_winner: "Awarded when your clip wins a Daily Drop challenge.",
+  week_gold: "Awarded for finishing 1st in a weekly round.", week_silver: "Awarded for finishing 2nd in a weekly round.", week_bronze: "Awarded for finishing 3rd in a weekly round.",
+  month_gold: "Awarded for finishing 1st in a monthly round.", month_silver: "Awarded for finishing 2nd in a monthly round.", month_bronze: "Awarded for finishing 3rd in a monthly round.",
+  year_gold: "Awarded for finishing 1st in the yearly round.", year_silver: "Awarded for finishing 2nd in the yearly round.", year_bronze: "Awarded for finishing 3rd in the yearly round.",
+};
 
 /** Six stars, one every four months subscribed, all six at two years. */
 export function StarRank({ stars, className = "" }: { stars: number; className?: string }) {
@@ -110,9 +127,11 @@ export function BadgeWall({ badges }: { badges: Badge[] }) {
             <p className="trophy-label">{name}</p>
             <ul>
               {row.map((b) => (
-                <li key={b.id} className={b.earned ? "is-earned" : "is-locked"} title={b.earned ? b.blurb : `Locked: ${b.blurb}`}>
-                  <BadgeCoin id={b.id} earned={b.earned} />
-                  <span>{b.label}</span>
+                <li key={b.id} className={b.earned ? "is-earned" : "is-locked"}>
+                  <HoverTip tip={`${b.earned ? "" : "Locked. "}${BADGE_INFO[b.id] ?? b.blurb}`}>
+                    <BadgeCoin id={b.id} earned={b.earned} />
+                    <span>{b.label}</span>
+                  </HoverTip>
                 </li>
               ))}
             </ul>
@@ -169,7 +188,7 @@ export function StarTracker({ stars, months }: { stars: number; months: number }
         {stars >= MAX_STARS ? "Six stars. Two years on the force."
           : `${STAR_MONTHS - into} month${STAR_MONTHS - into === 1 ? "" : "s"} to star ${next}`}
       </p>
-      <p className="mt-1 text-xs text-haze">One star every {STAR_MONTHS} months subscribed. All six at two years.</p>
+      <p className="mt-1 text-xs text-haze">{STAR_NOTE}</p>
     </div>
   );
 }
@@ -224,7 +243,7 @@ export function StatusStrip({ account, paying, fallbackClips }: { account: Accou
         </div>
       </div>
 
-      <div className="gauge" title="One star every four months on a plan, all six at two years.">
+      <div className="gauge" title={STAR_NOTE}>
         <StarRank stars={account.stars} className="[&_svg]:size-5" />
         <div>
           <p className="gauge-v">{account.stars}<small> / {MAX_STARS} wanted</small></p>

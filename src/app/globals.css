@@ -2448,3 +2448,12 @@ a.edge-card:hover b i { transform: translateX(4px); }
 .mz-gear input[type=range] { accent-color: #ff3d8b; width: 100%; }
 .mz-gear input[type=checkbox] { accent-color: #ff3d8b; width: 1rem; height: 1rem; }
 .mz-reset { justify-self: start; font-size: .75rem; text-decoration: underline; color: #bfaedc; }
+
+/* Hover / focus / tap description on trophies and badges */
+.hov-tip { position: relative; display: block; cursor: help; outline-offset: 3px; border-radius: 10px; }
+.hov-tip-pop { position: absolute; z-index: 40; left: 50%; bottom: calc(100% + .45rem); width: max-content; max-width: min(15rem, 70vw); padding: .5rem .7rem; border-radius: 10px;
+  font-size: .8rem; font-weight: 700; line-height: 1.35; text-align: center; background: var(--asphalt); color: #fff; box-shadow: 0 6px 18px rgba(0,0,0,.35);
+  opacity: 0; visibility: hidden; pointer-events: none; transform: translate(-50%, 4px); transition: opacity .15s, transform .15s, visibility .15s; }
+.hov-tip-pop::after { content: ""; position: absolute; left: 50%; top: 100%; margin-left: -5px; border: 5px solid transparent; border-bottom: 0; border-top-color: var(--asphalt); }
+.hov-tip.is-open .hov-tip-pop, .hov-tip:focus-visible .hov-tip-pop { opacity: 1; visibility: visible; transform: translate(-50%, 0); }
+@media (hover: hover) { .hov-tip:hover .hov-tip-pop { opacity: 1; visibility: visible; transform: translate(-50%, 0); } }
