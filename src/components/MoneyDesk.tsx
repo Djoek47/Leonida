@@ -19,6 +19,8 @@ export function GetPaid({ profile, setProfile }: { profile: Profile; setProfile:
   const [way, setWay] = useState<"stripe" | "other">(profile.payout_method && profile.payout_method !== "stripe" ? "other" : "stripe");
   const [busy, setBusy] = useState(false);
   const [note, setNote] = useState("");
+  const [ask, setAsk] = useState(false);
+  const [was, setWas] = useState(false);
 
   useEffect(() => {
     if (!new URLSearchParams(location.search).has("stripe")) return;
@@ -34,10 +36,25 @@ export function GetPaid({ profile, setProfile }: { profile: Profile; setProfile:
     const j = await call("/api/payout/stripe", { action: "connect" });
     if (j.url) { location.href = j.url; return; }
     setBusy(false);
+    if (j.ready) { setProfile({ ...profile, payout_method: "stripe", payout_handle: "Stripe account", stripe_connect_ready: true }); setNote("Stripe reconnected. Cash-outs go straight to your card or bank."); return; }
     if (String(j.error ?? "").includes("switched on")) {
       setWay("other");
       setNote("Card and bank payouts aren't available yet. Use PayPal, Venmo, Cash App or Interac for now; nothing is lost, your wallet keeps the money.");
     } else setNote(j.error ?? "Couldn't open Stripe.");
+  }
+  async function manage() {
+    setBusy(true);
+    const j = await call("/api/payout/stripe", { action: "manage" });
+    setBusy(false);
+    if (j.url) { window.open(j.url, "_blank", "noopener"); return; }
+    setNote(j.error ?? "Couldn't open your Stripe account.");
+  }
+  async function disconnect() {
+    setBusy(true);
+    const j = await call("/api/payout/stripe", { action: "disconnect" });
+    setBusy(false); setAsk(false);
+    if (j.ok) { setProfile({ ...profile, payout_method: null, payout_handle: "", stripe_connect_ready: false }); setWas(true); setNote("Stripe disconnected. Your wallet balance is untouched. Connect again, or choose a payout app, before you cash out."); }
+    else setNote(j.error ?? "Couldn't disconnect. Try again.");
   }
   async function save(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -60,8 +77,26 @@ export function GetPaid({ profile, setProfile }: { profile: Profile; setProfile:
       <div className="mt-4 grid gap-3 max-w-sm">
       {way === "stripe" ? (
         profile.stripe_connect_ready && profile.payout_method === "stripe"
-          ? <p className="font-bold text-gulf">Stripe connected. Cash-outs go straight to your card or bank.</p>
-          : <button onClick={connect} disabled={busy} className="btn btn-hot w-fit !py-2">{busy ? "Opening Stripe…" : "Connect with Stripe"}</button>
+          ? (
+            <>
+              <p className="font-bold text-gulf">Stripe connected. Cash-outs go straight to your card or bank.</p>
+              {ask ? (
+                <div role="alert" className="grid gap-2 rounded-lg border-2 border-line p-3 text-sm">
+                  <p>Disconnect Stripe? Cash-outs stop going to your card or bank until you connect again. Your wallet balance stays.</p>
+                  <div className="flex gap-2">
+                    <button onClick={disconnect} disabled={busy} className="btn btn-hot !py-1.5 text-sm">{busy ? "Disconnecting…" : "Yes, disconnect"}</button>
+                    <button onClick={() => setAsk(false)} disabled={busy} className="text-sm underline">Keep it</button>
+                  </div>
+                </div>
+              ) : (
+                <div className="flex flex-wrap gap-2">
+                  <button onClick={manage} disabled={busy} className="btn btn-hot w-fit !py-2 text-sm">{busy ? "Opening…" : "Manage Stripe account"}</button>
+                  <button onClick={() => setAsk(true)} disabled={busy} className="w-fit rounded border border-line px-3 py-2 text-sm font-bold">Disconnect</button>
+                </div>
+              )}
+            </>
+          )
+          : <button onClick={connect} disabled={busy} className="btn btn-hot w-fit !py-2">{busy ? "Opening Stripe…" : was ? "Reconnect with Stripe" : "Connect with Stripe"}</button>
       ) : (
         <form onSubmit={save} className="grid gap-3">
           <select name="method" defaultValue={profile.payout_method && profile.payout_method !== "stripe" ? profile.payout_method : "paypal"} className="field">{methods.map(([k, v]) => <option key={k} value={k}>{v}</option>)}</select>
