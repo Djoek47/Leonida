@@ -6,7 +6,7 @@ import { MAX_STARS, STAR_MONTHS, tierById } from "@/lib/tiers";
 import type { Account } from "@/lib/useUser";
 import { HoverTip } from "@/components/HoverTip";
 
-const STAR_NOTE = "Stars equals the user’s longevity in the community, stay longer and earn all 6";
+const STAR_NOTE = "Earn a full star every 4 months";
 
 /** What each badge means, in plain words. Falls back to the stored blurb. */
 const BADGE_INFO: Record<string, string> = {
