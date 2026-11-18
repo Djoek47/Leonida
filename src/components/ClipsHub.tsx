@@ -1,5 +1,6 @@
 "use client";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { lockScroll } from "@/lib/scrollLock";
 import Link from "@/components/A";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { sb } from "@/lib/supabase";
@@ -515,7 +516,7 @@ function Player({ r, list, fav, voted, mine, showVote, onClose, onPick, onFav, o
     // Line up the next one too.
     const n = list[list.findIndex((x) => x.id === r.id) + 1]; if (n) signFor(n);
   }, [r]);
-  useEffect(() => { const k = (e: KeyboardEvent) => e.key === "Escape" && onClose(); addEventListener("keydown", k); document.body.style.overflow = "hidden"; return () => { removeEventListener("keydown", k); document.body.style.overflow = ""; }; }, [onClose]);
+  useEffect(() => { const k = (e: KeyboardEvent) => e.key === "Escape" && onClose(); addEventListener("keydown", k); const unlock = lockScroll(); return () => { removeEventListener("keydown", k); unlock(); }; }, [onClose]);
   function counted1() {
     if (counted.current === r.id) return;
     counted.current = r.id;

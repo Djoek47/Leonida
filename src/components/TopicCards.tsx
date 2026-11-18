@@ -1,5 +1,6 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
+import { lockScroll } from "@/lib/scrollLock";
 import { HOW_IT_PLAYS } from "@/lib/news";
 import { TopicEmblem, type EmblemId } from "@/components/TopicEmblem";
 
@@ -97,11 +98,10 @@ function TopicPopup({ topic, points, emblem, shots, onClose }: {
       if (e.key === "ArrowLeft") setAt((i) => (i - 1 + n) % n);
     };
     addEventListener("keydown", onKey);
-    const prev = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
+    const unlock = lockScroll();
     box.current?.focus();
     shots.forEach((s) => { const im = new Image(); im.src = `/media/${s}.webp`; });   // no blank flash between tips
-    return () => { removeEventListener("keydown", onKey); document.body.style.overflow = prev; };
+    return () => { removeEventListener("keydown", onKey); unlock(); };
   }, [onClose, n, shots]);
 
   return (

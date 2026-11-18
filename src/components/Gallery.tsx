@@ -1,5 +1,6 @@
 "use client";
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { lockScroll } from "@/lib/scrollLock";
 import shots from "@/lib/gallery.json";
 
 type Shot = { src: string; group: string; label: string; title: string; subject: string };
@@ -28,8 +29,8 @@ export function Gallery() {
     };
     document.querySelector('[aria-current="true"]')?.scrollIntoView({ block: "nearest", inline: "center" });
     addEventListener("keydown", k);
-    document.body.style.overflow = "hidden";
-    return () => { removeEventListener("keydown", k); document.body.style.overflow = ""; };
+    const unlock = lockScroll();
+    return () => { removeEventListener("keydown", k); unlock(); };
   }, [at, step]);
 
   const open = at == null ? null : shown[at];
