@@ -2,7 +2,7 @@
  *  Every item names where it came from: Rockstar itself, or press who played the game.
  *  Update this file each working session. Newest first. */
 
-export type Source = "Rockstar" | "Press preview" | "TV";
+export type Source = "Rockstar" | "Press preview" | "Press review" | "TV";
 
 export type NewsItem = {
   date: string;            // YYYY-MM-DD
@@ -12,9 +12,18 @@ export type NewsItem = {
   links: { label: string; href: string }[];
 };
 
-export const NEWS_UPDATED = "2026-11-11";
+export const NEWS_UPDATED = "2026-11-18";
 
 export const NEWS: NewsItem[] = ([
+  {
+    date: "2026-11-18",
+    title: "No mission replay at launch, IGN reports: your 15 save slots are the workaround",
+    body: "IGN's reviewer says GTA VI has no menu option to replay story missions, a change from nearly every Rockstar game since The Ballad of Gay Tony. IGN's reading is that the story branches too much for it: earlier choices can change how a later mission plays out, like a heist that goes clean or turns messy. There are also no bronze, silver or gold medals. The workaround is the 15 manual save slots. IGN suggests a fresh save roughly every 7% of the story, which runs 50 to 100 hours depending on how you play. This is one reviewer's report, not a Rockstar statement, and replay could still be added later.",
+    source: "Press review",
+    links: [
+      { label: "IGN: GTA 6 doesn't let you replay story missions", href: "https://www.ign.com/articles/gta-6-doesnt-let-you-replay-story-missions-heres-why" },
+    ],
+  },
   {
     date: "2026-11-10",
     title: "Pre-load is live, with a new \"Pre-Load Now\" trailer",
@@ -123,8 +132,9 @@ export const NEWS: NewsItem[] = ([
   },
 ] as NewsItem[]).sort((a, b) => b.date.localeCompare(a.date));
 
-/** From the July press previews at Rockstar North (published Aug 27, 2026).
- *  Reported by people who played it — not a Rockstar manual. */
+/** From the July press previews at Rockstar North (published Aug 27, 2026), plus
+ *  launch-day press reports where a topic says so. Reported by people who played it —
+ *  not a Rockstar manual. */
 export const HOW_IT_PLAYS: { topic: string; points: string[] }[] = [
   {
     topic: "Guns",
@@ -190,6 +200,17 @@ export const HOW_IT_PLAYS: { topic: string; points: string[] }[] = [
       "Lung and oxygen bars: the lung bar drains when you swim underwater without a scuba tank. The oxygen bar shows the air left in a tank. Expect health damage if either runs out.",
       "Banked money: the number beside this icon is cash in the bank, which is safe if you're Wasted or Busted. The ring may track a money goal or a limit, since big sums in a bank could look suspicious for two people on the run.",
       "HUD meanings come from a community HUD guide, not a Rockstar manual, so they may change at release.",
+    ],
+  },
+  {
+    topic: "Story, saves and replays",
+    points: [
+      "No menu option to replay story missions at launch, according to IGN's reviewer. Nearly every Rockstar game since The Ballad of Gay Tony has had one.",
+      "The story branches. Choices you made hours earlier can change how a whole mission plays out. The reviewer's example is a heist that can go smoothly or turn messy.",
+      "IGN's guess at why: jumping back into one mission could clash with everything the story tracks behind the scenes. That is the reviewer's reading, not a Rockstar explanation.",
+      "No bronze, silver or gold medals, so there are no scores or best times to chase.",
+      "Workaround: 15 manual save slots. IGN suggests a new save about every 7% of the story, so you're never far from a moment you might want to revisit. The story runs roughly 50 to 100 hours.",
+      "From IGN's launch-day report (Nov 18): one reviewer's playthrough, not a Rockstar statement. Replay could still be added after launch.",
     ],
   },
   {

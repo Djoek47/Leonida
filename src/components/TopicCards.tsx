@@ -24,6 +24,9 @@ const LOOK: Record<string, { emblem: EmblemId; kicker: string; shots: string[] }
     "ultimate/safehouse_vehicles_01", "people/jason_and_lucia_11"] },
   "Money and robberies": { emblem: "money", kicker: "Bank, cash, loot", shots: [
     "people/jason_and_lucia_8", "people/jason_and_lucia_2", "people/jason_and_lucia_5"] },
+  "Story, saves and replays": { emblem: "profile", kicker: "No replay, 15 saves", shots: [
+    "people/jason_and_lucia_1", "people/jason_and_lucia_3", "people/jason_and_lucia_6",
+    "people/jason_and_lucia_10", "people/jason_duval_2", "people/lucia_caminos_9"] },
   "Criminal Profile": { emblem: "profile", kicker: "Professional to Psycho", shots: [
     "people/jason_duval_10", "places/vice_city_12", "people/jason_and_lucia_7"] },
   "Customising cars": { emblem: "custom", kicker: "Rideout and One-Eyed Willie's", shots: [
