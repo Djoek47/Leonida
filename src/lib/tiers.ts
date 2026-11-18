@@ -42,7 +42,7 @@ export const TIERS: Tier[] = [
   },
   {
     id: "hustler", label: "Hustler", rank: 2,
-    monthlyCents: 2000, annualCents: 19200, votes: 4, creditsPerMonth: 8,
+    monthlyCents: 2000, annualCents: 19000, votes: 4, creditsPerMonth: 8,
     weeklySubmissions: 8, adFree: true,
     badge: "BEST FOR GAMERS",
     perks: [
@@ -55,7 +55,7 @@ export const TIERS: Tier[] = [
   },
   {
     id: "kingpin", label: "Kingpin", rank: 3,
-    monthlyCents: 4500, annualCents: 43200, votes: 6, creditsPerMonth: 20,
+    monthlyCents: 4500, annualCents: 43000, votes: 6, creditsPerMonth: 20,
     weeklySubmissions: 12, adFree: true,
     badge: "BEST FOR CLIPPERS",
     perks: [
