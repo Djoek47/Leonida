@@ -5,8 +5,8 @@ import { sb } from "@/lib/supabase";
 import { useUser, type Profile } from "@/lib/useUser";
 import { DEMO_CLIPS, exactMoney, type Clip } from "@/lib/api";
 import { tierById, DOWNLOAD } from "@/lib/tiers";
-import { StatusStrip, type Badge } from "@/components/Gamification";
-import { TrophiesSection } from "@/components/TrophyCase";
+import { StatusStrip, BadgeWall, type Badge } from "@/components/Gamification";
+import { TrophyCase } from "@/components/TrophyCase";
 import { ResubmitClip, useResubmitInfo } from "@/components/ResubmitClip";
 import { FeaturedClips } from "@/components/FeaturedClips";
 import { DemoNote } from "@/components/DemoNote";
@@ -279,7 +279,8 @@ export default function Dashboard() {
 
       <FeaturedClips clips={clips} />
 
-      <TrophiesSection badges={badges.filter((b) => !/^(week|month|year)_/.test(b.id))} />
+      <div className="mt-10"><TrophyCase /></div>
+      {badges.some((b) => !/^(week|month|year)_/.test(b.id)) && <div className="mt-10"><BadgeWall badges={badges.filter((b) => !/^(week|month|year)_/.test(b.id))} /></div>}
     </div>
     </div>
   );
