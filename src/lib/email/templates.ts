@@ -247,7 +247,7 @@ export function eventEmail(kind: string, d: D, name: string): Email | null {
           ...(d.renews ? [["Renews", esc(date(d.renews))] as [string, string]] : []),
         ], N),
         button("Start using it", `${SITE}/dashboard`, N),
-        small(`Stay subscribed and your medal earns a star every 4 months. Change or cancel any time in settings.${d.test ? " This was a test-mode purchase: no card was charged." : ""}`, N),
+        small(`Stay subscribed. Earn a full star every 4 months. Change or cancel any time in settings.${d.test ? " This was a test-mode purchase: no card was charged." : ""}`, N),
       ], [`${name}, welcome to ${tierName(t)}.`, `Paid: ${money(d.amount)} ${annual ? "a year" : "a month"}${d.test ? " (test mode, no charge)" : ""}`,
           ...(PERKS[t] ?? []).map((p) => `- ${p}`), "", `${SITE}/dashboard`], "Your receipt for a Live From Leonida membership.");
     }
