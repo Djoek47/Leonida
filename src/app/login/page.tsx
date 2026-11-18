@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "@/components/A";
 import { sb, isLive } from "@/lib/supabase";
 import { plainAuthError } from "@/lib/authErrors";
@@ -34,6 +34,11 @@ export default function Login() {
   const redirectTo = typeof window !== "undefined"
     ? `${location.origin}/auth/confirm?next=${encodeURIComponent(next)}` : undefined;
 
+  // A fresh sign-up keeps its credentials in memory (never stored) so that if the
+  // confirmation is opened on ANOTHER device, this tab can sign itself in once
+  // the address is confirmed. BroadcastChannel and sessions don't cross devices.
+  const creds = useRef<{ email: string; password: string } | null>(null);
+
   // While this tab waits on a confirmation, it watches for the session the
   // confirm page creates — in another tab, or anywhere in this browser — and
   // carries the member through without a second sign-in.
@@ -48,12 +53,22 @@ export default function Login() {
     const ch = typeof BroadcastChannel !== "undefined" ? new BroadcastChannel("lfl-auth") : null;
     if (ch) ch.onmessage = (m) => { if (m.data?.type === "signed-in") check(); };
     const id = setInterval(check, 2500);
+    // Cross-device: try the password every 12s (stays inside Supabase's sign-in rate limit).
+    // "Email not confirmed" just means keep waiting; anything else ends the attempts.
+    let tries = 0;
+    const cross = creds.current ? setInterval(async () => {
+      const cr = creds.current; if (!cr || dead) return;
+      if (++tries > 75) { clearInterval(cross!); return; }
+      const { data, error } = await c.auth.signInWithPassword(cr);
+      if (data?.session) { creds.current = null; land(); }
+      else if (error && !/not confirmed/i.test(error.message)) { clearInterval(cross!); }
+    }, 12000) : null;
     const vis = () => { if (document.visibilityState === "visible") check(); };
     document.addEventListener("visibilitychange", vis);
-    return () => { dead = true; clearInterval(id); sub.subscription.unsubscribe(); ch?.close(); document.removeEventListener("visibilitychange", vis); };
+    return () => { dead = true; clearInterval(id); if (cross) clearInterval(cross); sub.subscription.unsubscribe(); ch?.close(); document.removeEventListener("visibilitychange", vis); };
   }, [waiting, next]);
 
-  function go(m: Mode) { setMode(m); setErr(null); setDone(null); setWaiting(false); }
+  function go(m: Mode) { setMode(m); setErr(null); setDone(null); setWaiting(false); creds.current = null; }
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
@@ -74,14 +89,15 @@ export default function Login() {
         });
         if (error) throw error;
         if (data.session) { location.href = next; return; }
-        setDone(`Account made. Open the confirmation we sent to ${email} — leave this tab open and it signs you in by itself.`);
+        creds.current = { email, password };
+        setDone(`Account made. Open the confirmation we sent to ${email}, on this device or your phone, and leave this tab open. It signs you in by itself.`);
         setMode("in"); setWaiting(true);
         return;
       }
       if (mode === "link") {
         const { error } = await c.auth.signInWithOtp({ email, options: { emailRedirectTo: redirectTo } });
         if (error) throw error;
-        setDone(`Link sent to ${email}. Leave this tab open — opening the link signs you in right here.`);
+        setDone(`Link sent to ${email}. Open it on this device and this tab signs in by itself. If you open it on another device, you'll be signed in there instead.`);
         setWaiting(true);
         return;
       }
