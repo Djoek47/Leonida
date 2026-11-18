@@ -8,7 +8,7 @@ export const dynamic = "force-dynamic";
  *
  *  Stripe members are paid on the spot: the wallet is debited, a transfer goes
  *  to their Stripe account, and Stripe pays it to their card or bank. If the
- *  transfer fails the debit is put back. Everyone else is queued for staff to
+ *  transfer fails the cash-out is queued for staff to pay by hand. Everyone else is queued for staff to
  *  send by PayPal, Venmo, Cash App, Interac. */
 export async function POST(req: NextRequest) {
   if (!env.serviceKey) return Response.json({ error: "Not available yet." }, { status: 503 });
@@ -41,9 +41,16 @@ export async function POST(req: NextRequest) {
       p_data: { amount: cents, method: "Stripe", handle: "your card or bank", reference: t.id }, p_dedupe: `transfer:${t.id}` });
     return Response.json({ ok: true, sent: true });
   } catch (e) {
-    // Put the money back so a failed transfer never leaves the wallet short.
-    await db.from("wallet_entries").insert({ player_id: me.id, amount_cents: cents, kind: "refund", note: "Stripe transfer failed, returned", ref: String(entry) });
-    console.error("transfer failed", e);
-    return Response.json({ error: "Stripe couldn't send it right now. Your balance is back where it was." }, { status: 502 });
+    // Stripe couldn't send it. Don't bounce the member: keep the debit and queue the
+    // cash-out for staff to pay by hand (PayPal, Venmo, Cash App, Interac).
+    console.error("transfer failed, queued for staff", e);
+    const handle = p.payout_handle || `Stripe account ${p.stripe_connect_id}`;
+    await db.from("wallet_entries").update({ note: "Stripe transfer failed, queued for staff" }).eq("id", entry);
+    await db.from("payouts").insert({ creator_id: me.id, period_start: new Date().toISOString().slice(0, 10), period_end: new Date().toISOString().slice(0, 10),
+      amount_cents: cents, download_count: 0, method: "stripe", handle, status: "requested",
+      note: `wallet cash-out #${entry}: Stripe transfer failed, pay by hand` });
+    await db.rpc("enqueue_email", { p_user: me.id, p_kind: "withdrawal_requested",
+      p_data: { amount: cents, method: "Stripe", handle: "your account" }, p_dedupe: `cashout:${entry}` });
+    return Response.json({ ok: true, queued: true });
   }
 }

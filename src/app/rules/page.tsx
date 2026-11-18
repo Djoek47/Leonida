@@ -25,7 +25,7 @@ const TERMS: [number, string, string][] = [
   [6, "Winning", "Most votes wins. If there is a tie, the winner is the user with the most views on their videos."],
   [7, "Payment", "Give us a working payout account and you will receive your winnings after the announcement."],
   [8, "Resubmission", "Clips that have won any weekly or monthly prize, at gold, silver or bronze, become ineligible for resubmission. Clips that have not won can still be resubmitted by selecting the next available week in the menu. A resubmitted clip counts toward that week's submission allowance and is reviewed again."],
-  [9, "Your rights", "You own your clip. Every clip download makes you $0.99. The user may edit and publish it, credited to your gamertag."],
+  [9, "Your rights", "You own your clip. Every clip download can earn you up to $0.99. The user may edit and publish it, credited to your gamertag."],
   [11, "Privacy", "Account details run the contest, pay winners and keep voting honest. We don't sell your data."],
 ];
 
