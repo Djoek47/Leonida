@@ -12,6 +12,12 @@ const LOOK: Record<string, { emblem: EmblemId; kicker: string; shots: string[] }
   "Police and Heat": { emblem: "heat", kicker: "What the cops know", shots: [
     "places/vice_city_6", "people/jason_duval_7", "people/lucia_caminos_7",
     "people/jason_and_lucia_9", "people/jason_and_lucia_13"] },
+  "Police markers": { emblem: "marker", kicker: "What the cops can match", shots: [
+    "people/jason_and_lucia_9", "places/vice_city_6", "people/lucia_caminos_7",
+    "people/jason_duval_7", "people/jason_and_lucia_13", "people/jason_and_lucia_9", "places/vice_city_6"] },
+  "Reading the HUD": { emblem: "hud", kicker: "Bars, Focus, banked cash", shots: [
+    "people/jason_duval_5", "people/jason_and_lucia_12", "people/lucia_caminos_7",
+    "people/jason_and_lucia_4", "people/jason_and_lucia_8", "people/jason_and_lucia_2"] },
   "Cars": { emblem: "cars", kicker: "Fuel, locks, handling", shots: [
     "art/jason_and_lucia_robbery_landscape", "ultimate/grotti_cheetah_04", "people/boobie_ike_2",
     "ultimate/safehouse_vehicles_01", "people/jason_and_lucia_11"] },

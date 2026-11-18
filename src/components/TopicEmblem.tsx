@@ -7,7 +7,7 @@
  *  a duffel — rather than generic icons. */
 export type EmblemId =
   | "guns" | "heat" | "cars" | "money" | "profile"
-  | "custom" | "fencing" | "looks" | "leonida";
+  | "custom" | "fencing" | "looks" | "leonida" | "hud" | "marker";
 
 const P: Record<EmblemId, React.ReactNode> = {
   // Crosshair over a round
@@ -17,6 +17,22 @@ const P: Record<EmblemId, React.ReactNode> = {
       <path d="M50 8v18M50 74v18M8 50h18M74 50h18" />
       <circle cx="50" cy="50" r="7" />
       <path d="M50 36v28" />
+    </>
+  ),
+  // Heart in a ring beside a meter
+  hud: (
+    <>
+      <circle cx="28" cy="50" r="20" />
+      <path d="M28 61 19 51a6 6 0 0 1 9-8 6 6 0 0 1 9 8z" />
+      <path d="M56 38h34v24H56zM73 38v24" />
+      <path d="M56 78h34" />
+    </>
+  ),
+  // Camera, the thing that keeps a record of you
+  marker: (
+    <>
+      <path d="M10 30h50v26H10zM60 38l30-10v36L60 50" />
+      <path d="M26 56v18h-12M36 72h10" />
     </>
   ),
   // Wanted star, radiating
