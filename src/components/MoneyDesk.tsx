@@ -5,6 +5,7 @@ import Link from "@/components/A";
 import { sb } from "@/lib/supabase";
 import type { Profile } from "@/lib/useUser";
 import { money, type Winning } from "@/lib/api";
+import { STRIPE_PAYOUTS } from "@/lib/content";
 
 const methods = [["paypal", "PayPal"], ["venmo", "Venmo"], ["cashapp", "Cash App"], ["interac", "Interac e-Transfer"]] as const;
 
@@ -16,7 +17,7 @@ async function call(url: string, body: object) {
 
 /** Where your money goes: Stripe straight to card or bank, or PayPal and co. sent by staff. */
 export function GetPaid({ profile, setProfile }: { profile: Profile; setProfile: (p: Profile) => void }) {
-  const [way, setWay] = useState<"stripe" | "other">(profile.payout_method && profile.payout_method !== "stripe" ? "other" : "stripe");
+  const [way, setWay] = useState<"stripe" | "other">(!STRIPE_PAYOUTS || (profile.payout_method && profile.payout_method !== "stripe") ? "other" : "stripe");
   const [busy, setBusy] = useState(false);
   const [note, setNote] = useState("");
   const [ask, setAsk] = useState(false);
@@ -69,8 +70,8 @@ export function GetPaid({ profile, setProfile }: { profile: Profile; setProfile:
       <h2 id="payout" className="money-h scroll-mt-28">Get paid</h2>
       <PayoutLogos className="mt-3" />
       <div className="pay-tabs" role="radiogroup" aria-label="Payout method">
-        <button type="button" role="radio" aria-checked={way === "stripe"} onClick={() => setWay("stripe")} className={way === "stripe" ? "on" : ""}>
-          <b>Card or bank</b><span>Instant, via Stripe</span></button>
+        <button type="button" role="radio" aria-checked={way === "stripe"} disabled={!STRIPE_PAYOUTS} onClick={() => setWay("stripe")} className={`${way === "stripe" ? "on" : ""}${STRIPE_PAYOUTS ? "" : " opacity-60 cursor-not-allowed"}`}>
+          <b>Card or bank</b><span>{STRIPE_PAYOUTS ? "Instant, via Stripe" : "Coming soon"}</span></button>
         <button type="button" role="radio" aria-checked={way === "other"} onClick={() => setWay("other")} className={way === "other" ? "on" : ""}>
           <b>Payout apps</b><span>Sent by staff</span></button>
       </div>

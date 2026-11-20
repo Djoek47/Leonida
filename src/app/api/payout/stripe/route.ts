@@ -1,5 +1,6 @@
 import { NextRequest } from "next/server";
 import { admin, configured, env, notConfigured, stripe, userFromRequest } from "@/lib/server";
+import { STRIPE_PAYOUTS } from "@/lib/content";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -16,6 +17,7 @@ export async function POST(req: NextRequest) {
   const me = await userFromRequest(req);
   if (!me) return Response.json({ error: "Sign in first." }, { status: 401 });
   const { action } = (await req.json().catch(() => ({}))) as { action?: string };
+  if (!STRIPE_PAYOUTS && action === "connect") return Response.json({ error: "Stripe payouts aren't switched on for this site yet." }, { status: 503 });
   const db = admin();
   const { data: p } = await db.from("profiles").select("stripe_connect_id").eq("id", me.id).single();
 

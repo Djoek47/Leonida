@@ -69,3 +69,7 @@ export const socials = [
   { id: "instagram", label: "Instagram", href: "https://www.instagram.com/lfleonida" },
   { id: "facebook", label: "Facebook", href: "https://www.facebook.com/livefromleonida" },
 ] as const;
+
+/** Instant card/bank cash-outs through Stripe Connect. Off until Connect has been tested live;
+ *  until then the wallet shows "coming soon" and cash-outs go through PayPal, Venmo, Cash App or Interac. */
+export const STRIPE_PAYOUTS = false;
