@@ -15,7 +15,7 @@ const BACKDROP = "/media/video/edge-loop.mp4";
 const POSTER = "/media/art/jason_lucia_motel_portrait.webp";
 
 const BEHIND = [
-  ["Leonida Economist", "Access every scheme to make money in Leonida.", null],
+  ["Leonida Economist", "Access every scheme to make money in Leonida. Hustler and Kingpin.", "/edge/economist"],
   ["Mission Briefing", "Get all insights into GTA VI Missions, don\u2019t miss a thing. Street, Hustler and Kingpin.", "/edge/briefing"],
 ] as const;
 
