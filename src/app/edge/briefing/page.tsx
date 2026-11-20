@@ -5,7 +5,7 @@ import { sb } from "@/lib/supabase";
 import { useUser } from "@/lib/useUser";
 import { CHAPTERS, MISSION_SOURCES, WHO, type Chapter, type Mission } from "@/lib/missions";
 
-type Brief = { id: string; title: string; mission: string | null; summary: string | null; body: string; published_at: string | null };
+type Brief = { id: string; title: string; mission: string | null; summary: string | null; body: string; published_at: string | null; sources?: string[] };
 type Teaser = { id: string; title: string; mission: string | null; published_at: string | null };
 const day = (iso: string | null) => (iso ? new Date(iso).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }) : "");
 const KEY = "lfl-chapter";
@@ -35,13 +35,20 @@ export default function MissionBriefing() {
     if (loading) return;
     const c = sb(); if (!c) return;
     if (allowed) {
-      c.from("mission_briefings").select("id, title, mission, summary, body, published_at").eq("published", true).order("published_at", { ascending: false })
+      c.from("mission_briefings").select("id, title, mission, summary, body, published_at, sources").eq("published", true).order("published_at", { ascending: false })
         .then(({ data }) => setRows((data ?? []) as Brief[]));
     } else {
       c.rpc("briefing_titles").then(({ data }) => setTeasers((data ?? []) as Teaser[]));
     }
   }, [allowed, loading]);
 
+  const known = useMemo(() => new Set(CHAPTERS.flatMap((c) => [...c.missions.map((m) => m.name.toLowerCase()), ...c.strangers.map((x) => x.name.toLowerCase())])), []);
+  const byMission = useMemo(() => {
+    const m = new Map<string, Brief>();
+    for (const b of rows) if (b.mission && known.has(b.mission.toLowerCase()) && !m.has(b.mission.toLowerCase())) m.set(b.mission.toLowerCase(), b);
+    return m;
+  }, [rows, known]);
+  const loose = rows.filter((b) => !b.mission || byMission.get(b.mission.toLowerCase())?.id !== b.id);
   const total = useMemo(() => CHAPTERS.reduce((n, c) => n + c.missions.length + c.strangers.length, 0), []);
 
   return (
@@ -82,14 +89,14 @@ export default function MissionBriefing() {
           </section>
 
           <div className="mt-6 grid gap-6">
-            {CHAPTERS.map((c) => <ChapterBlock key={c.id} c={c} state={c.id <= cur ? "open" : c.id === cur + 1 ? "peek" : "locked"} />)}
+            {CHAPTERS.map((c) => <ChapterBlock key={c.id} c={c} team={byMission} state={c.id <= cur ? "open" : c.id === cur + 1 ? "peek" : "locked"} />)}
           </div>
 
-          {rows.length > 0 && (
+          {loose.length > 0 && (
             <section className="mt-12">
               <h2 className="display text-3xl">From the team</h2>
               <ul className="mt-4 grid gap-3">
-                {rows.map((b) => {
+                {loose.map((b) => {
                   const on = open === b.id;
                   return (
                     <li key={b.id} className={`brief${on ? " is-open" : ""}`}>
@@ -120,7 +127,7 @@ export default function MissionBriefing() {
   );
 }
 
-function ChapterBlock({ c, state }: { c: Chapter; state: "open" | "peek" | "locked" }) {
+function ChapterBlock({ c, state, team }: { c: Chapter; state: "open" | "peek" | "locked"; team: Map<string, Brief> }) {
   const [side, setSide] = useState(false);
   const story = c.missions.filter((m) => !m.optional);
   const head = (
@@ -163,7 +170,7 @@ function ChapterBlock({ c, state }: { c: Chapter; state: "open" | "peek" | "lock
           <ul>{c.tips.map((t) => <li key={t}>{t}</li>)}</ul>
         </aside>
       )}
-      <ol className="mb-grid">{c.missions.map((m) => <MissionCard key={m.name} m={m} />)}</ol>
+      <ol className="mb-grid">{c.missions.map((m) => <MissionCard key={m.name} m={m} brief={team.get(m.name.toLowerCase())} />)}</ol>
       {c.strangers.length > 0 && (
         <div className="mb-side">
           <button className="mb-side-btn" onClick={() => setSide((v) => !v)} aria-expanded={side}>
@@ -176,6 +183,7 @@ function ChapterBlock({ c, state }: { c: Chapter; state: "open" | "peek" | "lock
                   <div className="mb-card-top"><span className="mb-tag">Stranger · {s.giver}</span>{s.where && <span className="mb-where">{s.where}</span>}</div>
                   <b className="mb-name">{s.name}</b>
                   <p className="mb-goal">{s.goal}</p>
+                  <TeamBrief b={team.get(s.name.toLowerCase())} />
                 </li>
               ))}
             </ol>
@@ -186,7 +194,7 @@ function ChapterBlock({ c, state }: { c: Chapter; state: "open" | "peek" | "lock
   );
 }
 
-function MissionCard({ m }: { m: Mission }) {
+function MissionCard({ m, brief }: { m: Mission; brief?: Brief }) {
   return (
     <li className={`mb-card${m.heist ? " is-heist" : ""}${m.optional ? " is-opt" : ""}`}>
       <div className="mb-card-top">
@@ -195,6 +203,7 @@ function MissionCard({ m }: { m: Mission }) {
       </div>
       <b className="mb-name">{m.name}</b>
       <p className="mb-goal">{m.goal}</p>
+      <TeamBrief b={brief} />
       {(m.optional || m.missable || m.heist) && (
         <div className="mb-flags">
           {m.heist && <span className="mb-flag f-heist">Heist</span>}
@@ -203,5 +212,23 @@ function MissionCard({ m }: { m: Mission }) {
         </div>
       )}
     </li>
+  );
+}
+
+/** A team-written briefing attached to one mission card. */
+function TeamBrief({ b }: { b?: Brief }) {
+  const [on, setOn] = useState(false);
+  if (!b) return null;
+  return (
+    <div className="mb-team">
+      <button onClick={() => setOn((v) => !v)} aria-expanded={on} className="mb-team-btn">★ Team briefing <i aria-hidden>{on ? "−" : "+"}</i></button>
+      {on && (
+        <div className="mb-team-body">
+          {b.summary && <p className="font-bold">{b.summary}</p>}
+          {b.body.split(/\n{2,}/).map((p, i) => <p key={i}>{p}</p>)}
+          {b.sources && b.sources.length > 0 && <p className="text-xs text-haze">Sources: {b.sources.map((u) => <a key={u} href={u} target="_blank" rel="noopener noreferrer" className="underline mr-2">{u.replace(/^https?:\/\/(www\.)?/, "").split("/")[0]}</a>)}</p>}
+        </div>
+      )}
+    </div>
   );
 }

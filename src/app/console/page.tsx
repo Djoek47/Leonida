@@ -7,8 +7,9 @@ import { BRACKETS } from "@/lib/tiers";
 import { DemoNote } from "@/components/DemoNote";
 import NotFound from "@/app/not-found";
 import { MoneyPanel } from "./Money";
+import { Research } from "./Research";
 
-type Tab = "overview" | "cashouts" | "review" | "gamertags" | "contest" | "payouts" | "creators" | "wallets" | "people" | "claims" | "drops" | "staff" | "support" | "rounds" | "money" | "presets" | "briefings";
+type Tab = "overview" | "cashouts" | "review" | "gamertags" | "contest" | "payouts" | "creators" | "wallets" | "people" | "claims" | "drops" | "staff" | "support" | "rounds" | "money" | "presets" | "briefings" | "research";
 type Row = Record<string, unknown> & { id: string };
 
 export default function Admin() {
@@ -32,7 +33,7 @@ const NAV: { group: string; items: [Tab, string, string?][] }[] = [
   { group: "Today", items: [["overview", "Overview"], ["review", "Clip queue", "clips_pending"], ["support", "Support", "support_open"], ["gamertags", "Gamertags", "gamertags_pending"], ["claims", "Claims", "claims_open"]] },
   { group: "Money", items: [["money", "Money"], ["cashouts", "Cash-out requests", "cashouts_waiting"], ["payouts", "Prize payouts", "prizes_waiting"], ["creators", "Creator payouts"], ["wallets", "Member money"]] },
   { group: "Rounds", items: [["contest", "Weekly round"], ["presets", "Upcoming weeks"], ["rounds", "Round results"], ["drops", "Daily Drops"]] },
-  { group: "Content", items: [["briefings", "Mission Briefing"]] },
+  { group: "Content", items: [["briefings", "Mission Briefing"], ["research", "Research"]] },
   { group: "Community", items: [["people", "People"], ["staff", "Staff and settings"]] },
 ];
 
@@ -94,6 +95,7 @@ function Shell({ tab, setTab, isOwner }: { tab: Tab; setTab: (t: Tab) => void; i
           {tab === "creators" && <CreatorPayouts />}
           {tab === "drops" && <Drops />}
           {tab === "briefings" && <Briefings />}
+          {tab === "research" && <Research />}
           {tab === "support" && <SupportDesk />}
           {tab === "rounds" && <RoundResults />}
           {tab === "wallets" && <><LedgerCheck /><Wallets /></>}
@@ -1269,7 +1271,7 @@ function RoundResults() {
 }
 
 /** Mission Briefing posts. Drafts stay here; published ones show to Street, Hustler and Kingpin members on The Edge. */
-type BriefRow = { id: string; title: string; mission: string | null; summary: string | null; body: string; published: boolean; published_at: string | null; updated_at: string };
+type BriefRow = { id: string; title: string; mission: string | null; summary: string | null; body: string; published: boolean; published_at: string | null; updated_at: string; sources?: string[] };
 function Briefings() {
   const [rows, setRows] = useState<BriefRow[]>([]);
   const [edit, setEdit] = useState<BriefRow | null>(null);
@@ -1287,6 +1289,7 @@ function Briefings() {
     if (!s) { setNote("Demo mode: nothing was written."); return; }
     const row = { title: String(f.get("title") ?? "").trim(), mission: String(f.get("mission") ?? "").trim() || null,
       summary: String(f.get("summary") ?? "").trim() || null, body: String(f.get("body") ?? "").trim(), published: f.get("published") === "on" };
+    if (row.published && row.body.startsWith("Research notes.")) { setNote("Rewrite the research notes in our own words (and remove the first line) before publishing."); return; }
     const { error } = edit ? await s.from("mission_briefings").update(row).eq("id", edit.id) : await s.from("mission_briefings").insert(row);
     setNote(error ? error.message : row.published ? "Saved and published. Street members and up can read it now." : "Saved as a draft.");
     if (!error) { setEdit(null); (e.target as HTMLFormElement).reset(); load(); }
@@ -1311,10 +1314,11 @@ function Briefings() {
         <form key={edit?.id ?? "new"} onSubmit={save} className="mt-4 grid gap-3">
           <div className="grid gap-3 sm:grid-cols-2">
             <label className="grid gap-1 text-sm font-bold">Title<input name="title" required minLength={3} maxLength={140} defaultValue={edit?.title} className="field font-normal" placeholder="Everything worth knowing before the first heist" /></label>
-            <label className="grid gap-1 text-sm font-bold">Mission (optional)<input name="mission" maxLength={80} defaultValue={edit?.mission ?? ""} className="field font-normal" placeholder="Mission name" /></label>
+            <label className="grid gap-1 text-sm font-bold">Mission (optional)<input name="mission" maxLength={80} defaultValue={edit?.mission ?? ""} className="field font-normal" placeholder="Exact mission name, e.g. Gone Fishing" /></label>
           </div>
           <label className="grid gap-1 text-sm font-bold">One-line summary (optional)<input name="summary" maxLength={200} defaultValue={edit?.summary ?? ""} className="field font-normal" /></label>
           <label className="grid gap-1 text-sm font-bold">Briefing<textarea name="body" required rows={10} defaultValue={edit?.body} className="field font-normal" /></label>
+          {edit?.sources && edit.sources.length > 0 && <p className="text-xs text-haze">Sources: {edit.sources.map((u) => <a key={u} href={u} target="_blank" rel="noopener noreferrer" className="underline mr-2">{u.replace(/^https?:\/\/(www\.)?/, "").split("/")[0]}</a>)}</p>}
           <label className="flex items-center gap-2 text-sm font-bold"><input type="checkbox" name="published" defaultChecked={edit?.published ?? false} /> Publish now</label>
           <div className="flex gap-3">
             <button className="btn btn-hot">{edit ? "Save changes" : "Save"}</button>

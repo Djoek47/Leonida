@@ -2526,3 +2526,10 @@ a.edge-card:hover b i { transform: translateX(4px); }
 .eco-table th { text-align: left; font-size: .66rem; letter-spacing: .14em; text-transform: uppercase; padding: .7rem .9rem; background: var(--gulf); color: #fff; }
 .eco-table td { padding: .65rem .9rem; border-top: 1px solid var(--line); vertical-align: top; }
 .eco-rules { display: grid; gap: .4rem; list-style: disc; padding-left: 1.2rem; line-height: 1.5; }
+.mb-team { margin-top: .35rem; }
+.mb-team-btn { width: 100%; display: flex; justify-content: space-between; padding: .35rem .55rem; border-radius: 7px; background: var(--foam); color: var(--mango); font-size: .72rem; font-weight: 900; letter-spacing: .08em; text-transform: uppercase; }
+.mb-team-btn i { font-style: normal; }
+.mb-team-body { display: grid; gap: .45rem; padding-top: .5rem; font-size: .86rem; line-height: 1.45; white-space: pre-line; }
+.guide-entries { display: grid; gap: 1rem; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); }
+.guide-entry { border: 2px solid var(--line); border-radius: 14px; background: var(--ink); padding: 1rem 1.1rem; display: grid; gap: .4rem; align-content: start; }
+.guide-entry ul { list-style: disc; padding-left: 1.1rem; display: grid; gap: .3rem; font-size: .92rem; line-height: 1.45; }
