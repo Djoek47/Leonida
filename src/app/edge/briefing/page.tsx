@@ -171,6 +171,7 @@ export default function MissionBriefing() {
           {CHAPTERS.map((c) => <option key={c.id} value={c.id}>{c.label}</option>)}
         </select>
         <span className="text-haze">Saved on this device. Clearing a chapter moves you on by itself.</span>
+        <Link href="/edge/briefing/choices" className="mx-road-link">🛣 The Road: choice tree →</Link>
       </div>
 
       <ChapterView c={ch} state={state} done={done} prog={prog} onOpen={(i) => setOpen({ ch: ch.id, i })} />
