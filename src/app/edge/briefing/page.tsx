@@ -6,7 +6,6 @@ import { useUser } from "@/lib/useUser";
 import { CHAPTERS, MISSION_SOURCES, WHO, type Chapter, type Mission } from "@/lib/missions";
 
 type Brief = { id: string; title: string; mission: string | null; summary: string | null; body: string; published_at: string | null; sources?: string[] };
-type Teaser = { id: string; title: string; mission: string | null; published_at: string | null };
 const day = (iso: string | null) => (iso ? new Date(iso).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }) : "");
 const KEY = "lfl-chapter";
 const PEEK = 2; // mission names shown from the next chapter
@@ -19,7 +18,6 @@ export default function MissionBriefing() {
   const { user, profile, paying, tier, loading } = useUser();
   const allowed = Boolean(profile?.is_admin || (paying && tier.rank >= 1));
   const [rows, setRows] = useState<Brief[]>([]);
-  const [teasers, setTeasers] = useState<Teaser[]>([]);
   const [open, setOpen] = useState<string | null>(null);
   const [cur, setCur] = useState<number | null>(null);
 
@@ -37,8 +35,6 @@ export default function MissionBriefing() {
     if (allowed) {
       c.from("mission_briefings").select("id, title, mission, summary, body, published_at, sources").eq("published", true).order("published_at", { ascending: false })
         .then(({ data }) => setRows((data ?? []) as Brief[]));
-    } else {
-      c.rpc("briefing_titles").then(({ data }) => setTeasers((data ?? []) as Teaser[]));
     }
   }, [allowed, loading]);
 
@@ -72,7 +68,6 @@ export default function MissionBriefing() {
             </div>
             <ul className="brief-teasers" aria-label="Opening missions">
               {CHAPTERS[1].missions.filter((m) => !m.optional).slice(0, 6).map((m) => <li key={m.name}><b>{m.name}</b><span>Chapter 1</span></li>)}
-              {teasers.map((t) => <li key={t.id}><b>{t.title}</b><span>{t.mission ? `${t.mission} · ` : ""}{day(t.published_at)}</span></li>)}
             </ul>
           </section>
         </>
