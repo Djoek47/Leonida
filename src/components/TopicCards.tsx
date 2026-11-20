@@ -43,6 +43,10 @@ const LOOK: Record<string, { emblem: EmblemId; kicker: string; shots: string[] }
   "Focus": { emblem: "hud", kicker: "Slow time, see more", shots: [
     "people/lucia_aim_closeup", "people/jason_sniper", "people/jason_duval_5",
     "people/jason_and_lucia_4", "people/lucia_pistol_rain"] },
+  "Story and endings": { emblem: "profile", kicker: "No spoilers here", shots: [
+    "people/jason_lucia_sunset_1", "places/vice_city_night", "people/jason_lucia_hilltop", "people/lucia_cell_window", "people/jason_and_lucia_10", "places/wrecking_ball_tower"] },
+  "Getting around": { emblem: "cars", kicker: "Taxis, fuel, planes", shots: [
+    "places/seaplane_keys_bridge", "places/car_wash_cab", "places/ricardo_tires_gas_night", "people/jason_seaplane"] },
   "Cheats": { emblem: "money", kicker: "Codes and how to unlock them", shots: [
     "people/masked_duo_rifles", "places/vice_city_night", "people/jason_gun_1",
     "places/police_supercar", "people/helicopter_hang", "places/orange_supercar", "places/sheriff_chase", "places/vice_city_6"] },

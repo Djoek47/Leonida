@@ -21,14 +21,14 @@ const money = (n: number) => `${n < 0 ? "−" : ""}$${Math.abs(n).toLocaleString
 export default function TheRoad() {
   const { profile, paying, tier, loading, user } = useUser();
   const allowed = Boolean(profile?.is_admin || (paying && tier.rank >= 1));
-  const [reach, setReach] = useState(0);
+  const [reach, setReach] = useState(1); // the Prologue has no choices, so the road starts at Chapter 1
   const [picks, setPicks] = useState<Record<string, number>>({});
   const [spoil, setSpoil] = useState(false);
   const [ready, setReady] = useState(false);
 
   useEffect(() => {
     try {
-      const v = Number(localStorage.getItem(KEY)); if (Number.isInteger(v) && v >= 0) setReach(v);
+      const v = Number(localStorage.getItem(KEY)); if (Number.isInteger(v) && v >= 0) setReach(Math.max(1, v));
       setPicks(JSON.parse(localStorage.getItem(PICKS) ?? "{}"));
     } catch {}
     setReady(true);

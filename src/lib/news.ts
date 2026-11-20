@@ -184,6 +184,10 @@ export const HOW_IT_PLAYS: { topic: string; points: string[] }[] = [
       "The Waink app scans any car for its security, tracker and resale value.",
       "Register stolen cars for a fee; buy garages for more storage. Scooter Bros deliver your car to you.",
       "Handbrake moves to X so you can shoot with L1/R1 while driving.",
+      "Scan before you steal: WAiNK shows the security level, the tool you'll need, tracker status, fence value and registration cost.",
+      "Trackers come in three tiers: cheap cars have none, mid-range cars call the police, supercars ping your position if you drive too slowly.",
+      "The slim jim is quieter than smashing glass, and damage cuts the sale price. The Key Cloner (Chapter 3) opens keyless supercars.",
+      "Unregistered cars can despawn. Store one you want to keep in a garage and pay its registration.",
     ],
   },
   {
@@ -294,6 +298,26 @@ export const HOW_IT_PLAYS: { topic: string; points: string[] }[] = [
       "Coffee, tea, sleeping or showering at a safehouse, or a sink in town refill it faster.",
       "Food and drink stretch the bar until you're wasted. Adrenaline is the biggest boost.",
       "Make it permanently bigger at the shooting range, golf putting, pool and fishing.",
+    ],
+  },
+  {
+    topic: "Story and endings",
+    points: [
+      "Prologue plus five chapters, roughly 91 story missions and 60 to 90 hours.",
+      "Jason and Lucia can't be seen together in public through the Chapter 4 airport setup, so you meet at the hotel.",
+      "There's more than one ending. Guides agree it's shaped by your story decisions, the relationship, each Criminal Profile and your Family Savings.",
+      "Before the finale the game asks if you're ready. After the credits it drops you back to that moment, so you can save and see the other road.",
+      "Beating the story unlocks 100% completion and the cheats list.",
+      "Our choice tree, The Road, maps every decision that matters. Spoilers stay sealed until you ask.",
+    ],
+  },
+  {
+    topic: "Getting around",
+    points: [
+      "Open the phone with Up on the D-pad: RydeMe taxis work as fast travel, with 20% off after the second BuckMe goal.",
+      "Staying at the Y Hotel in Chapter 4, the hotel car service is a free taxi from the front door.",
+      "Fill up before long drives. Stolen cars don't always start with a full tank, and running dry in a chase ends it.",
+      "Seaplanes, Seasharks and airboats are all story vehicles early on. Scan every one with WAiNK: 200 of the 277 count toward 100%.",
     ],
   },
   {
