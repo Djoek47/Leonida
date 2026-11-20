@@ -26,7 +26,7 @@ export const people = [
   { slug: "cal_hampton", art: "cal_hampton", name: "Cal Hampton", shots: 4, video: "cal_hampton_video_clip", line: "Jason's friend and partner in work. Happiest at home, listening in on the Coast Guard." },
   { slug: "boobie_ike", art: "boobie_ike", name: "Boobie Ike", shots: 4, video: "boobie_ike_video_clip", line: "Vice City legend. Real estate, a strip club, a record label." },
   { slug: "drequan_priest", art: "drequan_priest", name: "DreQuan Priest", shots: 4, video: "drequan_priest_video_clip", line: "Boobie's partner at Only Raw Records, chasing the next big act." },
-  { slug: "real_dimez", art: "real_dimez", name: "Real Dimez", shots: 4, video: "real_dimez_video_clip", line: "Local rap duo trying to turn a viral moment into a career." },
+  { slug: "real_dimez", art: "real_dimez", name: "Real Dimez", shots: 4, video: "real_dimez_video_clip", line: "Roxy and Bae-Luxe: two rappers, one duo, trying to turn a viral moment into a career." },
   { slug: "raul_bautista", art: "raul_bautista", name: "Raul Bautista", shots: 4, video: "raul_bautista_video_clip", line: "A seasoned bank robber always looking for new talent." },
   { slug: "brian_heder", art: "brian_heder", name: "Brian Heder", shots: 4, video: "brian_heder_video_clip", line: "Old-school drug runner in the Keys, and Jason's landlord." },
 ] as const;

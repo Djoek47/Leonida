@@ -98,7 +98,7 @@ export function TopicCards() {
 
 /** One tip at a time, on its own picture. Arrows, keys or a swipe move
  *  through them; the picture stays clear and the tip sits on a dark fade. */
-function TopicPopup({ topic, points, emblem, shots, onClose }: {
+export function TopicPopup({ topic, points, emblem, shots, onClose }: {
   topic: string; points: string[]; emblem: EmblemId; shots: string[]; onClose: () => void;
 }) {
   const box = useRef<HTMLDivElement>(null);

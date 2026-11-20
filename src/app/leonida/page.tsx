@@ -9,8 +9,22 @@ import { EditionCarousel } from "@/components/EditionCarousel";
 import { Arsenal } from "@/components/Arsenal";
 import { Gallery } from "@/components/Gallery";
 import { GuideNav } from "@/components/GuideNav";
+import { CastList } from "@/components/CastList";
+import { CheatCodes } from "@/components/CheatCodes";
+import { VehicleCatalog } from "@/components/VehicleCatalog";
+import { LEAD_ACTORS } from "@/lib/cast";
 
 export const revalidate = 7200;
+
+/** More official shots per place, on top of the numbered ones. */
+const EXTRA: Record<string, string[]> = {
+  vice_city: ["places/vice_city_night", "places/marina_skyline", "places/palm_tower", "places/club_jungle_1"],
+  leonida_keys: ["places/rusty_anchor_bar", "places/seaplane_keys_bridge", "places/seaplane_sunset", "places/catamaran_aerial"],
+  grassrivers: ["places/flamingo_wetlands", "places/sheriff_chase"],
+  port_gellhorn: ["places/ricardo_tires_gas_night", "places/car_wash_cab"],
+  ambrosia: ["places/ganado_coast", "places/offroad_muscle"],
+  mount_kalaga_national_park: ["places/beach_aerial"],
+};
 
 export default function Guide() {
   return (
@@ -35,10 +49,10 @@ export default function Guide() {
         <div className="mt-8 rounded-lg border border-line bg-ink p-6 md:p-8 grid gap-6 md:grid-cols-[1fr_1.4fr] items-center">
           <div>
             <p className="display text-4xl">More maps</p>
-            <p className="text-haze mt-2">Rockstar hasn&apos;t released an official map yet. These community projects go deeper.</p>
+            <p className="text-haze mt-2">Rockstar hasn&apos;t published an official map. These go deeper: the full in-game map and the community&apos;s interactive maps.</p>
           </div>
-          <ul className="grid gap-3 sm:grid-cols-3">
-            {[["State of Leonida map", "Mapping Community", "https://map.stateofleonida.net/"], ["GTA VI landmarks map", "GTADB", "https://map.gtadb.org/"], ["GTA Wiki", "Weird Gloop", "https://gta.wiki/"]].map(([t, by, href]) => (
+          <ul className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+            {[["Full in-game map, high-res", "PowerPyx", "https://www.powerpyx.com/?p=370486"], ["State of Leonida map", "Mapping Community", "https://map.stateofleonida.net/"], ["GTA VI landmarks map", "GTADB", "https://map.gtadb.org/"], ["GTA Wiki", "Weird Gloop", "https://gta.wiki/"]].map(([t, by, href]) => (
               <li key={href}><a href={href} target="_blank" rel="noreferrer" className="block h-full rounded-lg border-2 border-gulf p-4 hover:bg-gulf hover:text-white transition-colors">
                 <span className="block font-extrabold">{t}</span><span className="block text-sm opacity-80">by {by}</span></a></li>
             ))}
@@ -46,13 +60,15 @@ export default function Guide() {
         </div>
       </section>
 
+      <GuideNews />
+
       <section id="places" className="py-6 scroll-mt-40">
         <div className="mx-auto max-w-7xl px-4"><h2 className="display text-6xl md:text-7xl">Places</h2></div>
         <div className="mt-8">
           {regions.map((r, i) => (
             <article id={r.slug} key={r.slug} className="place-band scroll-mt-40" style={{ "--tone": r.tone } as React.CSSProperties}>
               <div className={`mx-auto max-w-7xl px-4 py-12 grid gap-6 md:grid-cols-[1.6fr_1fr] items-center ${i % 2 ? "md:[&>*:first-child]:order-2" : ""}`}>
-                <PlaceReel slug={r.slug} name={r.name} shots={r.shots} />
+                <PlaceReel slug={r.slug} name={r.name} shots={r.shots} extra={EXTRA[r.slug]} />
                 <div>
                   <h3 className="place-sign display text-4xl md:text-5xl">{r.name}</h3>
                   <p className="mt-3 place-blurb">{r.blurb}</p>
@@ -63,7 +79,6 @@ export default function Guide() {
         </div>
       </section>
 
-      <GuideNews />
 
       <section id="people" className="bg-ink border-y border-line py-16 scroll-mt-40">
         <div className="mx-auto max-w-7xl px-4">
@@ -76,15 +91,17 @@ export default function Guide() {
                 </div>
                 <h3 className="name-tag display">{p.name}</h3>
                 <p className="mt-3 text-haze text-[15px]">{p.line}</p>
+                {p.slug in LEAD_ACTORS && <p className="mt-1 text-xs font-bold text-haze">Voiced by {LEAD_ACTORS[p.slug]}</p>}
               </article>
             ))}
           </div>
+          <div className="mt-16"><CastList /></div>
         </div>
       </section>
 
       <section id="couple" className="mx-auto max-w-7xl px-4 py-16 scroll-mt-40">
         <h2 className="display text-6xl md:text-7xl">Jason &amp; Lucia</h2>
-        <p className="text-haze mt-3 max-w-2xl">The relationship isn&apos;t only the story. It&apos;s how you play. Here&apos;s what Rockstar and the press previews have confirmed so far.</p>
+        <p className="text-haze mt-3 max-w-2xl">The relationship isn&apos;t only the story. It&apos;s how you play.</p>
         <div className="mt-8 grid gap-3 grid-cols-2 lg:grid-cols-4">
           {[["jason_lucia_balcony", "Balcony at sunset"], ["lucia_convertible_heist", "Armoured-truck getaway"], ["jason_lucia_hilltop", "Hilltop over the city"], ["lucia_jason_home", "Home after a shift"]].map(([f, t], i) => (
             <figure key={f} className={`couple-tile ${i === 0 ? "col-span-2 row-span-2" : ""}`}>
@@ -94,27 +111,35 @@ export default function Guide() {
             </figure>
           ))}
         </div>
-        <div className="mt-10 grid gap-6 md:grid-cols-2">
+        <ul className="couple-facts mt-8">
           {[
-            ["Two leads, one story", "You play as both. Jason is ex-military and has run drugs; Lucia is a fighter, just out of prison. Their partnership is the spine of the plot."],
-            ["Together or apart", "In the open world you can run around as a couple or split up and cause trouble on your own. One preview had Jason driving the highway, then a switch to Lucia in the passenger seat to use her phone."],
-            ["When you can switch", "Rockstar North's Rob Nelson says it depends on the mission. Some let you swap freely, some swap you mid-mission (in the trailer's bank getaway you shoot as Jason, then drive as Lucia), and some lock you to one of them for the story."],
-            ["Your choices matter", "Previews say how you behave affects the relationship more deeply than earlier Rockstar honour systems. Reports also say you can't break the two of them up, however badly you treat each other."],
-          ].map(([h, p]) => (
-            <div key={h} className="set-card !mt-0"><h3 className="text-xl font-extrabold">{h}</h3><p className="mt-2 text-haze">{p}</p></div>
-          ))}
-        </div>
-        <p className="mt-4 text-xs text-haze">From Rockstar&apos;s interview with Famitsu and Dazed&apos;s preview. We&apos;ll update this from real play after launch.</p>
+            ["⇄", "Switch any time", "Press down on the D-pad to swap between them, outside missions that lock you to one."],
+            ["♥", "Four levels", "The bond runs from Running on Empty up to Hot Together, and it can go both ways."],
+            ["🍹", "Do things together", "Dates, robberies, the gym and dancing raise it. Ignoring calls and ditching each other drop it."],
+            ["⚑", "It changes the story", "Rockstar says how you treat each other changes how parts of the story play out."],
+          ].map(([i, h, p]) => <li key={h}><span aria-hidden>{i}</span><b>{h}</b><p>{p}</p></li>)}
+        </ul>
+        <p className="mt-4 text-sm"><Link href="/edge/briefing/choices" className="underline font-bold">Every romance choice is on The Road →</Link></p>
       </section>
 
       <section id="garage" className="mx-auto max-w-7xl px-4 py-16 scroll-mt-40">
         <h2 className="display text-6xl md:text-7xl">Cars and weapons</h2>
-        <p className="text-haze mt-3 max-w-2xl">Everything seen so far. Tap one for the details. Stats and where to find them get added after launch.</p>
+        <p className="text-haze mt-3 max-w-2xl">The ones we&apos;ve got pictures of. Tap one for the details.</p>
         <div className="mt-8"><Arsenal /></div>
+
+        <h3 id="all-vehicles" className="display text-4xl mt-16 scroll-mt-40">Every vehicle so far</h3>
+        <p className="text-haze mt-2 mb-6 max-w-2xl">All the named cars, bikes, boats and aircraft, by class. Search one or filter by where it&apos;s been seen.</p>
+        <VehicleCatalog />
 
         <h3 className="display text-4xl mt-16">Edition extras</h3>
         <p className="text-haze mt-2 mb-6 max-w-2xl">What the Ultimate Edition and the Vintage Vice City Pack add at launch, from Rockstar&apos;s screenshots and press images. Swipe sideways. Rockstar hasn&apos;t said yet what the standard game gets.</p>
         <EditionCarousel />
+      </section>
+
+      <section id="cheats" className="mx-auto max-w-7xl px-4 py-16 scroll-mt-40">
+        <h2 className="display text-6xl md:text-7xl">Cheat codes</h2>
+        <p className="text-haze mt-3 max-w-2xl">Every confirmed code, what unlocks it, and how to punch it in.</p>
+        <div className="mt-8"><CheatCodes /></div>
       </section>
 
       <section id="screenshots" className="mx-auto max-w-7xl px-4 py-16 scroll-mt-40">

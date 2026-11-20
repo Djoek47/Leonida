@@ -9,8 +9,9 @@ import { useEffect, useRef, useState } from "react";
  *  stops dead for anyone who has asked for less motion.
  *
  *  Clicking steps to the next shot, so it can be driven by hand as well. */
-export function PlaceReel({ slug, name, shots }: { slug: string; name: string; shots: number }) {
-  const n = Math.min(shots, 6);
+export function PlaceReel({ slug, name, shots, extra = [] }: { slug: string; name: string; shots: number; extra?: string[] }) {
+  const srcs = [...Array.from({ length: Math.min(shots, 6) }, (_, i) => `places/${slug}_${i + 1}`), ...extra].slice(0, 10);
+  const n = srcs.length;
   const [at, setAt] = useState(0);
   const [live, setLive] = useState(false);
   const box = useRef<HTMLDivElement>(null);
@@ -37,7 +38,7 @@ export function PlaceReel({ slug, name, shots }: { slug: string; name: string; s
         aria-label={`${name} — next picture`}>
         {Array.from({ length: n }, (_, i) => (
           // eslint-disable-next-line @next/next/no-img-element
-          <img key={i} src={`/media/places/${slug}_${i + 1}.webp`}
+          <img key={i} src={`/media/${srcs[i]}.webp`}
             alt={i === 0 ? `${name}, official screenshot` : ""}
             loading={i === 0 ? "eager" : "lazy"} decoding="async"
             className={i === at ? "is-on" : ""} aria-hidden={i !== at} />
@@ -51,7 +52,7 @@ export function PlaceReel({ slug, name, shots }: { slug: string; name: string; s
           {Array.from({ length: Math.min(n, 4) }, (_, i) => (i + at + 1) % n).slice(0, Math.min(3, n - 1)).map((i) => (
             <button key={i} type="button" onClick={() => setAt(i)} aria-label={`${name}, picture ${i + 1}`}>
               {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={`/media/places/${slug}_${i + 1}.webp`} alt="" loading="lazy" decoding="async" />
+              <img src={`/media/${srcs[i]}.webp`} alt="" loading="lazy" decoding="async" />
             </button>
           ))}
         </div>

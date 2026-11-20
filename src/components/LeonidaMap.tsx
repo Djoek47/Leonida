@@ -1,6 +1,7 @@
 "use client";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { modeAt } from "./ThemeToggle";
+import { COUNTIES, COUNTY_TONE, locate } from "@/lib/atlas";
 
 /*
   Live From Leonida map: our own styling, place curation and layers, adapted from GTADB community data
@@ -17,6 +18,7 @@ const ISLAND = { x0: -8600, x1: 3300, y0: -8300, y1: 10300 }; // world bounds of
 
 type Layer = { id: string; label: string; glyph: string; color: string; soon?: boolean };
 const LAYERS: Layer[] = [
+  { id: "atlas", label: "Counties and districts", glyph: "◎", color: "#ff3d8b" },
   { id: "sights", label: "Sights", glyph: "★", color: "#00704a" },
   { id: "nightlife", label: "Hotels and food", glyph: "H", color: "#ae3ec9" },
   { id: "shops", label: "Shops", glyph: "$", color: "#e67700" },
@@ -72,6 +74,7 @@ export function LeonidaMap() {
   const [places, setPlaces] = useState<Place[]>([]);
   const [on, setOn] = useState<Set<string>>(new Set(LAYERS.filter((l) => !l.soon).map((l) => l.id)));
   const [sel, setSel] = useState<Place | null>(null);
+  const [county, setCounty] = useState<string | null>(null);
   const [, force] = useState(0);
   const base = () => (document.querySelector("base") ? "" : "/");
 
@@ -84,6 +87,7 @@ export function LeonidaMap() {
   }, []);
 
   const shown = useMemo(() => places.filter((p) => on.has(p[6])), [places, on]);
+  const geo = useMemo(() => locate(places), [places]);
   const layerOf = (id: string) => LAYERS.find((l) => l.id === id)!;
   const scale = () => (1024 * 2 ** view.current.z) / WORLD;
   const toScreen = (wx: number, wy: number, w: number, h: number) => { const s = scale(), v = view.current; return [w / 2 + (wx - v.x) * s, h / 2 - (wy - v.y) * s]; };
@@ -125,6 +129,24 @@ export function LeonidaMap() {
       if (!pc) { pc = recolor(img, night); painted.current.set(key, pc); }
       g.drawImage(pc, ox + tx * tw, oy + ty * tw, tw + 0.5, tw + 0.5);
     }
+    // atlas: county names when zoomed out, district names as you zoom in (or for the picked county)
+    if (on.has("atlas")) {
+      g.textAlign = "center"; g.textBaseline = "middle"; g.lineJoin = "round";
+      for (const c of COUNTIES) {
+        const tone = COUNTY_TONE[c.id], picked = county === c.id, dim = county && !picked;
+        if (v.z >= 1.6 || picked) for (const a of c.areas) {
+          const xy = geo.at.get(a); if (!xy) continue;
+          const [sx, sy] = toScreen(xy[0], xy[1], w, h);
+          if (sx < -80 || sy < -20 || sx > w + 80 || sy > h + 20) continue;
+          g.globalAlpha = dim ? 0.35 : 1;
+          g.fillStyle = tone; g.beginPath(); g.arc(sx, sy, picked ? 5 : 3.5, 0, Math.PI * 2); g.fill();
+          g.font = `${picked ? 800 : 700} ${picked ? 13 : 11}px system-ui, sans-serif`;
+          g.lineWidth = 3.5; g.strokeStyle = night ? "rgba(20,10,38,.9)" : "rgba(255,255,255,.92)"; g.strokeText(a, sx, sy - 11);
+          g.fillStyle = night ? "#fff1e8" : "#1c1710"; g.fillText(a, sx, sy - 11);
+        }
+        g.globalAlpha = 1;
+      }
+    }
     // markers: small road-sign plates; labels appear once zoomed in
     const big = v.z >= 2.6, sz = big ? 22 : 16;
     const glyphFont = `800 ${big ? 12 : 10}px system-ui, sans-serif`;
@@ -143,7 +165,24 @@ export function LeonidaMap() {
         g.fillStyle = night ? "#fff1e8" : "#1c1710"; g.fillText(p[1], sx, sy + k / 2 + 13.5);
       }
     }
-  }, [shown, sel, night]); // eslint-disable-line react-hooks/exhaustive-deps
+    // county names last, so they sit on top of the markers
+    if (on.has("atlas")) {
+      g.textAlign = "center"; g.textBaseline = "middle"; g.lineJoin = "round";
+      for (const c of COUNTIES) {
+        const tone = COUNTY_TONE[c.id], picked = county === c.id;
+        const ctr = geo.centre.get(c.id);
+        if (!ctr || v.z >= 2.2 || (county && !picked)) continue;
+        const [sx, sy] = toScreen(ctr[0], ctr[1], w, h);
+        const label = c.name.toUpperCase();
+        g.font = `900 ${picked ? 20 : 15}px system-ui, sans-serif`;
+        const tw3 = g.measureText(label).width + 16;
+        g.fillStyle = "rgba(12,8,22,.82)"; g.beginPath(); g.roundRect(sx - tw3 / 2, sy - 13, tw3, 38, 8); g.fill();
+        g.strokeStyle = tone; g.lineWidth = 2; g.stroke();
+        g.fillStyle = tone; g.fillText(label, sx, sy);
+        g.font = "800 10px system-ui, sans-serif"; g.fillStyle = "#fff"; g.fillText(c.ch.toUpperCase(), sx, sy + 15);
+      }
+    }
+  }, [shown, sel, night, on, county, geo]); // eslint-disable-line react-hooks/exhaustive-deps
   const drawRef = useRef(draw); drawRef.current = draw;
   // always draws with the latest state, even when called from an old tile onload
   const schedule = useCallback(() => { cancelAnimationFrame(raf.current); raf.current = requestAnimationFrame(() => drawRef.current()); }, []);
@@ -194,6 +233,19 @@ export function LeonidaMap() {
     for (const p of shown) { const [sx, sy] = toScreen(p[3], p[4], r.width, r.height); const d = (sx - px) ** 2 + (sy - py) ** 2; if (d < bd) { bd = d; best = p; } }
     setSel(best);
   }
+  function focusXY(x: number, y: number, z = 3.4) { view.current = { x, y, z: Math.max(view.current.z, z) }; schedule(); force((n) => n + 1); }
+  function pickCounty(id: string | null) {
+    setCounty(id); setSel(null);
+    if (!id) { view.current.z = minZ.current; schedule(); force((n) => n + 1); return; }
+    setOn((s) => new Set(s).add("atlas"));
+    const c = COUNTIES.find((k) => k.id === id)!, pts = c.areas.map((a) => geo.at.get(a)).filter(Boolean) as [number, number][];
+    const ctr = geo.centre.get(id); if (!pts.length && !ctr) return;
+    const xs = pts.length ? pts.map((p) => p[0]) : [ctr![0]], ys = pts.length ? pts.map((p) => p[1]) : [ctr![1]];
+    const cv0 = cv.current!, span = Math.max(Math.max(...xs) - Math.min(...xs), Math.max(...ys) - Math.min(...ys), 2500) * 1.5;
+    const z = Math.log2(((Math.min(cv0.clientWidth, cv0.clientHeight) / span) * WORLD) / 1024);
+    view.current = { x: (Math.min(...xs) + Math.max(...xs)) / 2, y: (Math.min(...ys) + Math.max(...ys)) / 2, z: Math.max(minZ.current, Math.min(4, z)) };
+    schedule(); force((n) => n + 1);
+  }
   function focus(p: Place) { view.current = { x: p[3], y: p[4], z: Math.max(view.current.z, 3.2) }; setSel(p); schedule(); force((n) => n + 1); }
   function onKey(e: React.KeyboardEvent) {
     const s = 80 / scale(), v = view.current;
@@ -201,7 +253,7 @@ export function LeonidaMap() {
     if (k[e.key]) { e.preventDefault(); k[e.key](); schedule(); }
   }
   const toggle = (id: string) => setOn((s) => { const n = new Set(s); if (n.has(id)) n.delete(id); else n.add(id); return n; });
-  const count = (id: string) => places.filter((p) => p[6] === id).length;
+  const count = (id: string) => (id === "atlas" ? geo.at.size : places.filter((p) => p[6] === id).length);
 
   return (
     <div className="grid gap-4 lg:grid-cols-[1fr_20rem]">
@@ -218,6 +270,31 @@ export function LeonidaMap() {
           <button onClick={() => zoomAt(0.6)} className="btn bg-ink text-foam !p-0 size-10 !rounded-md shadow text-xl" aria-label="Zoom in">+</button>
           <button onClick={() => zoomAt(-0.6)} className="btn bg-ink text-foam !p-0 size-10 !rounded-md shadow text-xl" aria-label="Zoom out">−</button>
         </div>
+        {county && (() => {
+          const c = COUNTIES.find((k) => k.id === county)!, placed = c.areas.filter((a) => geo.at.has(a));
+          return (
+            <article className="atlas-card" style={{ "--tone": COUNTY_TONE[c.id] } as React.CSSProperties}>
+              <div className="atlas-card-hero" style={{ backgroundImage: `url(/media/${c.img}.webp)` }}>
+                <button onClick={() => pickCounty(null)} className="atlas-card-x" aria-label="Close county">×</button>
+                <span className="atlas-card-ch">{c.ch}</span>
+                <h3>{c.name}</h3>
+                <p>{c.where}</p>
+              </div>
+              <div className="atlas-card-body">
+                <p className="atlas-card-k">On the map · {placed.length} of {c.areas.length}</p>
+                <div className="atlas-card-list">
+                  {c.areas.map((a) => {
+                    const xy = geo.at.get(a);
+                    return xy
+                      ? <button key={a} onClick={() => focusXY(xy[0], xy[1])} className="is-pin">📍 {a}</button>
+                      : <span key={a} title="Not pinned yet">{a}</span>;
+                  })}
+                </div>
+                {placed.length < c.areas.length && <p className="atlas-card-note">Faded names aren&apos;t pinned yet. Our crew adds them as they&apos;re logged in game.</p>}
+              </div>
+            </article>
+          );
+        })()}
         {sel && (
           <article className="absolute z-10 left-3 top-3 w-[min(19rem,calc(100%-5rem))] rounded-xl bg-ink border border-line shadow-2xl overflow-hidden">
             <button onClick={() => setSel(null)} className="absolute right-2 top-2 size-8 rounded-full bg-ink-2 text-foam" aria-label="Close">×</button>
@@ -232,7 +309,16 @@ export function LeonidaMap() {
       </div>
 
       <aside className="grid gap-3 content-start">
-        <p className="font-extrabold">Show on the map</p>
+        <p className="font-extrabold">Counties</p>
+        <div className="atlas-chips">
+          {COUNTIES.map((c) => (
+            <button key={c.id} onClick={() => pickCounty(county === c.id ? null : c.id)} aria-pressed={county === c.id}
+              className={`atlas-chip${county === c.id ? " is-on" : ""}`} style={{ "--tone": COUNTY_TONE[c.id] } as React.CSSProperties}>
+              <i aria-hidden /><b>{c.name.replace(" County", "")}</b><span>{c.ch}</span>
+            </button>
+          ))}
+        </div>
+        <p className="font-extrabold mt-1">Show on the map</p>
         <ul className="grid gap-2">
           {LAYERS.map((l) => (
             <li key={l.id}>

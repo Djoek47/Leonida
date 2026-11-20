@@ -320,17 +320,4 @@ export const HOW_IT_PLAYS: { topic: string; points: string[] }[] = [
       "Seaplanes, Seasharks and airboats are all story vehicles early on. Scan every one with WAiNK: 200 of the 277 count toward 100%.",
     ],
   },
-  {
-    topic: "Cheats",
-    points: [
-      "Open the phone with Up, hold L1 (LB) and press R1 (RB), then enter the D-pad code. Same codes on PS5 and Xbox.",
-      "Cheats only open after the story, under Progress Menu > Cheats, and each one has its own unlock task.",
-      "Using one switches off trophies and achievements and blocks saving until you quit. Save first.",
-      "$250,000: Up, Right, Down, Left, Up, Left, Down, Right.",
-      "Unlimited Focus: Down, Up, Up, Down, Up, Down, Up, Down, Up, Right.",
-      "Body Armor: Down, Up, Left, Up, Up, Up, Up, Up, Down, Down (after 100 workouts).",
-      "Max Ammo: Down, Up, Right, Down, Left, Left, Up, Up, Down, Left (25 range bronzes).",
-      "18 of the 61 cheats are confirmed so far. The full list is in the guide entries below.",
-    ],
-  },
 ];
