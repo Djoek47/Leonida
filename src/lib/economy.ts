@@ -74,7 +74,7 @@ export const CASH_RULES = [
 
 /** Warnings tied to a chapter. Hidden past the member's chapter like everything else. */
 export const CHAPTER_ALERTS: { ch: number; text: string }[] = [
-  { ch: 1, text: "Before Tourist Trap, move up to $5,000 into Family Savings. Starting that mission wipes pocket cash, checking, the floorboard stash, the house and your cars. Family Savings (up to $5,000) is all that carries over." },
+  { ch: 1, text: "Before Recalibration, move up to $5,000 into Family Savings. From there on you lose pocket cash, checking, the floorboard stash, the house and your cars. Family Savings (up to $5,000) is all that carries over, and it pays $2,000 interest at Coffee Break." },
   { ch: 2, text: "From Coffee Break you can rob as a couple. It's quicker, and the in-game help says it improves the relationship. Threats don't hurt your Criminal Profile; needless violence does." },
   { ch: 3, text: "Once Yasmani is a fence you can drop loot at your garage and pick which fence buys it." },
   { ch: 4, text: "BuckMe Premium is handed to you when Chapter 4 starts: $2,000,000 checking limit." },

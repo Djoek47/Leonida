@@ -77,8 +77,8 @@ export const CHAPTERS: Chapter[] = [
       Search for Tree Effigies|Kirk|Pelican Valley|Find carved tree effigies on the trail of Mr. Mangrove.
       Help Kirk Find Mr. Mangrove|Kirk|Cottonmouth Lake|Join Kirk's hunt for Mr. Mangrove.`),
     tips: [
-      "Point of no return: Tourist Trap. Starting it wipes your pocket cash, checking balance, the floorboard stash, the Key Lento house and your personal vehicles.",
-      "Before Tourist Trap, put up to $5,000 into Family Savings. That is the only money that carries over.",
+      "Point of no return: Recalibration (then Tourist Trap). From there you lose pocket cash, checking balance, the floorboard stash, the Key Lento house and your personal vehicles.",
+      "Before Recalibration, put up to $5,000 into Family Savings. It's the only money that carries over, and it earns $2,000 interest in Chapter 2.",
       "Get Shirley's Rum and Steal the Scooter can be missed for good. Do them when Shirley offers.",
       "Fences unlock here: Brian after Lab Fees, Donnie after Clean Up After Donnie. Both pay low rates.",
     ],

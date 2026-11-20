@@ -37,6 +37,15 @@ const LOOK: Record<string, { emblem: EmblemId; kicker: string; shots: string[] }
     "ultimate/wyman_car_collection_01", "people/brian_heder_3", "people/cal_hampton_4", "ultimate/ptt_store_01"] },
   "Looking the part": { emblem: "looks", kicker: "Fits, ink, hair", shots: [
     "ultimate/electric_fang_04", "ultimate/saras_salon_03", "ultimate/weapon_variants_01", "ultimate/vice_city_style_01"] },
+  "Jason and Lucia": { emblem: "profile", kicker: "Keep the relationship hot", shots: [
+    "people/jason_lucia_balcony", "people/jason_and_lucia_2", "people/lucia_jason_home",
+    "people/jason_lucia_sunset_1", "people/jason_and_lucia_6", "people/jason_lucia_hilltop"] },
+  "Focus": { emblem: "hud", kicker: "Slow time, see more", shots: [
+    "people/lucia_aim_closeup", "people/jason_sniper", "people/jason_duval_5",
+    "people/jason_and_lucia_4", "people/lucia_pistol_rain"] },
+  "Cheats": { emblem: "money", kicker: "Codes and how to unlock them", shots: [
+    "people/masked_duo_rifles", "places/vice_city_night", "people/jason_gun_1",
+    "places/police_supercar", "people/helicopter_hang", "places/orange_supercar", "places/sheriff_chase", "places/vice_city_6"] },
   "Life in Leonida": { emblem: "leonida", kicker: "The state itself", shots: [
     "places/leonida_keys_1", "people/raul_bautista_1", "people/lucia_caminos_9",
     "people/jason_duval_3", "people/real_dimez_4"] },
