@@ -2,6 +2,7 @@
 import { useEffect, useState } from "react";
 import { LAUNCH } from "@/lib/content";
 import { sb } from "@/lib/supabase";
+import { cityFeed } from "@/lib/cityFeed";
 
 function untilLaunch() {
   const ms = new Date(LAUNCH).getTime() - Date.now();
@@ -41,18 +42,22 @@ export function Ticker() {
       .then(({ data }) => { if (data) setLive([...data.filter((d) => d.kind === "manual"), ...data.filter((d) => d.kind !== "manual")].map((d) => String(d.text))); });
     load(); const i = setInterval(load, 10 * 60 * 1000); return () => clearInterval(i);
   }, []);
-  const items = [
-    t || "Counting down to launch",
-    ...live,
-    "Out now on PS5 and Xbox Series X|S",
+  const [city, setCity] = useState<string[]>([]);
+  useEffect(() => { setCity(cityFeed()); }, []);
+  const launched = Date.now() >= new Date(LAUNCH).getTime();
+  // Staff and daily-news lines first, then a few facts, then today's city feed mixed in.
+  const facts = [
     "99 on Metacritic, tied with Ocarina of Time as the best-reviewed game ever",
     "Sensor Tower estimates 24.6 million copies and $2.36 billion on day one. Rockstar hasn't confirmed figures",
     "Weekly prize pool grows with every member: gold 60, silver 25, bronze 15",
     "Clip submissions are open. Send in your best moment",
-    "Every download pays the creator who made the clip",
-    "New in the guide: the Leonida atlas, every county and district",
-    "Members: Mission Briefing and The Road choice tree are live",
-    "Traffic on I-95 into Vice City: heavy. Police activity reported on Ocean Drive",
+    "New on the Edge: Leonida Economist and The Road choice tree",
+  ];
+  const items = [
+    ...(launched ? [] : [t || "Counting down to launch"]),
+    ...live,
+    ...facts.flatMap((f, i) => (city[i] ? [f, city[i]] : [f])),
+    ...city.slice(facts.length),
   ];
   return (
     <div className="ticker led-board h-8 flex items-center" aria-label="News ticker">
