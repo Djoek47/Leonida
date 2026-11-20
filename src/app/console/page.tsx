@@ -8,8 +8,9 @@ import { DemoNote } from "@/components/DemoNote";
 import NotFound from "@/app/not-found";
 import { MoneyPanel } from "./Money";
 import { Research } from "./Research";
+import { News } from "./News";
 
-type Tab = "overview" | "cashouts" | "review" | "gamertags" | "contest" | "payouts" | "creators" | "wallets" | "people" | "claims" | "drops" | "staff" | "support" | "rounds" | "money" | "presets" | "briefings" | "research";
+type Tab = "overview" | "cashouts" | "review" | "gamertags" | "contest" | "payouts" | "creators" | "wallets" | "people" | "claims" | "drops" | "staff" | "support" | "rounds" | "money" | "presets" | "briefings" | "research" | "news";
 type Row = Record<string, unknown> & { id: string };
 
 export default function Admin() {
@@ -33,7 +34,7 @@ const NAV: { group: string; items: [Tab, string, string?][] }[] = [
   { group: "Today", items: [["overview", "Overview"], ["review", "Clip queue", "clips_pending"], ["support", "Support", "support_open"], ["gamertags", "Gamertags", "gamertags_pending"], ["claims", "Claims", "claims_open"]] },
   { group: "Money", items: [["money", "Money"], ["cashouts", "Cash-out requests", "cashouts_waiting"], ["payouts", "Prize payouts", "prizes_waiting"], ["creators", "Creator payouts"], ["wallets", "Member money"]] },
   { group: "Rounds", items: [["contest", "Weekly round"], ["presets", "Upcoming weeks"], ["rounds", "Round results"], ["drops", "Daily Drops"]] },
-  { group: "Content", items: [["briefings", "Mission Briefing"], ["research", "Research"]] },
+  { group: "Content", items: [["briefings", "Mission Briefing"], ["research", "Research"], ["news", "News + ticker"]] },
   { group: "Community", items: [["people", "People"], ["staff", "Staff and settings"]] },
 ];
 
@@ -96,6 +97,7 @@ function Shell({ tab, setTab, isOwner }: { tab: Tab; setTab: (t: Tab) => void; i
           {tab === "drops" && <Drops />}
           {tab === "briefings" && <Briefings />}
           {tab === "research" && <Research />}
+          {tab === "news" && <News />}
           {tab === "support" && <SupportDesk />}
           {tab === "rounds" && <RoundResults />}
           {tab === "wallets" && <><LedgerCheck /><Wallets /></>}

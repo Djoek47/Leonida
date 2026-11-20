@@ -430,3 +430,15 @@ export function eventEmail(kind: string, d: D, name: string): Email | null {
   }
   return null;
 }
+
+/** Staff-only: the daily news run's digest. */
+export function newsDigestEmail(items: { title: string; source: string; link: string }[], onTicker: number): Email {
+  setRank("free");
+  const top = items.slice(0, 12);
+  return sign(`${items.length} new GTA VI stories today`, top[0]?.title ?? "Today's news", [
+    heading(`${items.length} new stories in the inbox.`, L),
+    para(onTicker ? `The ${onTicker} newest are on the site's LED ticker now. Hide or reword any of them from the console.` : "Nothing new went on the ticker.", L),
+    list(top.map((h) => `<a href="${esc(h.link)}" style="color:inherit;">${esc(h.title)}</a>${h.source ? ` <span style="opacity:.7">(${esc(h.source)})</span>` : ""}`), L),
+    button("Open the news inbox", `${SITE}/console?tab=news`, L),
+  ], [`${items.length} new GTA VI stories today.`, ...top.map((h) => `- ${h.title} (${h.source}) ${h.link}`), "", `${SITE}/console?tab=news`]);
+}

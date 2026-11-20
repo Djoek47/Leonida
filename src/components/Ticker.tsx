@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
 import { LAUNCH } from "@/lib/content";
+import { sb } from "@/lib/supabase";
 
 function untilLaunch() {
   const ms = new Date(LAUNCH).getTime() - Date.now();
@@ -32,17 +33,25 @@ function Clock() {
 export function Ticker() {
   const [t, setT] = useState("");
   useEffect(() => { setT(untilLaunch()); const i = setInterval(() => setT(untilLaunch()), 60000); return () => clearInterval(i); }, []);
+  // Lines from the console (ticker_items): staff-written ones plus the daily news run's headlines.
+  const [live, setLive] = useState<string[]>([]);
+  useEffect(() => {
+    const c = sb(); if (!c) return;
+    const load = () => c.from("ticker_items").select("text, kind, created_at").eq("active", true).order("created_at", { ascending: false }).limit(12)
+      .then(({ data }) => { if (data) setLive([...data.filter((d) => d.kind === "manual"), ...data.filter((d) => d.kind !== "manual")].map((d) => String(d.text))); });
+    load(); const i = setInterval(load, 10 * 60 * 1000); return () => clearInterval(i);
+  }, []);
   const items = [
     t || "Counting down to launch",
+    ...live,
+    "Out now on PS5 and Xbox Series X|S",
+    "99 on Metacritic, tied with Ocarina of Time as the best-reviewed game ever",
+    "Sensor Tower estimates 24.6 million copies and $2.36 billion on day one. Rockstar hasn't confirmed figures",
     "Weekly prize pool grows with every member: gold 60, silver 25, bronze 15",
-    "Reported install size: over 200 GB. Clear your drive",
-    "Out November 19 on PS5 and Xbox Series X|S",
-    "39 new launch screenshots just dropped — see them in the guide",
-    "Reviews land November 18, one day before launch",
-    "New: Justice ft. Gesaffelstein, \"Pusher\" — the full score drops December 11",
-    "South Park just aired fresh GTA VI gameplay. Yes, the dog poop one",
-    "Clip submissions open on launch day",
+    "Clip submissions are open. Send in your best moment",
     "Every download pays the creator who made the clip",
+    "New in the guide: the Leonida atlas, every county and district",
+    "Members: Mission Briefing and The Road choice tree are live",
     "Traffic on I-95 into Vice City: heavy. Police activity reported on Ocean Drive",
   ];
   return (

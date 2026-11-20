@@ -3,6 +3,10 @@
     {
       "path": "/api/cron/rounds",
       "schedule": "5 17 * * *"
+    },
+    {
+      "path": "/api/cron/news",
+      "schedule": "0 11 * * *"
     }
   ],
   "headers": [
