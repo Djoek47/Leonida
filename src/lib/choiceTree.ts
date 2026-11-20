@@ -8,7 +8,9 @@
 
 export type Effect = { pro?: number; vio?: number; rel?: number; cash?: number; gear?: string; log: string };
 export type Option = { pick: string; outcome: string; fx: Effect };
-export type Fork = { id: string; ch: number; mission: string; prompt: string; options: Option[]; big?: boolean };
+/** `romance` marks a Jason-and-Lucia moment. `multi` forks are checklists: tick any mix of options
+ *  (stored as a bitmask) instead of picking one lane. */
+export type Fork = { id: string; ch: number; mission: string; prompt: string; options: Option[]; big?: boolean; romance?: boolean; multi?: boolean };
 
 export const FORKS: Fork[] = [
   // ───────── Chapter 1 ─────────
@@ -28,15 +30,36 @@ export const FORKS: Fork[] = [
     { pick: "Harpoon it", outcome: "Two hits and it's gone. Dobbs lives to tell the story.", fx: { pro: 1, log: "Saved Dobbs from the shark" } },
     { pick: "Let nature work", outcome: "Dobbs doesn't come back up. Only the ending scene changes.", fx: { vio: 1, log: "Let the shark take Dobbs" } },
   ] },
-  { id: "errands", ch: 1, mission: "Coming Home", prompt: "Lucia's out tomorrow. Do the errands?", big: true, options: [
-    { pick: "Everything: house, flowers, necklace, clothes", outcome: "She notices all of it. The relationship starts high, and it feeds the ending.", fx: { rel: 3, gear: "Necklace", log: "Got everything ready for Lucia" } },
-    { pick: "Just pick her up", outcome: "She notices that too. Skipping her clothes even costs you later.", fx: { rel: -2, log: "Showed up empty-handed for Lucia" } },
+  { id: "prep", ch: 1, mission: "Feng Shui", prompt: "Lucia gets out tomorrow. What do you get done first?", romance: true, multi: true, big: true, options: [
+    { pick: "Fix up the house", outcome: "She notices the repaired stairs the moment she walks in. A heart.", fx: { rel: 1, log: "Fixed up the house" } },
+    { pick: "Groceries in the fridge", outcome: "A full fridge says you planned for her. A heart when she's home.", fx: { rel: 1, log: "Stocked the fridge" } },
+    { pick: "Flowers (splurge on the roses)", outcome: "Roses waiting for her. A heart.", fx: { rel: 1, log: "Bought Lucia roses" } },
+    { pick: "Gold necklace, $475", outcome: "From The Siren's Chest. A heart now, and it comes up again in Chapter 2.", fx: { rel: 1, cash: -475, gear: "Necklace", log: "Bought Lucia a necklace" } },
+    { pick: "Her clothes from Andy", outcome: "She changes at the bar instead of wearing prison clothes. Skip it and it costs you later.", fx: { rel: 1, log: "Collected Lucia's clothes" } },
+    { pick: "Get The Chop", outcome: "A haircut or beard tidy at Barnacle Beauties before the pickup.", fx: { rel: 1, log: "Got The Chop" } },
+    { pick: "Fix Jason's car", outcome: "She comments on the car on the drive home. A heart.", fx: { rel: 1, log: "Fixed Jason's car" } },
+  ] },
+  { id: "anchor", ch: 1, mission: "Coming Home", prompt: "The Rusty Anchor, her first night out. The music's on.", romance: true, options: [
+    { pick: "Dance with her, again and again", outcome: "Each dance can add a heart. Guides say you can stack several here.", fx: { rel: 2, log: "Danced with Lucia all night at the Rusty Anchor" } },
+    { pick: "Stay at the bar", outcome: "Pool with Mattia, drinks, nothing gained.", fx: { log: "Stayed at the bar on Lucia's first night" } },
   ] },
   { id: "smugglers", ch: 1, mission: "Down to Earth", prompt: "The smugglers want paying. You can't.", options: [
     { pick: "Arms and legs", outcome: "Everyone lives. Professional points.", fx: { pro: 1, log: "Kneecapped the smugglers" } },
     { pick: "Put them down", outcome: "A cleaner deal, a darker profile.", fx: { vio: 1, log: "Killed the smugglers" } },
   ] },
-  { id: "retire", ch: 1, mission: "Swamped", prompt: "Brian's retiring. Tell Lucia?", options: [
+  { id: "jetski", ch: 1, mission: "Day Release", prompt: "Jet ski race off Mattia's yacht.", romance: true, options: [
+    { pick: "Lucia rides on Jason's ski", outcome: "Together on one ski. A heart, win or lose.", fx: { rel: 1, log: "Raced the jet ski together" } },
+    { pick: "Separate skis", outcome: "Faster, maybe. Winning changes nothing.", fx: { log: "Raced Mattia on separate skis" } },
+  ] },
+  { id: "nine", ch: 1, mission: "Day Release", prompt: "Nine1Nine, then the pool.", romance: true, options: [
+    { pick: "Hold hands and dance", outcome: "Lucia's side of the night out. Another heart.", fx: { rel: 1, log: "Held hands and danced at Nine1Nine" } },
+    { pick: "Work the room alone", outcome: "Fun night, no change.", fx: { log: "Split up at Nine1Nine" } },
+  ] },
+  { id: "clockout", ch: 1, mission: "Clock Out", prompt: "Lucia's curfew is 4pm.", romance: true, options: [
+    { pick: "Home before 4pm", outcome: "She makes curfew. A small boost.", fx: { rel: 1, log: "Got Lucia home before curfew" } },
+    { pick: "Push it", outcome: "No boost.", fx: { log: "Ran Lucia's curfew close" } },
+  ] },
+  { id: "retire", ch: 1, mission: "Swamped", prompt: "Brian's retiring. Tell Lucia?", romance: true, options: [
     { pick: "Tell her", outcome: "No secrets. The relationship goes up.", fx: { rel: 1, log: "Told Lucia about Brian" } },
     { pick: "Keep it to yourself", outcome: "Nothing gained.", fx: { log: "Kept Brian's news to himself" } },
   ] },
@@ -50,16 +73,34 @@ export const FORKS: Fork[] = [
     { pick: "Defuse, twice", outcome: "No fight. Lucia's profile goes Professional.", fx: { pro: 2, log: "Talked the Kolts down" } },
     { pick: "Provoke them", outcome: "A brawl in the suds.", fx: { vio: 1, log: "Started a fight with the Kolts" } },
   ] },
+  { id: "couple", ch: 2, mission: "After Coffee Break", prompt: "You can rob as a couple now.", romance: true, options: [
+    { pick: "Rob together", outcome: "Quicker jobs, and successful joint robberies add hearts.", fx: { rel: 1, log: "Started robbing as a couple" } },
+    { pick: "Split the work", outcome: "Works fine. Leaving your partner to face the cops alone hurts the relationship.", fx: { log: "Kept robbing solo" } },
+  ] },
+  { id: "free2", ch: 2, mission: "Between missions", prompt: "Downtime in Port Gellhorn.", romance: true, options: [
+    { pick: "Date night: drinks, dancing, mini golf", outcome: "Choose Go Out from home. Dates are the fastest way to build the relationship.", fx: { rel: 2, log: "Took dates in Port Gellhorn" } },
+    { pick: "Calls and texts only", outcome: "Answering keeps the bond steady while you're apart.", fx: { log: "Kept in touch by phone" } },
+    { pick: "Ghost each other", outcome: "Ignored messages and long stretches apart drag it down.", fx: { rel: -2, log: "Ignored each other's calls" } },
+  ] },
   { id: "pawn", ch: 2, mission: "Hit Avery Pawn", prompt: "Inside the pawn shop.", options: [
     { pick: "Threaten the staff first", outcome: "They give up the safe code. Bigger take.", fx: { log: "Cracked the Avery Pawn safe" } },
     { pick: "Smash the cases now", outcome: "Two stars straight away, a lighter bag.", fx: { vio: 1, log: "Smash-and-grabbed Avery Pawn" } },
   ] },
-  { id: "dance", ch: 2, mission: "Afternoon Delight", prompt: "Mario wants Jason in the routine.", options: [
+  { id: "dance", ch: 2, mission: "Afternoon Delight", prompt: "Mario wants Jason in the routine.", romance: true, options: [
     { pick: "Dance", outcome: "Extra scenes and a shopping stop. Lucia can get caught in the office, so Jason has to save her.", fx: { rel: 1, cash: 10000, log: "Jason danced at Delights" } },
     { pick: "Refuse", outcome: "The robbery kicks off at once and the bikers chase harder.", fx: { cash: 10000, log: "Jason refused to dance" } },
   ] },
 
   // ───────── Chapter 3 ─────────
+  { id: "both", ch: 3, mission: "Between missions", prompt: "Who do you play in free roam?", romance: true, options: [
+    { pick: "Switch to Lucia often", outcome: "Answering Jason's texts from her side counts too. It's a two-way street.", fx: { rel: 1, log: "Played both sides of the relationship" } },
+    { pick: "Stick with Jason", outcome: "Favouring one of them and barely playing the other wears the relationship down.", fx: { rel: -1, log: "Stuck with Jason" } },
+  ] },
+  { id: "free3", ch: 3, mission: "Between missions", prompt: "A free afternoon in Vice City.", romance: true, options: [
+    { pick: "Gym, kayak or scuba together", outcome: "Shared activities add hearts (and the gym trains stats too).", fx: { rel: 2, log: "Spent free days together in Vice City" } },
+    { pick: "Business only", outcome: "Partners in crime, not much more.", fx: { log: "Kept it all business" } },
+    { pick: "Leave your partner with the cops", outcome: "Abandoning them mid-chase is one of the surest ways to lose hearts.", fx: { rel: -2, log: "Left the partner behind in a chase" } },
+  ] },
   { id: "product", ch: 3, mission: "Dealer's Choice", prompt: "Boobie's product. Pure or cut?", options: [
     { pick: "Pure", outcome: "They test it and pay. Clean deal, Professional bonus.", fx: { pro: 1, log: "Sold Boobie's product pure" } },
     { pick: "Cut", outcome: "They notice. Half price, product handed back with the money.", fx: { log: "Got caught cutting the product" } },
@@ -114,6 +155,15 @@ export const FORKS: Fork[] = [
     { pick: "Decline", outcome: "Nothing changes.", fx: { log: "Lucia stayed natural" } },
     { pick: "Take them", outcome: "Lucia's body changes for the rest of the game.", fx: { log: "Lucia took Nate's steroids" } },
   ] },
+  { id: "free4", ch: 4, mission: "Between missions", prompt: "Money's coming in. How do you spend the nights?", romance: true, options: [
+    { pick: "Go out: club, jet skis, a parachute jump", outcome: "High-energy dates. The surest way to Hot Together.", fx: { rel: 2, log: "Went out together in Vice City" } },
+    { pick: "Couch, bed at the same time, goodnight texts", outcome: "Domestic and steady. Small hearts add up.", fx: { rel: 1, log: "Kept the home life warm" } },
+    { pick: "Ignore calls for days", outcome: "The relationship slides. A bad patch can be fixed, but not for free.", fx: { rel: -2, log: "Went quiet for days" } },
+  ] },
+  { id: "family", ch: 4, mission: "Between missions", prompt: "Big scores in the bank. Family Savings?", romance: true, options: [
+    { pick: "Feed Family Savings", outcome: "Guides say savings shape relationship events and the late game.", fx: { rel: 1, log: "Built up Family Savings" } },
+    { pick: "Keep it in checking", outcome: "Spendable, losable, and it doesn't count toward the family.", fx: { log: "Kept the money in checking" } },
+  ] },
   { id: "felipe", ch: 4, mission: "Bad Driver!", prompt: "Felipe, on his knees in the woods.", big: true, options: [
     { pick: "Kill him", outcome: "Andrea pays $20,000.", fx: { vio: 2, cash: 20000, log: "Killed Felipe" } },
     { pick: "Spare him", outcome: "He calls later: Collect Felipe's Gift, his car.", fx: { pro: 2, gear: "Felipe's car", log: "Spared Felipe" } },
@@ -136,4 +186,6 @@ export const TREE_SOURCES = [
   { label: "PowerPyx walkthrough", href: "https://www.powerpyx.com/gta-6-full-walkthrough-all-missions/" },
   { label: "Dork: choices and missables", href: "https://readdork.com/gaming/gta-6-walkthrough" },
   { label: "OutputLag: the final choice", href: "https://outputlag.com/guides/gta-6-endings/" },
+  { label: "GameSpot: romance guide", href: "https://www.gamespot.com/articles/gta-6-romance-relationships/" },
+  { label: "G2A: relationship guide", href: "https://www.g2a.com/news/gta-6-news/gta-6-relationship-guide/" },
 ];

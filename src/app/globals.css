@@ -3026,3 +3026,37 @@ button.ec-card:hover { transform: translateY(-3px); border-color: #8effc1; box-s
   .ec-route-pay { grid-column: 2; text-align: left; }
   .ec-route { padding: 1rem; }
 }
+
+/* The Road v2: romance forks, checklist, lane switching */
+.fork-mission em.is-heart { background: linear-gradient(90deg, #ff3d8b, #ff7ab8); }
+.fork.is-heart .fork-dot { border-color: #ff7ab8; color: #ff7ab8; font-size: .7rem; line-height: 1; box-shadow: 0 0 16px rgba(255,122,184,.8); }
+.fork.is-heart.is-done .fork-dot { background: #ff3d8b; color: #fff; }
+.fork.is-heart .fork-opt { border-color: rgba(255,122,184,.45); }
+.fork.is-done .fork-opt.is-closed { cursor: pointer; }
+.fork.is-done .fork-opt.is-closed:hover { opacity: 1; border-color: #2ef2d0; transform: translateY(-3px); }
+.fork-closed { gap: .2rem; }
+.fork-closed .fork-closed-b { display: none; background: #2ef2d0 !important; }
+.fork-opt.is-closed:hover .fork-closed-a, .fork-opt.is-closed:focus-visible .fork-closed-a { display: none; }
+.fork-opt.is-closed:hover .fork-closed-b, .fork-opt.is-closed:focus-visible .fork-closed-b { display: inline-block; }
+.fork-opt.is-chosen { animation: laneSwitch .45s ease; }
+@keyframes laneSwitch { 0% { transform: scale(.97); } 60% { transform: scale(1.02); } 100% { transform: none; } }
+.fork-check { margin-top: 1rem; display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: .55rem; }
+.fork-tick { position: relative; display: grid; grid-template-columns: auto 1fr; align-items: start; gap: .25rem .6rem; text-align: left; padding: .75rem .85rem; border-radius: 14px; color: #fff5d6;
+  background: linear-gradient(160deg, rgba(40,12,44,.95), rgba(18,8,30,.95)); border: 2px solid rgba(255,122,184,.35); transition: transform .15s, border-color .15s, box-shadow .15s; }
+.fork-tick b { font-family: Overpass, sans-serif; font-weight: 900; line-height: 1.15; color: #fff; }
+.fork-tick .fork-out, .fork-tick .fork-redact { grid-column: 2; font-size: .82rem; }
+.fork-tick-box { grid-row: span 2; width: 26px; height: 26px; border-radius: 8px; display: grid; place-items: center; border: 2px solid #ff7ab8; color: #fff; font-size: .85rem; }
+.fork-tick.is-on { border-color: #ff3d8b; box-shadow: 0 0 22px -6px rgba(255,61,139,.8); }
+.fork-tick.is-on .fork-tick-box { background: #ff3d8b; border-color: #ff3d8b; animation: laneSwitch .35s ease; }
+.fork-tick:hover:not(:disabled) { transform: translateY(-2px); border-color: #ff7ab8; }
+.fork-check-foot { margin-top: .8rem; display: flex; justify-content: center; align-items: center; gap: 1rem; }
+.fork-check-foot > span { font-family: Doto, monospace; font-weight: 900; color: #ff7ab8; background: rgba(23,10,42,.94); padding: .2rem .7rem; border-radius: 10px; }
+.fork-go { padding: .6rem 1.2rem; border-radius: 999px; font-weight: 900; background: #2ef2d0; color: #0c0616; box-shadow: 0 0 22px rgba(46,242,208,.6); }
+.fork-go:disabled { opacity: .4; box-shadow: none; }
+.road-gauge.is-heart { border-color: rgba(255,122,184,.6); }
+.road-gauge.is-heart .road-gauge-k { color: #ff7ab8; }
+.road-gauge.is-heart b { color: #ff7ab8; text-shadow: 0 0 10px rgba(255,61,139,.7); }
+.road-log li.is-heart { border-left-color: #ff7ab8; }
+.road-log li.is-heart span { color: #ff7ab8; }
+.road-meter-note { display: block; margin-top: .3rem; font-size: .72rem; color: rgba(255,245,214,.6); }
+.road-gear { align-items: flex-start; align-content: flex-start; }

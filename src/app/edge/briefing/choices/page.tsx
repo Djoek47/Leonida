@@ -16,6 +16,10 @@ const KEY = "lfl-chapter";
 const PICKS = "lfl-road";
 const PROFILE = ["Psycho", "Violent", "Hardened", "Professional"];
 const HEART = ["Running on Empty", "Not So Hot", "Crazy in Love", "Hot Together"];
+/** Relationship level from the hearts your choices add (they start out together at level 2). */
+const heartLevel = (rel: number) => (rel <= -3 ? 0 : rel < 4 ? 1 : rel < 9 ? 2 : 3);
+/** Options a pick covers: one lane, or every ticked box on a checklist fork. */
+const chosen = (f: Fork, v: number | undefined) => (v === undefined ? [] : f.multi ? f.options.map((_, i) => i).filter((i) => v & (1 << i)) : [v]);
 const money = (n: number) => `${n < 0 ? "−" : ""}$${Math.abs(n).toLocaleString("en-US")}`;
 
 export default function TheRoad() {
@@ -43,21 +47,26 @@ export default function TheRoad() {
   const reachedEnd = visible.some((f) => f.id === "bridge");
 
   const tally = useMemo(() => {
-    let pro = 0, vio = 0, rel = 0, cash = 0; const gear: string[] = []; const log: { ch: number; text: string; big?: boolean }[] = [];
+    let pro = 0, vio = 0, rel = 0, cash = 0; const gear: string[] = []; const log: { ch: number; text: string; big?: boolean; heart?: boolean }[] = [];
     for (const f of FORKS) {
-      const i = picks[f.id]; if (i === undefined || !visible.includes(f)) continue;
-      const fx = f.options[i].fx;
-      pro += fx.pro ?? 0; vio += fx.vio ?? 0; rel += fx.rel ?? 0; cash += fx.cash ?? 0;
-      if (fx.gear) gear.push(fx.gear);
-      log.push({ ch: f.ch, text: fx.log, big: f.big });
+      const v = picks[f.id]; if (v === undefined || !visible.includes(f)) continue;
+      const opts = chosen(f, v);
+      for (const i of opts) {
+        const fx = f.options[i].fx;
+        pro += fx.pro ?? 0; vio += fx.vio ?? 0; rel += fx.rel ?? 0; cash += fx.cash ?? 0;
+        if (fx.gear) gear.push(fx.gear);
+        log.push({ ch: f.ch, text: fx.log, big: f.big, heart: f.romance });
+      }
+      if (f.multi && !opts.length) log.push({ ch: f.ch, text: "Skipped every errand before Lucia came home", big: f.big, heart: true });
     }
     const lean = pro + vio === 0 ? 2 : Math.max(0, Math.min(3, Math.round(((pro - vio) / (pro + vio) + 1) * 1.5)));
-    const heart = Math.max(0, Math.min(3, 2 + Math.sign(rel) * (Math.abs(rel) >= 3 ? 1 : 0) - (rel < 0 ? 1 : 0)));
+    const heart = heartLevel(rel);
     return { pro, vio, rel, cash, gear, log, lean, heart };
   }, [picks, visible]);
 
+  // Any lane you've reached can be changed later: the picks after it stay as they are.
   function choose(f: Fork, i: number) {
-    if (f.id !== nextId) return;
+    if (picks[f.id] === undefined && f.id !== nextId) return;
     save({ ...picks, [f.id]: i });
   }
   function rewind(f: Fork) {
@@ -74,7 +83,7 @@ export default function TheRoad() {
       <div className="road-wrap">
         <p className="road-kick"><Link href="/edge/briefing" className="underline underline-offset-4">Mission Briefing</Link> · Choice tree</p>
         <h1 className="road-title"><span>The</span> Road</h1>
-        <p className="road-sub">Every choice in Jason and Lucia&apos;s story, as one drive through Leonida. Pick a lane at each fork: it lights up and the others close behind you. What each choice does stays sealed until you&apos;ve driven every fork, unless you flip spoilers on.</p>
+        <p className="road-sub">Every choice in Jason and Lucia&apos;s story, the romance included, as one drive through Leonida. Pick a lane at each fork and it lights up. Changed your mind? Tap another lane on any fork you&apos;ve driven to switch. What each choice does stays sealed until you&apos;ve driven every fork, unless you flip spoilers on.</p>
 
         {!allowed ? (
           <div className="road-gate">
@@ -85,6 +94,7 @@ export default function TheRoad() {
           <>
             <div className="road-dash" role="group" aria-label="Your drive">
               <div className="road-gauge"><span className="road-gauge-k">Forks driven</span><b>{done}<small>/{visible.length}</small></b></div>
+              <div className="road-gauge is-heart"><span className="road-gauge-k">Romance moments</span><b>{visible.filter((f) => f.romance && picks[f.id] !== undefined).length}<small>/{visible.filter((f) => f.romance).length}</small></b></div>
               <div className="road-gauge"><span className="road-gauge-k">You&apos;re on</span><b className="text-base">{CHAPTERS[Math.min(reach, CHAPTERS.length - 1)].label}</b></div>
               <button className={`road-switch${spoil ? " is-on" : ""}`} onClick={() => setSpoil((v) => !v)} aria-pressed={spoil}>
                 <span className="road-switch-track"><i /></span>
@@ -103,12 +113,17 @@ export default function TheRoad() {
                     <div className={`road-exit${closed ? " is-closed" : ""}`}>
                       <span className="road-exit-n">EXIT {c.id}</span>
                       <span className="road-exit-t">{closed ? "Road closed" : c.title}</span>
-                      <span className="road-exit-m">{closed ? `Reach ${c.label} or turn on spoilers` : `${forks.length} forks ahead`}</span>
+                      <span className="road-exit-m">{closed ? `Reach ${c.label} or turn on spoilers` : `${forks.filter((f) => picks[f.id] !== undefined).length}/${forks.length} forks driven · ${forks.filter((f) => f.romance).length} ♥`}</span>
                     </div>
                     {closed ? (
                       c.id === reach + 1 ? <div className="road-block" aria-hidden><i /><i /><i /></div> : null
                     ) : (
-                      forks.map((f) => <ForkView key={f.id} f={f} pick={picks[f.id]} state={picks[f.id] !== undefined ? "done" : f.id === nextId ? "now" : "later"} revealed={revealed} onPick={(i) => choose(f, i)} onRewind={() => rewind(f)} />)
+                      forks.map((f) => {
+                        const st = picks[f.id] !== undefined ? "done" : f.id === nextId ? "now" : "later";
+                        return f.multi
+                          ? <Checklist key={f.id} f={f} pick={picks[f.id]} state={st} revealed={revealed} onPick={(m) => save({ ...picks, [f.id]: m })} onRewind={() => rewind(f)} />
+                          : <ForkView key={f.id} f={f} pick={picks[f.id]} state={st} revealed={revealed} onPick={(i) => choose(f, i)} onRewind={() => rewind(f)} />;
+                      })
                     )}
                   </Fragment>
                 );
@@ -137,6 +152,7 @@ export default function TheRoad() {
                       <span className="road-meter-k">Jason &amp; Lucia</span>
                       <div className="road-hearts">{[0, 1, 2, 3].map((k) => <i key={k} className={k <= tally.heart ? "on" : ""} aria-hidden>♥</i>)}</div>
                       <div className="road-meter-ends"><b>{HEART[tally.heart]}</b></div>
+                      <small className="road-meter-note">{tally.rel >= 0 ? `+${tally.rel}` : tally.rel} hearts from your choices. Hot Together unlocks their most intimate scenes.</small>
                     </div>
                     <div className="road-meter">
                       <span className="road-meter-k">Money your choices made</span>
@@ -149,10 +165,10 @@ export default function TheRoad() {
                   </div>
                   {tally.log.length > 0 && (
                     <ol className="road-log">
-                      {tally.log.map((l, k) => <li key={k} className={l.big ? "is-big" : ""}><span>Ch. {l.ch}</span>{l.text}</li>)}
+                      {tally.log.map((l, k) => <li key={k} className={`${l.big ? "is-big" : ""}${l.heart ? " is-heart" : ""}`}><span>{l.heart ? "♥ " : ""}Ch. {l.ch}</span>{l.text}</li>)}
                     </ol>
                   )}
-                  <p className="road-fine">The profile and relationship readings are our estimate from these choices. The game also counts how you play between missions, so yours may differ.</p>
+                  <p className="road-fine">The profile and relationship readings are our estimate from these choices. The game counts every small thing too (holding hands, greetings, gifts, texts), so yours may differ. The romance is optional: Jason and Lucia stay partners in crime at every level.</p>
                 </>
               ) : (
                 <p className="road-sealed-msg">{visible.length - done} fork{visible.length - done === 1 ? "" : "s"} left in reach. Every outcome, your profile, your relationship and {reach >= 5 ? "your ending" : "your story log"} unlock when you reach the last one.</p>
@@ -171,10 +187,10 @@ function ForkView({ f, pick, state, revealed, onPick, onRewind }: { f: Fork; pic
   const n = f.options.length;
   const xs = f.options.map((_, i) => ((i + 0.5) / n) * 100);
   return (
-    <div className={`fork is-${state}${f.big ? " is-big" : ""}`}>
+    <div className={`fork is-${state}${f.big ? " is-big" : ""}${f.romance ? " is-heart" : ""}`}>
       <div className="fork-node">
-        <span className="fork-dot">{state === "now" && <Car />}</span>
-        <span className="fork-mission">{f.big && <em>Key decision</em>}{f.mission}</span>
+        <span className="fork-dot">{state === "now" ? <Car /> : f.romance ? "♥" : null}</span>
+        <span className="fork-mission">{f.romance && <em className="is-heart">♥ Jason &amp; Lucia</em>}{f.big && !f.romance && <em>Key decision</em>}{f.mission}</span>
         <p className="fork-prompt">{f.prompt}</p>
       </div>
       <svg className="fork-svg" viewBox="0 0 100 60" preserveAspectRatio="none" aria-hidden>
@@ -184,7 +200,7 @@ function ForkView({ f, pick, state, revealed, onPick, onRewind }: { f: Fork; pic
         {f.options.map((o, i) => {
           const chosen = pick === i, closed = pick !== undefined && !chosen;
           return (
-            <button key={o.pick} onClick={() => onPick(i)} disabled={state !== "now"} aria-pressed={chosen}
+            <button key={o.pick} onClick={() => !chosen && onPick(i)} disabled={state === "later"} aria-pressed={chosen} title={closed ? "Switch to this lane" : undefined}
               className={`fork-opt${chosen ? " is-chosen" : ""}${closed ? " is-closed" : ""}`}>
               <span className="fork-lane">Lane {String.fromCharCode(65 + i)}</span>
               <b>{o.pick}</b>
@@ -192,7 +208,7 @@ function ForkView({ f, pick, state, revealed, onPick, onRewind }: { f: Fork; pic
                 ? <span className="fork-out">{o.outcome}</span>
                 : <span className="fork-redact" aria-label="Outcome sealed"><i /><i /><i style={{ width: "55%" }} /></span>}
               {chosen && <span className="fork-stamp">Your road</span>}
-              {closed && <span className="fork-closed"><span>Road closed</span></span>}
+              {closed && <span className="fork-closed"><span className="fork-closed-a">Road closed</span><span className="fork-closed-b">↪ Switch lane</span></span>}
             </button>
           );
         })}
@@ -200,7 +216,42 @@ function ForkView({ f, pick, state, revealed, onPick, onRewind }: { f: Fork; pic
       <svg className="fork-svg is-merge" viewBox="0 0 100 40" preserveAspectRatio="none" aria-hidden>
         {xs.map((x, i) => <path key={i} d={`M${x} 0 C${x} 18, 50 18, 50 40`} className={pick === undefined ? "lane" : pick === i ? "lane is-lit" : "lane is-closed"} vectorEffect="non-scaling-stroke" />)}
       </svg>
-      {state === "done" && <button className="fork-rewind" onClick={onRewind}>↺ Rewind to here</button>}
+      {state === "done" && <button className="fork-rewind" onClick={onRewind}>↺ Clear from here</button>}
+    </div>
+  );
+}
+
+/** A checklist fork: tick any mix, then drive on. Ticks stay editable afterwards. */
+function Checklist({ f, pick, state, revealed, onPick, onRewind }: { f: Fork; pick?: number; state: "done" | "now" | "later"; revealed: boolean; onPick: (mask: number) => void; onRewind: () => void }) {
+  const [draft, setDraft] = useState(0);
+  const mask = pick ?? draft;
+  const n = f.options.filter((_, i) => mask & (1 << i)).length;
+  const toggle = (i: number) => { const m = mask ^ (1 << i); if (pick === undefined) setDraft(m); else onPick(m); };
+  return (
+    <div className={`fork is-${state} is-heart is-multi${f.big ? " is-big" : ""}`}>
+      <div className="fork-node">
+        <span className="fork-dot">{state === "now" ? <Car /> : "♥"}</span>
+        <span className="fork-mission"><em className="is-heart">♥ Jason &amp; Lucia · tick any</em>{f.mission}</span>
+        <p className="fork-prompt">{f.prompt}</p>
+      </div>
+      <div className="fork-check">
+        {f.options.map((o, i) => {
+          const on = Boolean(mask & (1 << i));
+          return (
+            <button key={o.pick} className={`fork-tick${on ? " is-on" : ""}`} onClick={() => toggle(i)} disabled={state === "later"} aria-pressed={on}>
+              <span className="fork-tick-box" aria-hidden>{on ? "♥" : ""}</span>
+              <b>{o.pick}</b>
+              {revealed ? <span className="fork-out">{o.outcome}</span> : <span className="fork-redact" aria-label="Outcome sealed"><i /><i style={{ width: "60%" }} /></span>}
+            </button>
+          );
+        })}
+      </div>
+      <div className="fork-check-foot">
+        <span>{n}/{f.options.length} done</span>
+        {pick === undefined
+          ? <button className="fork-go" disabled={state !== "now"} onClick={() => onPick(draft)}>Pick her up →</button>
+          : <button className="fork-rewind !static" onClick={onRewind}>↺ Clear from here</button>}
+      </div>
     </div>
   );
 }
