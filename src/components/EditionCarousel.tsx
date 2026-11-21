@@ -42,27 +42,27 @@ export function EditionCarousel() {
     setI(Math.min(CARDS.length - 1, Math.round(el.scrollLeft / (w + 16))));
   };
   return (
-    <div className="ec">
-      <div className="ec-bar">
-        <p className="ec-count" aria-live="polite">{String(i + 1).padStart(2, "0")} <span>/ {String(CARDS.length).padStart(2, "0")}</span></p>
+    <div className="xc">
+      <div className="xc-bar">
+        <p className="xc-count" aria-live="polite">{String(i + 1).padStart(2, "0")} <span>/ {String(CARDS.length).padStart(2, "0")}</span></p>
         <div className="flex gap-2">
-          <button type="button" onClick={() => go(-1)} aria-label="Previous" className="ec-btn">←</button>
-          <button type="button" onClick={() => go(1)} aria-label="Next" className="ec-btn">→</button>
+          <button type="button" onClick={() => go(-1)} aria-label="Previous" className="xc-btn">←</button>
+          <button type="button" onClick={() => go(1)} aria-label="Next" className="xc-btn">→</button>
         </div>
       </div>
-      <ul ref={ref} onScroll={onScroll} className="ec-track" tabIndex={0} aria-label="Edition extras, swipe sideways">
+      <ul ref={ref} onScroll={onScroll} className="xc-track" tabIndex={0} aria-label="Edition extras, swipe sideways">
         {CARDS.map((c) => (
-          <li key={c.img} className="ec-card">
-            <div className="ec-pic">
+          <li key={c.img} className="xc-card">
+            <div className="xc-pic">
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img src={`/media/${c.img}.webp`} alt={c.name} loading="lazy" />
-              <span className="ec-tag">{c.tag}</span>
+              <span className="xc-tag">{c.tag}</span>
             </div>
-            <div className="ec-body">
-              <p className="ec-pack">{c.pack}</p>
+            <div className="xc-body">
+              <p className="xc-pack">{c.pack}</p>
               <h4 className="display text-3xl leading-none">{c.name}</h4>
               <p className="mt-2 text-haze text-[15px]">{c.text}</p>
-              <ul className="ec-pts">{c.points.map((p) => <li key={p}>{p}</li>)}</ul>
+              <ul className="xc-pts">{c.points.map((p) => <li key={p}>{p}</li>)}</ul>
             </div>
           </li>
         ))}

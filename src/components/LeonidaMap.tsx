@@ -16,19 +16,45 @@ const STATIC = process.env.NEXT_PUBLIC_STATIC === "1";
 const TILEZ = STATIC ? 2 : MAXZ;
 const ISLAND = { x0: -8600, x1: 3300, y0: -8300, y1: 10300 }; // world bounds of Leonida
 
-type Layer = { id: string; label: string; glyph: string; color: string; soon?: boolean };
-const LAYERS: Layer[] = [
-  { id: "atlas", label: "Counties and districts", glyph: "◎", color: "#ff3d8b" },
-  { id: "sights", label: "Sights", glyph: "★", color: "#00704a" },
-  { id: "nightlife", label: "Hotels and food", glyph: "H", color: "#ae3ec9" },
-  { id: "shops", label: "Shops", glyph: "$", color: "#e67700" },
-  { id: "gas", label: "Gas stations", glyph: "G", color: "#c92a2a" },
-  { id: "transport", label: "Transport", glyph: "T", color: "#1c7ed6" },
-  { id: "city", label: "City and industry", glyph: "C", color: "#495057" },
-  { id: "cars", label: "Cars", glyph: "", color: "#000", soon: true },
-  { id: "weapons", label: "Weapons", glyph: "", color: "#000", soon: true },
-  { id: "money", label: "Fast money", glyph: "", color: "#000", soon: true },
-  { id: "extras", label: "Extras", glyph: "", color: "#000", soon: true },
+type Layer = { id: string; label: string; glyph: string; color: string; off?: boolean };
+type Group = { id: string; label: string; layers: Layer[]; soon?: string[] };
+const GROUPS: Group[] = [
+  { id: "services", label: "Services", layers: [
+    { id: "guns", label: "Ammu-Nation", glyph: "A", color: "#c92a2a" },
+    { id: "fence", label: "Fences", glyph: "F", color: "#f08c00" },
+    { id: "safehouse", label: "Safehouses", glyph: "S", color: "#2b8a3e" },
+    { id: "modshop", label: "Mod shops and car washes", glyph: "M", color: "#1971c2" },
+    { id: "emergency", label: "Police and hospitals", glyph: "+", color: "#364fc7" },
+    { id: "gas", label: "Gas stations", glyph: "G", color: "#e8590c" },
+  ] },
+  { id: "places", label: "Places", layers: [
+    { id: "sights", label: "Sights", glyph: "★", color: "#00704a" },
+    { id: "hotels", label: "Hotels", glyph: "H", color: "#ae3ec9" },
+    { id: "food", label: "Food and nightlife", glyph: "♫", color: "#d6336c" },
+    { id: "activities", label: "Activities", glyph: "◆", color: "#0c8599" },
+    { id: "shops", label: "Shops", glyph: "$", color: "#e67700" },
+    { id: "transport", label: "Transport", glyph: "T", color: "#1c7ed6" },
+  ] },
+  { id: "city", label: "City", layers: [
+    { id: "city", label: "City and industry", glyph: "C", color: "#495057", off: true },
+    { id: "homes", label: "Homes", glyph: "⌂", color: "#868e96", off: true },
+  ] },
+  { id: "robberies", label: "Robberies", layers: [], soon: ["Banks", "Payday Loans", "Safes", "Smash 'n' grabs", "Illegal operations", "Towable ATMs"] },
+];
+const LAYERS: Layer[] = [{ id: "atlas", label: "Counties and districts", glyph: "◎", color: "#ff3d8b" }, ...GROUPS.flatMap((g) => g.layers)];
+/** What each kind of place connects to elsewhere on the site. */
+const LINKS: Record<string, [string, string]> = {
+  fence: ["Who buys what: Leonida Economist", "/edge/economist"],
+  guns: ["Weapons in the guide", "/leonida#garage"],
+  modshop: ["Every vehicle in the guide", "/leonida#garage"],
+  safehouse: ["Where to spend your 15 saves", "/edge/briefing"],
+  emergency: ["How heat and the police work", "/leonida#how-it-plays"],
+};
+const MORE_MAPS: [string, string, string][] = [
+  ["Full in-game map, high-res", "PowerPyx", "https://www.powerpyx.com/?p=370486"],
+  ["State of Leonida map", "Mapping Community", "https://map.stateofleonida.net/"],
+  ["GTA VI landmarks map", "GTADB", "https://map.gtadb.org/"],
+  ["GTA Wiki", "Weird Gloop", "https://gta.wiki/"],
 ];
 
 /** What actually exists on disk per zoom, counted from public/gtadb/tiles.
@@ -72,7 +98,10 @@ export function LeonidaMap() {
   const [live, setLive] = useState(false);
   const [night, setNight] = useState(false);
   const [places, setPlaces] = useState<Place[]>([]);
-  const [on, setOn] = useState<Set<string>>(new Set(LAYERS.filter((l) => !l.soon).map((l) => l.id)));
+  const [on, setOn] = useState<Set<string>>(new Set(LAYERS.filter((l) => !l.off).map((l) => l.id)));
+  const [q, setQ] = useState("");
+  const [openG, setOpenG] = useState<Set<string>>(new Set(["services", "places", "city", "robberies"]));
+  const clusters = useRef<{ x: number; y: number; n: number; wx: number; wy: number }[]>([]);
   const [sel, setSel] = useState<Place | null>(null);
   const [county, setCounty] = useState<string | null>(null);
   const [, force] = useState(0);
@@ -151,16 +180,42 @@ export function LeonidaMap() {
     const big = v.z >= 2.6, sz = big ? 22 : 16;
     const glyphFont = `800 ${big ? 12 : 10}px system-ui, sans-serif`;
     g.textAlign = "center"; g.textBaseline = "middle";
+    // zoomed out: bunch nearby markers into numbered bubbles (tap one to zoom in)
+    const cell = 72, bins = new Map<string, Place[]>(), singles: Place[] = [];
+    clusters.current = [];
     for (const p of shown) {
       const [sx, sy] = toScreen(p[3], p[4], w, h);
       if (sx < -40 || sy < -40 || sx > w + 40 || sy > h + 40) continue;
+      if (v.z >= 2.5 || sel?.[0] === p[0]) { singles.push(p); continue; }
+      const key = `${Math.floor(sx / cell)},${Math.floor(sy / cell)}`;
+      (bins.get(key) ?? bins.set(key, []).get(key)!).push(p);
+    }
+    for (const list of bins.values()) {
+      if (list.length < 3) { singles.push(...list); continue; }
+      const wx = list.reduce((t, p) => t + p[3], 0) / list.length, wy = list.reduce((t, p) => t + p[4], 0) / list.length;
+      const [sx, sy] = toScreen(wx, wy, w, h);
+      const tally = new Map<string, number>(); list.forEach((p) => tally.set(p[6], (tally.get(p[6]) ?? 0) + 1));
+      const top = [...tally.entries()].sort((a, b) => b[1] - a[1])[0][0];
+      const r = Math.min(26, 13 + Math.sqrt(list.length) * 2.2);
+      g.fillStyle = "rgba(255,255,255,.95)"; g.beginPath(); g.arc(sx, sy, r + 3, 0, Math.PI * 2); g.fill();
+      g.fillStyle = layerOf(top).color; g.beginPath(); g.arc(sx, sy, r, 0, Math.PI * 2); g.fill();
+      g.font = "900 12px system-ui, sans-serif"; g.fillStyle = "#fff"; g.fillText(String(list.length), sx, sy + 1);
+      clusters.current.push({ x: sx, y: sy, n: list.length, wx, wy });
+    }
+    const taken: number[][] = [];
+    for (const p of singles) {
+      const [sx, sy] = toScreen(p[3], p[4], w, h);
       const L = layerOf(p[6]), active = sel?.[0] === p[0], k = active ? sz + 8 : sz;
       g.fillStyle = "#fff"; g.beginPath(); g.roundRect(sx - k / 2 - 2, sy - k / 2 - 2, k + 4, k + 4, 6); g.fill();
       g.fillStyle = active ? "#ffc12b" : L.color; g.beginPath(); g.roundRect(sx - k / 2, sy - k / 2, k, k, 5); g.fill();
       g.font = glyphFont; g.fillStyle = active ? "#1c1710" : "#fff"; g.fillText(L.glyph, sx, sy + 1);
-      if (big || active) {
+      const named = !p[1].startsWith("Unnamed");
+      if ((big && named) || active) {
         g.font = "700 12px system-ui, sans-serif";
         const tw2 = g.measureText(p[1]).width + 10;
+        const box = [sx - tw2 / 2, sy + k / 2 + 4, tw2, 18];
+        if (!active && taken.some((t) => box[0] < t[0] + t[2] && box[0] + box[2] > t[0] && box[1] < t[1] + t[3] && box[1] + box[3] > t[1])) continue;
+        taken.push(box);
         g.fillStyle = night ? "rgba(20,10,38,.85)" : "rgba(255,255,255,.92)"; g.beginPath(); g.roundRect(sx - tw2 / 2, sy + k / 2 + 4, tw2, 18, 4); g.fill();
         g.fillStyle = night ? "#fff1e8" : "#1c1710"; g.fillText(p[1], sx, sy + k / 2 + 13.5);
       }
@@ -229,6 +284,8 @@ export function LeonidaMap() {
     const dr = drag.current; drag.current = null;
     if (!dr || dr.moved) return;
     const r = cv.current!.getBoundingClientRect(), px = e.clientX - r.left, py = e.clientY - r.top;
+    const hit = clusters.current.find((c) => (c.x - px) ** 2 + (c.y - py) ** 2 < 26 ** 2);
+    if (hit) { view.current = { x: hit.wx, y: hit.wy, z: Math.min(MAXZ, view.current.z + 1.2) }; schedule(); force((n) => n + 1); return; }
     let best: Place | null = null, bd = 20 ** 2;
     for (const p of shown) { const [sx, sy] = toScreen(p[3], p[4], r.width, r.height); const d = (sx - px) ** 2 + (sy - py) ** 2; if (d < bd) { bd = d; best = p; } }
     setSel(best);
@@ -255,9 +312,76 @@ export function LeonidaMap() {
   const toggle = (id: string) => setOn((s) => { const n = new Set(s); if (n.has(id)) n.delete(id); else n.add(id); return n; });
   const count = (id: string) => (id === "atlas" ? geo.at.size : places.filter((p) => p[6] === id).length);
 
+  const results = q.trim().length > 1 ? places.filter((p) => `${p[1]} ${p[2]} ${p[5]}`.toLowerCase().includes(q.trim().toLowerCase())).slice(0, 8) : [];
+  const allOn = LAYERS.every((l) => on.has(l.id));
   return (
-    <div className="grid gap-4 lg:grid-cols-[1fr_20rem]">
-      <div ref={wrap} onMouseLeave={() => setLive(false)} className="relative rounded-xl overflow-hidden border border-line h-[min(78vh,700px)] min-h-[440px]">
+    <div className="lmap">
+      <aside className="lmap-side">
+        <div className="lmap-head">
+          <span className="lmap-vi" aria-hidden>VI</span>
+          <div><b>Leonida map</b><small>{places.length.toLocaleString()} places · tap any for details</small></div>
+        </div>
+        <label className="lmap-search">
+          <span aria-hidden>🔎</span>
+          <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search places, streets, real-life spots" aria-label="Search the map" />
+        </label>
+        {results.length > 0 && (
+          <ul className="lmap-results">
+            {results.map((p) => (
+              <li key={p[0]}><button onClick={() => { setOn((s) => new Set(s).add(p[6])); focus(p); setQ(""); }}>
+                <i style={{ background: layerOf(p[6]).color }}>{layerOf(p[6]).glyph}</i><b>{p[1]}</b><small>{p[2]}</small>
+              </button></li>
+            ))}
+          </ul>
+        )}
+        <div className="lmap-all">
+          <button onClick={() => setOn(allOn ? new Set() : new Set(LAYERS.map((l) => l.id)))}>{allOn ? "Hide all" : "Show all"}</button>
+          <button onClick={() => { setCounty(null); setSel(null); view.current.z = minZ.current; schedule(); force((n) => n + 1); }}>Whole state</button>
+        </div>
+        <div className="lmap-scroll">
+          <p className="lmap-g">Counties</p>
+          <div className="atlas-chips">
+            {COUNTIES.map((c) => (
+              <button key={c.id} onClick={() => pickCounty(county === c.id ? null : c.id)} aria-pressed={county === c.id}
+                className={`atlas-chip${county === c.id ? " is-on" : ""}`} style={{ "--tone": COUNTY_TONE[c.id] } as React.CSSProperties}>
+                <i aria-hidden /><b>{c.name.replace(" County", "")}</b><span>{c.ch}</span>
+              </button>
+            ))}
+          </div>
+          <button className={`lmap-row${on.has("atlas") ? " is-on" : ""}`} onClick={() => toggle("atlas")} aria-pressed={on.has("atlas")}>
+            <i style={{ background: "#ff3d8b" }}>◎</i><span>District names</span><small>{geo.at.size}</small>
+          </button>
+          {GROUPS.map((gr) => {
+            const ids = gr.layers.map((l) => l.id), groupOn = ids.length > 0 && ids.every((id) => on.has(id));
+            return (
+              <section key={gr.id} className="lmap-group">
+                <div className="lmap-gh">
+                  <button className="lmap-g" onClick={() => setOpenG((s) => { const n = new Set(s); if (n.has(gr.id)) n.delete(gr.id); else n.add(gr.id); return n; })} aria-expanded={openG.has(gr.id)}>
+                    {gr.label} <span aria-hidden>{openG.has(gr.id) ? "▾" : "▸"}</span>
+                  </button>
+                  {ids.length > 0 && (
+                    <button className={`lmap-switch${groupOn ? " is-on" : ""}`} aria-label={`Show all ${gr.label}`} aria-pressed={groupOn}
+                      onClick={() => setOn((s) => { const n = new Set(s); ids.forEach((id) => (groupOn ? n.delete(id) : n.add(id))); return n; })}><i /></button>
+                  )}
+                </div>
+                {openG.has(gr.id) && (
+                  <div className="lmap-rows">
+                    {gr.layers.map((l) => (
+                      <button key={l.id} className={`lmap-row${on.has(l.id) ? " is-on" : ""}`} onClick={() => toggle(l.id)} aria-pressed={on.has(l.id)}>
+                        <i style={{ background: l.color }}>{l.glyph}</i><span>{l.label}</span><small>{count(l.id)}</small>
+                      </button>
+                    ))}
+                    {gr.soon?.map((n) => <div key={n} className="lmap-row is-soon"><i>·</i><span>{n}</span><small>Soon</small></div>)}
+                    {gr.soon && <p className="lmap-note">Robbery spots are being licensed. They&apos;ll land here, linked to the Economist.</p>}
+                  </div>
+                )}
+              </section>
+            );
+          })}
+        </div>
+      </aside>
+
+      <div ref={wrap} onMouseLeave={() => setLive(false)} className="lmap-map">
         <canvas ref={cv} tabIndex={0} onKeyDown={onKey} aria-label="Map of Leonida. Drag to move, scroll or pinch to zoom, arrow keys to pan."
           className={`absolute inset-0 h-full w-full ${live ? "touch-none cursor-grab active:cursor-grabbing" : "touch-pan-y"}`}
           onPointerDown={down} onPointerMove={move} onPointerUp={up} onPointerCancel={up} />
@@ -267,9 +391,10 @@ export function LeonidaMap() {
           </button>
         )}
         <div className="absolute right-3 top-3 z-10 grid gap-1">
-          <button onClick={() => zoomAt(0.6)} className="btn bg-ink text-foam !p-0 size-10 !rounded-md shadow text-xl" aria-label="Zoom in">+</button>
-          <button onClick={() => zoomAt(-0.6)} className="btn bg-ink text-foam !p-0 size-10 !rounded-md shadow text-xl" aria-label="Zoom out">−</button>
+          <button onClick={() => zoomAt(0.6)} className="lmap-zoom" aria-label="Zoom in">+</button>
+          <button onClick={() => zoomAt(-0.6)} className="lmap-zoom" aria-label="Zoom out">−</button>
         </div>
+        <p className="lmap-credit">Base map and places: <a href="https://map.gtadb.org" target="_blank" rel="noreferrer">GTADB</a> (CC BY 4.0)</p>
         {county && (() => {
           const c = COUNTIES.find((k) => k.id === county)!, placed = c.areas.filter((a) => geo.at.has(a));
           return (
@@ -303,42 +428,17 @@ export function LeonidaMap() {
               <h3 className="font-extrabold text-lg leading-tight">{sel[1]}</h3>
               <p className="text-sm text-haze">{sel[2]}</p>
               {sel[5] && <p className="mt-2 text-sm"><span className="font-bold">Real-life spot:</span> {sel[5]}</p>}
+              {LINKS[sel[6]] && <a href={LINKS[sel[6]][1]} className="lmap-link">{LINKS[sel[6]][0]} →</a>}
             </div>
           </article>
         )}
       </div>
 
-      <aside className="grid gap-3 content-start">
-        <p className="font-extrabold">Counties</p>
-        <div className="atlas-chips">
-          {COUNTIES.map((c) => (
-            <button key={c.id} onClick={() => pickCounty(county === c.id ? null : c.id)} aria-pressed={county === c.id}
-              className={`atlas-chip${county === c.id ? " is-on" : ""}`} style={{ "--tone": COUNTY_TONE[c.id] } as React.CSSProperties}>
-              <i aria-hidden /><b>{c.name.replace(" County", "")}</b><span>{c.ch}</span>
-            </button>
-          ))}
-        </div>
-        <p className="font-extrabold mt-1">Show on the map</p>
-        <ul className="grid gap-2">
-          {LAYERS.map((l) => (
-            <li key={l.id}>
-              <button disabled={l.soon} onClick={() => toggle(l.id)} aria-pressed={on.has(l.id)}
-                className={`w-full flex items-center gap-3 rounded-lg border-2 px-3 py-2 text-left ${l.soon ? "border-dashed border-line opacity-60" : on.has(l.id) ? "border-gulf bg-ink" : "border-line"}`}>
-                <span className="grid place-items-center size-7 rounded-md text-white font-black text-sm shrink-0" style={{ background: l.soon ? "var(--line)" : l.color, opacity: on.has(l.id) || l.soon ? 1 : 0.35 }}>{l.glyph}</span>
-                <span className="flex-1 font-bold text-sm">{l.label}</span>
-                <span className="text-xs text-haze">{l.soon ? "At launch" : count(l.id)}</span>
-              </button>
-            </li>
-          ))}
-        </ul>
-        <p className="text-sm text-haze">Cars, weapons and money spots go on the map after launch, logged by our crew.</p>
-        <p className="font-extrabold mt-2">Jump to</p>
-        <div className="flex flex-wrap gap-2">
-          {places.filter((p) => p[6] === "sights").slice(0, 8).map((p) => (
-            <button key={p[0]} onClick={() => focus(p)} className="px-3 py-1.5 rounded-full text-sm font-bold border-2 border-line hover:border-gulf">{p[1]}</button>
-          ))}
-        </div>
-      </aside>
+
+      <nav className="lmap-more" aria-label="More maps">
+        <b>More maps</b>
+        {MORE_MAPS.map(([t, by, href]) => <a key={href} href={href} target="_blank" rel="noopener noreferrer"><span>{t}</span><small>{by} ↗</small></a>)}
+      </nav>
     </div>
   );
 }

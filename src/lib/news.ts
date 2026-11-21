@@ -312,6 +312,28 @@ export const HOW_IT_PLAYS: { topic: string; points: string[] }[] = [
     ],
   },
   {
+    topic: "Cash, guns and loot",
+    points: [
+      "There are three kinds of money: pocket cash, money in the bank (BuckMe) and stash-bag loot. Only the bank is safe.",
+      "Wasted or busted, you lose your pocket cash plus a small BuckMe fee. Deposit at an ATM often, or hide cash under the floorboards at Jason's house before BuckMe opens.",
+      "Guns you picked up are lost when you go down. Guns you bought come back from any Ammu-Nation weapon locker.",
+      "Picked-up guns survive in your own car's trunk, as long as the car isn't destroyed or left behind.",
+      "Loot goes into stash bags: narcotics, jewelry, marked bills. Each of you carries two; more fit in a car trunk, none on a bike.",
+      "A stash bag is worth nothing until a fence buys it, and it's usually lost if you're wasted or busted. Lose the cops first, then drive it to a fence.",
+    ],
+  },
+  {
+    topic: "Impound and getting your car back",
+    points: [
+      "Busted in your car, or leave your own car inside a police search area, and it's towed to the nearest impound lot.",
+      "Only registered cars go to the impound. A stolen car you never registered is simply gone.",
+      "The map's Personal tab shows which lot has it. Anything in the trunk, stash bags included, waits there too.",
+      "Free way back: drive into the lot and take it. You'll pick up a two-star wanted level on the way out.",
+      "Paid way back: the Scooter Bros app delivers it once Moses is done in Chapter 2. A one-time upgrade, around $12,500, makes recoveries free with daily credits.",
+      "Chapter 2's Impounded Vehicle side mission walks you through it with Lucia's car at the Port Gellhorn lot.",
+    ],
+  },
+  {
     topic: "Getting around",
     points: [
       "Open the phone with Up on the D-pad: RydeMe taxis work as fast travel, with 20% off after the second BuckMe goal.",

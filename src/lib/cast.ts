@@ -2,7 +2,8 @@
  *  `ch` is the chapter you first meet them (0 = Prologue), from our mission list; `promo` marks
  *  people Rockstar revealed in trailers, so they're never treated as spoilers. Voice actors from
  *  the in-game credits as reported by GamesRadar and OutputLag. */
-export type CastMember = { name: string; role: string; met: string; ch: number; actor?: string; promo?: boolean; with?: string };
+/** `img`: a picture in public/media/cast/<img>.webp, once we have one. */
+export type CastMember = { name: string; role: string; met: string; ch: number; actor?: string; promo?: boolean; with?: string; img?: string };
 
 export const CAST: CastMember[] = [
   { name: "Tomás", role: "Lucia's son, taken into care after her arrest", met: "Prologue", ch: 0 },

@@ -2,6 +2,7 @@
 import { useEffect, useRef, useState } from "react";
 import { lockScroll } from "@/lib/scrollLock";
 import { HOW_IT_PLAYS } from "@/lib/news";
+import { useTeamEntries, teamLook, teamTips, type TeamEntry } from "@/components/GuideEntries";
 import { TopicEmblem, type EmblemId } from "@/components/TopicEmblem";
 
 /** Each topic's mark, and one picture per tip, in the same order as the
@@ -45,6 +46,8 @@ const LOOK: Record<string, { emblem: EmblemId; kicker: string; shots: string[] }
     "people/jason_and_lucia_4", "people/lucia_pistol_rain"] },
   "Story and endings": { emblem: "profile", kicker: "No spoilers here", shots: [
     "people/jason_lucia_sunset_1", "places/vice_city_night", "people/jason_lucia_hilltop", "people/lucia_cell_window", "people/jason_and_lucia_10", "places/wrecking_ball_tower"] },
+  "Cash, guns and loot": { emblem: "money", kicker: "Keep what you take", shots: ["people/masked_duo_rifles", "places/vice_city_3", "places/palm_tower", "people/jason_gun_1"] },
+  "Impound and getting your car back": { emblem: "cars", kicker: "Lost your ride", shots: ["places/sheriff_chase", "places/police_supercar", "places/car_wash_cab", "places/port_gellhorn_3"] },
   "Getting around": { emblem: "cars", kicker: "Taxis, fuel, planes", shots: [
     "places/seaplane_keys_bridge", "places/car_wash_cab", "places/ricardo_tires_gas_night", "people/jason_seaplane"] },
   "Cheats": { emblem: "money", kicker: "Codes and how to unlock them", shots: [
@@ -59,6 +62,8 @@ const FALLBACK = { emblem: "leonida" as EmblemId, kicker: "", shots: ["places/vi
 
 export function TopicCards() {
   const [open, setOpen] = useState<string | null>(null);
+  const team = useTeamEntries();
+  const [teamOpen, setTeamOpen] = useState<TeamEntry | null>(null);
   const topic = HOW_IT_PLAYS.find((t) => t.topic === open) ?? null;
 
   return (
@@ -86,8 +91,32 @@ export function TopicCards() {
             </li>
           );
         })}
+        {team.map((e) => {
+          const look = teamLook(e);
+          return (
+            <li key={e.id}>
+              <button onClick={() => setTeamOpen(e)} className="tile is-team group" aria-haspopup="dialog">
+                <span className="tile-reel" aria-hidden>
+                  {look.shots.slice(0, 4).map((src, i) => (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img key={src} src={`/media/${src}.webp`} alt="" loading="lazy" decoding="async" style={{ animationDelay: `${i * 1.4}s` }} />
+                  ))}
+                </span>
+                <span className="tile-team" title="Written and checked by the Live From Leonida team">★ By our team</span>
+                <TopicEmblem id={look.emblem} className="tile-mark" />
+                <span className="tile-plate">
+                  <span className="tile-kick">{e.topic}</span>
+                  <span className="tile-name display">{e.title}</span>
+                  <span className="tile-more">{teamTips(e).length} things to know →</span>
+                </span>
+              </button>
+            </li>
+          );
+        })}
       </ul>
+      {team.length > 0 && <p className="tile-legend"><span>★</span> Green cards are written and checked by our team.</p>}
 
+      {teamOpen && <TopicPopup team topic={teamOpen.title} points={teamTips(teamOpen)} emblem={teamLook(teamOpen).emblem} shots={teamLook(teamOpen).shots} onClose={() => setTeamOpen(null)} />}
       {topic && <TopicPopup topic={topic.topic} points={topic.points}
         emblem={(LOOK[topic.topic] ?? FALLBACK).emblem}
         shots={(LOOK[topic.topic] ?? FALLBACK).shots}
@@ -98,8 +127,8 @@ export function TopicCards() {
 
 /** One tip at a time, on its own picture. Arrows, keys or a swipe move
  *  through them; the picture stays clear and the tip sits on a dark fade. */
-export function TopicPopup({ topic, points, emblem, shots, onClose }: {
-  topic: string; points: string[]; emblem: EmblemId; shots: string[]; onClose: () => void;
+export function TopicPopup({ topic, points, emblem, shots, onClose, team }: {
+  topic: string; points: string[]; emblem: EmblemId; shots: string[]; onClose: () => void; team?: boolean;
 }) {
   const box = useRef<HTMLDivElement>(null);
   const [at, setAt] = useState(0);
@@ -122,7 +151,7 @@ export function TopicPopup({ topic, points, emblem, shots, onClose }: {
 
   return (
     <div className="pop-back" onMouseDown={(e) => { if (e.target === e.currentTarget) onClose(); }}>
-      <div ref={box} tabIndex={-1} role="dialog" aria-modal="true" aria-label={`${topic}: tip ${at + 1} of ${n}`} className="slide"
+      <div ref={box} tabIndex={-1} role="dialog" aria-modal="true" aria-label={`${topic}: tip ${at + 1} of ${n}`} className={`slide${team ? " is-team" : ""}`}
         onTouchStart={(e) => { touch.current = e.touches[0].clientX; }}
         onTouchEnd={(e) => { if (touch.current === null) return; const dx = e.changedTouches[0].clientX - touch.current; if (Math.abs(dx) > 40) go(dx < 0 ? 1 : -1); touch.current = null; }}>
         {points.map((_, i) => (

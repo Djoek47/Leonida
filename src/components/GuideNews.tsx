@@ -1,6 +1,5 @@
 import Link from "@/components/A";
 import { TopicCards } from "@/components/TopicCards";
-import { GuideEntries } from "@/components/GuideEntries";
 
 
 /** The places you change how a car, a gun or a character looks. Official Rockstar shots. */
@@ -25,7 +24,6 @@ export function GuideNews() {
       <div className="mt-10">
         <TopicCards />
       </div>
-      <GuideEntries />
       <p className="mt-10 text-sm text-haze">Got a source we missed? Drop it in <Link href="/chat" className="underline">Chat</Link>.</p>
     </section>
   );
