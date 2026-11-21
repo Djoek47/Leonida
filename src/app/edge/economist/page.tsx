@@ -63,6 +63,14 @@ function useCount(target: number, ms = 900) {
   return v;
 }
 
+const TOUR_KEY = "lfl-eco-tour";
+const STEPS = [
+  { id: "eco-ch", t: "Pick your chapter", s: "The page follows your story", tip: "Tap the chapter you're on. Only what you can actually do right now shows up, so nothing spoils the story." },
+  { id: "eco-make", t: "Make money", s: "Best earners, in order", tip: "This is your to-do list. Number 1 is the best money for the time. Tap any card further down for the full breakdown." },
+  { id: "eco-sell", t: "Sell it", s: "Find the right fence", tip: "Loot only turns into cash at a fence. Each one pays best for different goods, so check before you drive across the map." },
+  { id: "eco-keep", t: "Keep it", s: "Bank it so you can't lose it", tip: "Deposit at any ATM, then move it into Family Savings. Type your savings to see how far up the BuckMe ladder you are." },
+] as const;
+
 export default function Economist() {
   const { user, profile, paying, tier, loading } = useUser();
   const allowed = Boolean(profile?.is_admin || (paying && tier.rank >= 2));
@@ -71,6 +79,10 @@ export default function Economist() {
   const [filter, setFilter] = useState<(typeof FILTERS)[number]["id"]>("all");
   const [open, setOpen] = useState<Engine | null>(null);
   const [burst, setBurst] = useState(0);
+  const [tour, setTour] = useState<number | null>(null);
+  useEffect(() => { try { if (!localStorage.getItem(TOUR_KEY)) setTour(0); } catch {} }, []);
+  const endTour = () => { setTour(null); try { localStorage.setItem(TOUR_KEY, "1"); } catch {} };
+  useEffect(() => { if (tour !== null) document.getElementById(STEPS[tour].id)?.scrollIntoView({ behavior: "smooth", block: "start" }); }, [tour]);
 
   useEffect(() => {
     let c = 1;
@@ -99,7 +111,7 @@ export default function Economist() {
       <div className="ec-wrap">
         <p className="ec-kick"><Link href="/edge" className="underline underline-offset-4">The Edge</Link> · Hustler and Kingpin</p>
         <h1 className="ec-title">Leonida <span>Economist</span></h1>
-        <p className="ec-sub">Money in Leonida doesn&apos;t reset each chapter. It stacks. Every chapter opens new ways to earn on top of the old ones. See how your earning power grows, what pays most right now, where to sell, and how to keep it.</p>
+        <p className="ec-sub">Tell us your chapter. We show you the fastest money right now, where to sell what you steal, and how to keep it.</p>
 
         {!allowed ? (
           <section className="ec-gate">
@@ -112,7 +124,15 @@ export default function Economist() {
           </section>
         ) : (
           <>
+            <nav className="ec-steps" aria-label="How the Economist works">
+              {STEPS.map((st, i) => (
+                <a key={st.id} href={`#${st.id}`} className="ec-stepcard"><span className="ec-n">{i + 1}</span><span><b>{st.t}</b><small>{st.s}</small></span></a>
+              ))}
+              <button className="ec-tourbtn" onClick={() => setTour(0)}>▶ 30-second tour</button>
+            </nav>
+
             {/* Where you are: shared with Mission Briefing */}
+            <div id="eco-ch" className="ec-h ec-anchor"><h2><span className="ec-n">1</span>Which chapter are you on?</h2><p>Everything below changes to match. Same setting as Mission Briefing.</p></div>
             <div className="ec-levels" role="radiogroup" aria-label="Which chapter are you on?">
               {[1, 2, 3, 4, 5].map((c) => {
                 const locked = c > reach + 1;
@@ -124,7 +144,7 @@ export default function Economist() {
                 );
               })}
             </div>
-            <p className="ec-levels-note">I&apos;m on <b>Chapter {reach}</b>. Same setting as Mission Briefing: tap a chapter you&apos;ve reached to move there.</p>
+            <p className="ec-levels-note">You&apos;re on <b>Chapter {reach}</b>. Locked chapters open as you play.</p>
 
             {/* HUD */}
             <section className="ec-hud" style={{ backgroundImage: `url(/media/${BANNER[view]}.webp)` }} aria-label="Earning power">
@@ -143,28 +163,6 @@ export default function Economist() {
               </div>
             </section>
 
-            {/* Skyline: earning power stacks chapter on chapter */}
-            <section className="ec-sky-wrap" aria-label="How earning power grows">
-              <div className="ec-h"><h2>The expansion</h2><p>Each tower is a chapter. Its height is the biggest single score open by then, and each block is a money engine. New blocks glow. Nothing you open ever closes, so the towers only grow.</p></div>
-              <div className="ec-sky">
-                {[1, 2, 3, 4, 5].map((c) => {
-                  const pc = power(c), hidden = c > reach;
-                  const h = hidden ? 26 : 16 + (Math.log10(Math.max(pc.top, 1000)) - 3) / (Math.log10(260000) - 3) * 84;
-                  return (
-                    <button key={c} className={`ec-tower${view === c ? " is-on" : ""}${hidden ? " is-dark" : ""}`} onClick={() => !hidden && look(c)} disabled={hidden} aria-label={hidden ? `Chapter ${c}, locked` : `Chapter ${c}: ${usd(pc.top)}, ${pc.open.length} engines`}>
-                      <span className="ec-tower-top">{hidden ? "?" : usd(pc.top)}</span>
-                      <span className="ec-tower-body" style={{ height: `${h}%` }}>
-                        {!hidden && pc.open.map((e) => <i key={e.id} className={`k-${e.kind}${e.ch === c && c > 1 ? " is-new" : ""}`} title={e.name} />)}
-                      </span>
-                      <span className="ec-tower-ch">Ch. {c}</span>
-                      <span className="ec-tower-n">{hidden ? "Keep playing" : `${pc.open.length} engines${pc.fresh.length && c > 1 ? ` · +${pc.fresh.length}` : ""}`}</span>
-                    </button>
-                  );
-                })}
-              </div>
-              <div className="ec-legend">{(Object.keys(KIND_LABEL) as EngineKind[]).map((k) => <span key={k}><i className={`k-${k}`} />{KIND_LABEL[k]}</span>)}</div>
-            </section>
-
             {/* Alerts for this chapter */}
             {CHAPTER_ALERTS.filter((a) => a.ch === view).map((a) => (
               <aside key={a.text} className="ec-alert" role="note"><b>Chapter {a.ch} money alert</b><p>{a.text}</p></aside>
@@ -172,6 +170,8 @@ export default function Economist() {
 
             {/* Fastest route */}
             {route && (
+              <>
+              <div id="eco-make" className="ec-h ec-anchor"><h2><span className="ec-n">2</span>Make money</h2><p>Start at the top of this list. Number 1 pays best for the time it takes.</p></div>
               <section className="ec-route" aria-label="Fastest money this chapter">
                 <div className="ec-route-head">
                   <span className="ec-k">Fastest money in Chapter {view}</span>
@@ -188,11 +188,12 @@ export default function Economist() {
                   ))}
                 </ol>
               </section>
+              </>
             )}
 
             {/* Engines */}
             <section aria-label="Money engines">
-              <div className="ec-h"><h2>Money engines</h2><p>Everything open up to Chapter {view}. Tap a card for the full dossier.</p></div>
+              <div className="ec-h"><h3 className="ec-h3">Every way to earn so far</h3><p>Tap a card for how it works, what it pays and the risk.</p></div>
               <div className="ec-filters" role="tablist">{FILTERS.map((f) => <button key={f.id} role="tab" aria-selected={filter === f.id} className={filter === f.id ? "is-on" : ""} onClick={() => setFilter(f.id)}>{f.label}</button>)}</div>
               <ul className="ec-grid">
                 {visible.map((e) => (
@@ -219,7 +220,7 @@ export default function Economist() {
 
             {/* Pipeline: take → fence → bank */}
             <section className="ec-pipe-wrap" aria-label="From loot to money in the bank">
-              <div className="ec-h"><h2>Loot is not money yet</h2><p>Stolen goods are worth nothing until a fence buys them. This is the trip every dollar makes.</p></div>
+              <div id="eco-sell" className="ec-h ec-anchor"><h2><span className="ec-n">3</span>Sell it</h2><p>Stolen goods aren&apos;t money until a fence buys them. Pick the fence that pays best for what you&apos;re carrying.</p></div>
               <ol className="ec-pipe">
                 {[["🎒", "Take", "Store, safe, car, vault"], ["🚗", "Stash", "Bag in the trunk, lose the cops"], ["🤝", "Fence", "Sell to the right buyer"], ["🏧", "Checking", "Deposit at any ATM"], ["🏦", "Family Savings", "Can't be lost or withdrawn"]].map(([ico, t, s], i) => (
                   <li key={t} style={{ animationDelay: `${i * 0.12}s` }}><span className="ec-pipe-ico" aria-hidden>{ico}</span><b>{t}</b><small>{s}</small></li>
@@ -239,11 +240,34 @@ export default function Economist() {
               </ul>
             </section>
 
+            <div id="eco-keep" className="ec-h ec-anchor"><h2><span className="ec-n">4</span>Keep it</h2><p>Cash in your pocket can be lost. Bank it, then move it to Family Savings where nobody can touch it.</p></div>
             <Ladder />
 
             <section className="ec-rules" aria-label="Cash rules">
-              <div className="ec-h"><h2>House rules for your cash</h2></div>
+              <div className="ec-h"><h3 className="ec-h3">Cash rules to remember</h3></div>
               <ul>{CASH_RULES.map((r) => <li key={r}>{r}</li>)}</ul>
+            </section>
+
+            {/* Skyline: earning power stacks chapter on chapter */}
+            <section className="ec-sky-wrap" aria-label="How earning power grows">
+              <div className="ec-h"><h2><span className="ec-n is-x">+</span>How your money grows</h2><p>One tower per chapter. Taller means bigger scores. Nothing ever closes, so it only grows. Tap a tower to look ahead.</p></div>
+              <div className="ec-sky">
+                {[1, 2, 3, 4, 5].map((c) => {
+                  const pc = power(c), hidden = c > reach;
+                  const h = hidden ? 26 : 16 + (Math.log10(Math.max(pc.top, 1000)) - 3) / (Math.log10(260000) - 3) * 84;
+                  return (
+                    <button key={c} className={`ec-tower${view === c ? " is-on" : ""}${hidden ? " is-dark" : ""}`} onClick={() => !hidden && look(c)} disabled={hidden} aria-label={hidden ? `Chapter ${c}, locked` : `Chapter ${c}: ${usd(pc.top)}, ${pc.open.length} engines`}>
+                      <span className="ec-tower-top">{hidden ? "?" : usd(pc.top)}</span>
+                      <span className="ec-tower-body" style={{ height: `${h}%` }}>
+                        {!hidden && pc.open.map((e) => <i key={e.id} className={`k-${e.kind}${e.ch === c && c > 1 ? " is-new" : ""}`} title={e.name} />)}
+                      </span>
+                      <span className="ec-tower-ch">Ch. {c}</span>
+                      <span className="ec-tower-n">{hidden ? "Keep playing" : `${pc.open.length} engines${pc.fresh.length && c > 1 ? ` · +${pc.fresh.length}` : ""}`}</span>
+                    </button>
+                  );
+                })}
+              </div>
+              <div className="ec-legend">{(Object.keys(KIND_LABEL) as EngineKind[]).map((k) => <span key={k}><i className={`k-${k}`} />{KIND_LABEL[k]}</span>)}</div>
             </section>
 
             <p className="ec-src">
@@ -254,6 +278,18 @@ export default function Economist() {
         )}
       </div>
       {open && <Dossier e={open} onClose={() => setOpen(null)} />}
+      {tour !== null && allowed && (
+        <div className="ec-tour" role="dialog" aria-label="Economist tour">
+          <p className="ec-k">Step {tour + 1} of {STEPS.length}</p>
+          <p className="ec-tour-h">{STEPS[tour].t}</p>
+          <p className="ec-tour-p">{STEPS[tour].tip}</p>
+          <div className="ec-tour-dots" aria-hidden>{STEPS.map((_, i) => <i key={i} className={i === tour ? "on" : ""} />)}</div>
+          <div className="ec-tour-btns">
+            <button onClick={endTour} className="ec-tour-skip">Skip</button>
+            {tour < STEPS.length - 1 ? <button className="btn btn-hot" onClick={() => setTour(tour + 1)}>Next →</button> : <button className="btn btn-hot" onClick={endTour}>Got it</button>}
+          </div>
+        </div>
+      )}
     </div>
   );
 }

@@ -103,12 +103,18 @@ export default function Edge() {
           </Link>
         </div>
 
+        <Link href="/edge/archive" className={`eg-archive${rank >= 3 ? " is-open" : ""}`}>
+          <span className="eg-archive-ico" aria-hidden>{rank >= 3 ? "🎞" : "🔒"}</span>
+          <span><b>Clip archive</b><small>Every clip from every closed week, with podiums and downloads. {rank >= 3 ? "Yours with Kingpin." : "Kingpin only."}</small></span>
+          <span className="eg-go">{rank >= 3 ? "Open the archive →" : "Take a look →"}</span>
+        </Link>
+
         <div className="eg-access">
           <p><b>How you get the Edge:</b> it comes with membership.</p>
           <ul>
             <li className={rank >= 1 ? "is-have" : ""}><span>Street</span>Mission Briefing and The Road</li>
             <li className={rank >= 2 ? "is-have" : ""}><span>Hustler</span>Adds the Leonida Economist</li>
-            <li className={rank >= 3 ? "is-have" : ""}><span>Kingpin</span>Everything, plus the clip archive</li>
+            <li className={rank >= 3 ? "is-have" : ""}><span>Kingpin</span>Everything, plus the <Link href="/edge/archive" className="underline">clip archive</Link></li>
           </ul>
           {rank < 1 && <Link href={user ? "/pricing" : "/login?next=/edge"} className="btn btn-hot">{user ? "See the plans" : "Sign in"}</Link>}
         </div>

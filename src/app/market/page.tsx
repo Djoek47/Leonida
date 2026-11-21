@@ -52,8 +52,8 @@ export default function Market() {
           </div>
         </div>
         <ol className="mk-steps">
-          {[["🖼", "See the screenshots", "Five frames picked by the seller, plus a description of what happens."], ["💬", "Ask the seller", "Chat before you buy. Videos stay locked so nobody can copy them."], ["⬇", "Buy and download", "$1 to $20. The full file is yours to keep and use."]].map(([i, h, p], k) => (
-            <li key={h}><span className="mk-step-n">{k + 1}</span><span className="mk-step-i" aria-hidden>{i}</span><b>{h}</b><small>{p}</small></li>
+          {[["🖼", "Peek", "5 screenshots + what happens"], ["💬", "Ask", "Chat with the seller first"], ["⬇", "Own it", "$1–$20, full file, yours"]].map(([i, h, p], k) => (
+            <li key={h} style={{ animationDelay: `${k * 0.12}s` }}><span className="mk-step-i" aria-hidden>{i}</span><span className="mk-step-n">{k + 1}</span><b>{h}</b><small>{p}</small></li>
           ))}
         </ol>
       </section>

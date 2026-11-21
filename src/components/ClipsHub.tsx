@@ -237,8 +237,9 @@ export function ClipsHub({ cat }: { cat: Cat }) {
     setMsg("Getting the file…");
     const token = (await c.auth.getSession()).data.session?.access_token;
     const res = await fetch("/api/download", { method: "POST", headers: { "content-type": "application/json", ...(token ? { authorization: `Bearer ${token}` } : {}) }, body: JSON.stringify({ clipId: r.id }) });
-    const j = (await res.json().catch(() => ({}))) as { file?: string; checkout?: string; error?: string; external?: boolean };
+    const j = (await res.json().catch(() => ({}))) as { file?: string; checkout?: string; error?: string; external?: boolean; archived?: boolean };
     if (j.checkout) { location.href = j.checkout; return; }
+    if (j.archived) { setMsg("That clip's week is over, so it lives in the Kingpin archive now (livefromleonida.com/edge/archive)."); return; }
     if (!j.file) { setMsg(j.error ?? (paying ? "Could not start the download." : `Downloads are for members, or ${exactMoney(DOWNLOAD.priceCents)} each.`)); return; }
     if (j.external) window.open(j.file, "_blank", "noopener"); else location.href = j.file;
     setOwned((o) => new Set(o).add(r.id));

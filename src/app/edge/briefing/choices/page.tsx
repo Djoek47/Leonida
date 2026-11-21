@@ -67,7 +67,14 @@ export default function TheRoad() {
   // Any lane you've reached can be changed later: the picks after it stay as they are.
   function choose(f: Fork, i: number) {
     if (picks[f.id] === undefined && f.id !== nextId) return;
-    save({ ...picks, [f.id]: i });
+    const first = picks[f.id] === undefined;
+    const n = { ...picks, [f.id]: i };
+    save(n);
+    // First time through a fork: drive on to the next one so the trip keeps moving.
+    if (first) {
+      const nx = visible.find((x) => n[x.id] === undefined);
+      if (nx) setTimeout(() => document.getElementById(`fork-${nx.id}`)?.scrollIntoView({ behavior: "smooth", block: "center" }), 650);
+    }
   }
   function rewind(f: Fork) {
     const idx = FORKS.indexOf(f);
@@ -197,7 +204,7 @@ function ForkView({ f, pick, state, revealed, onPick, onRewind }: { f: Fork; pic
   const n = f.options.length;
   const xs = f.options.map((_, i) => ((i + 0.5) / n) * 100);
   return (
-    <div className={`fork is-${state}${f.big ? " is-big" : ""}${f.romance ? " is-heart" : ""}`}>
+    <div id={`fork-${f.id}`} className={`fork is-${state}${f.big ? " is-big" : ""}${f.romance ? " is-heart" : ""}`}>
       <div className="fork-node">
         <span className="fork-dot">{state === "now" ? <Car /> : f.romance ? "♥" : null}</span>
         <span className="fork-mission">{f.romance && <em className="is-heart">♥ Jason &amp; Lucia</em>}{f.big && !f.romance && <em>Key decision</em>}{f.mission}</span>
@@ -238,7 +245,7 @@ function Checklist({ f, pick, state, revealed, onPick, onRewind }: { f: Fork; pi
   const n = f.options.filter((_, i) => mask & (1 << i)).length;
   const toggle = (i: number) => { const m = mask ^ (1 << i); if (pick === undefined) setDraft(m); else onPick(m); };
   return (
-    <div className={`fork is-${state} is-heart is-multi${f.big ? " is-big" : ""}`}>
+    <div id={`fork-${f.id}`} className={`fork is-${state} is-heart is-multi${f.big ? " is-big" : ""}`}>
       <div className="fork-node">
         <span className="fork-dot">{state === "now" ? <Car /> : "♥"}</span>
         <span className="fork-mission"><em className="is-heart">♥ Jason &amp; Lucia · tick any</em>{f.mission}</span>
