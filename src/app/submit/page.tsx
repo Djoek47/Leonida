@@ -75,27 +75,18 @@ function RoundWindow() {
   const [c, setC] = useState<Contest | null>(null);
   useEffect(() => { currentContest().then(setC).catch(() => {}); }, []);
   if (!c) return null;
-  const subsClose = new Date(c.submissions_close).getTime();
   const opens = new Date(c.voting_opens).getTime();
   const closes = new Date(c.voting_closes).getTime();
   const now = Date.now();
-  const takingClips = now < subsClose && !["closed", "paid"].includes(c.status);
+  const live = now >= opens && now < closes && !["closed", "paid"].includes(c.status);
   const when = (t: number) => new Date(t).toLocaleString(undefined,
-    { weekday: "short", month: "short", day: "numeric", hour: "numeric", minute: "2-digit" });
+    { weekday: "long", month: "short", day: "numeric", hour: "numeric", minute: "2-digit" });
   return (
-    <section className={`round-window${takingClips ? "" : " shut"}`}>
-      <p className="rw-k">{takingClips ? "Now taking clips" : "Entries closed"}</p>
+    <section className={`round-window${live ? "" : " shut"}`}>
+      <p className="rw-k">{live ? "● Round open" : "Next round"}</p>
       <p className="rw-t">{c.title}</p>
-      <dl className="rw-dates">
-        <div><dt>Entries close</dt><dd>{when(subsClose)}</dd></div>
-        <div><dt>Voting opens</dt><dd>{when(opens)}</dd></div>
-        <div><dt>Voting closes</dt><dd>{when(closes)}</dd></div>
-      </dl>
-      <p className="rw-note">
-        {takingClips
-          ? "Send it before entries close to submit it for this round. Staff review every submission, and only approved clips make the final contest cut."
-          : "This round has stopped taking clips. Anything you send now waits for the next one."}
-      </p>
+      <p className="rw-one">{live ? <>Send clips and vote until <b>{when(closes)}</b></> : <>Opens <b>{when(opens)}</b></>}</p>
+      <p className="rw-note">{live ? "Our team checks every clip before it goes up for votes." : "Anything you send now goes into this round when it opens."}</p>
     </section>
   );
 }
@@ -273,12 +264,8 @@ function SendForm({ userId, cap, usedWeek, resetsAt, gamertag, platform }: { use
                 <span>
                   <b>{r.title}</b>
                   <small>
-                    Entries close {new Date(r.submissions_close).toLocaleString(undefined,
+                    Open until {new Date(r.voting_closes).toLocaleString(undefined,
                       { weekday: "short", month: "short", day: "numeric", hour: "numeric", minute: "2-digit", timeZone: "America/Toronto", timeZoneName: "short" })}
-                    {" · voting "}
-                    {new Date(r.voting_opens).toLocaleDateString(undefined, { month: "short", day: "numeric" })}
-                    {"–"}
-                    {new Date(r.voting_closes).toLocaleDateString(undefined, { month: "short", day: "numeric" })}
                   </small>
                 </span>
               </label>

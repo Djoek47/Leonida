@@ -54,8 +54,13 @@ export async function openContests(): Promise<Contest[]> {
 export async function currentContest(): Promise<Contest> {
   const c = sb();
   if (!c) return DEMO_CONTEST;
-  const { data } = await c.from("contests").select("*").in("status", ["voting", "review", "submissions"])
-    .order("voting_closes", { ascending: false }).limit(1).maybeSingle();
+  // The round open right now; if none, the next one to open. Never a week further out.
+  const now = new Date().toISOString();
+  const open = await c.from("contests").select("*").eq("kind", "weekly").in("status", ["voting", "review", "submissions"])
+    .lte("voting_opens", now).gt("voting_closes", now).order("voting_closes", { ascending: true }).limit(1).maybeSingle();
+  const next = open.data ? null : await c.from("contests").select("*").eq("kind", "weekly").in("status", ["voting", "review", "submissions"])
+    .gt("voting_opens", now).order("voting_opens", { ascending: true }).limit(1).maybeSingle();
+  const data = open.data ?? next?.data;
   return (data as Contest) ?? { ...DEMO_CONTEST, id: "none", title: "Season 1 opens at launch", status: "submissions" };
 }
 

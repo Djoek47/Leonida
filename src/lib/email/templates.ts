@@ -295,10 +295,10 @@ export function eventEmail(kind: string, d: D, name: string): Email | null {
       return night(`${s(d.round, "A new round")} is open`, `Enter a clip you already have up.`, [
         heading("A new round is open.", N),
         para(`${hi(name)} <strong>${esc(s(d.round, "This week's round"))}</strong> is taking entries. ${n === 1 ? `Your clip <strong>${esc(s(d.latest, "your clip"))}</strong> is live for downloads and could go in` : `You have ${n} clips live for downloads, including <strong>${esc(s(d.latest, "your latest"))}</strong>, and any of them could go in`}.`, N),
-        rows([["Round", esc(s(d.round))], ...(closes ? [["Entries close", esc(closes)] as [string, string]] : [])], N),
+        rows([["Round", esc(s(d.round))], ...(closes ? [["Open until", esc(closes)] as [string, string]] : [])], N),
         button("Pick a clip to enter", `${SITE}/dashboard`, N),
         small("It stays on sale either way. Entering only adds the chance at the prize. You can turn these emails off in Settings → Notifications.", N),
-      ], [`${name}, ${s(d.round, "a new round")} is open for entries.`, closes ? `Entries close ${closes}.` : "", `${SITE}/dashboard`], "You're getting this because you have a clip on the site that isn't in a round yet.");
+      ], [`${name}, ${s(d.round, "a new round")} is open for entries.`, closes ? `Open until ${closes}.` : "", `${SITE}/dashboard`], "You're getting this because you have a clip on the site that isn't in a round yet.");
     }
 
     case "clip_sold":

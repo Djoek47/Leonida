@@ -3940,3 +3940,4 @@ a.mk-card:hover, a.mk-card:focus-visible { transform: translateY(-4px); border-c
 .fork-check-foot > span { font-family: var(--font-overpass), system-ui, sans-serif; font-variant-numeric: tabular-nums; }
 :root[data-theme="day"] .mk-page .btn-ghost:not(.mk-ghost) { color: #1c140c; background: #fff; border-color: rgba(224,48,111,.4); }
 :root[data-theme="day"] .mk-page .btn-ghost:not(.mk-ghost):hover { border-color: #e0306f; color: #c2185b; }
+.rw-one { margin-top: .5rem; font-size: 1.05rem; font-weight: 700; } .rw-one b { font-weight: 900; }

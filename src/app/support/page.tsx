@@ -15,7 +15,7 @@ const TOPICS: [string, string, string][] = [
 // Answers people need most, shown before the form so many never have to send it.
 const QUICK: Record<string, [string, string][]> = {
   payments: [["When do I get download money?", "Download earnings become available after the earning month ends, at midnight on the 1st (Toronto time)."], ["When is a weekly prize paid?", "Weekly prizes are processed after the winner is announced and valid payment details are provided."]],
-  voting: [["When does a round open and close?", "Rounds open Thursday at noon. Entries close the next Wednesday at noon; voting ends just before Thursday noon."], ["Why can't I vote on a clip?", "Only approved clips in the open weekly round take votes, and one vote per clip, for good."]],
+  voting: [["When does a round open and close?", "Each round runs Thursday noon to Thursday noon. While it\u2019s open you can send clips and vote. When it ends, both stop and the results come in."], ["Why can't I vote on a clip?", "Only approved clips in the open weekly round take votes, and one vote per clip, for good."]],
   clips: [["How long does review take?", "Usually within a day. You get an email either way."], ["Limits?", "Under 2 minutes and under 600 MB, up to 3 tags."]],
 };
 type Mine = { ref: string; subject: string; status: string; reply: string | null; created_at: string };

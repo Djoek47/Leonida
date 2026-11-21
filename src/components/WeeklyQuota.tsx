@@ -11,7 +11,7 @@ export function WeeklyQuota({ allowance, used, resetsAt, paying, contestId }: { 
       {out
         ? <><b>You have used all {q.allowance} submissions for {q.round_title ?? "this contest week"}.</b> Your next allowance starts when its entries close.</>
         : <>This week{q.round_title ? ` (${q.round_title})` : ""}: <b>{q.used} of {q.allowance}</b> clips submitted - <b>{q.remaining}</b> remaining.</>}
-      <span className="block text-sm opacity-80">Entries close and your allowance resets: {resetLabel(q.resets_at)}{paying ? "" : <> · <Link href="/pricing" className="underline">more with a plan</Link></>}</span>
+      <span className="block text-sm opacity-80">Round ends and your allowance resets: {resetLabel(q.resets_at)}{paying ? "" : <> · <Link href="/pricing" className="underline">more with a plan</Link></>}</span>
     </p>
   );
 }

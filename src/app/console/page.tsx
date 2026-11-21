@@ -659,7 +659,7 @@ function ContestAdmin() {
     e.preventDefault();
     const f = Object.fromEntries(new FormData(e.currentTarget)) as Record<string, string>;
     const row = { title: f.title, pool_cents: Math.round(Number(f.pool) * 100), youtube_url: f.youtube || null, status: f.status,
-      submissions_close: new Date(f.subs).toISOString(), voting_opens: new Date(f.vopen).toISOString(), voting_closes: new Date(f.vclose).toISOString() };
+      submissions_close: new Date(f.vclose).toISOString(), voting_opens: new Date(f.vopen).toISOString(), voting_closes: new Date(f.vclose).toISOString() };
     const s = sb();
     if (s) { const r = c?.id && f.mode === "update" ? await s.from("contests").update(row).eq("id", c.id).select().single() : await s.from("contests").insert(row).select().single();
       if (r.error) { setMsg(r.error.message); return; } setC(r.data as Contest); }
@@ -695,9 +695,8 @@ function ContestAdmin() {
       <div className="grid sm:grid-cols-2 gap-4">
         <label className="grid gap-1 text-sm font-bold">Prize pool (USD)<input name="pool" type="number" defaultValue={(c?.pool_cents ?? 10000) / 100} className="field font-normal" /></label>
         <label className="grid gap-1 text-sm font-bold">Status<select name="status" defaultValue={c?.status} className="field font-normal">{["submissions", "review", "voting", "closed", "paid"].map((s) => <option key={s}>{s}</option>)}</select></label>
-        <label className="grid gap-1 text-sm font-bold">Submissions close<input name="subs" type="datetime-local" defaultValue={d(c?.submissions_close)} required className="field font-normal" /></label>
-        <label className="grid gap-1 text-sm font-bold">Voting opens<input name="vopen" type="datetime-local" defaultValue={d(c?.voting_opens)} required className="field font-normal" /></label>
-        <label className="grid gap-1 text-sm font-bold">Voting closes<input name="vclose" type="datetime-local" defaultValue={d(c?.voting_closes)} required className="field font-normal" /></label>
+        <label className="grid gap-1 text-sm font-bold">Round opens<input name="vopen" type="datetime-local" defaultValue={d(c?.voting_opens)} required className="field font-normal" /></label>
+        <label className="grid gap-1 text-sm font-bold">Round ends (uploads and votes stop)<input name="vclose" type="datetime-local" defaultValue={d(c?.voting_closes)} required className="field font-normal" /></label>
         <label className="grid gap-1 text-sm font-bold">Compilation YouTube URL<input name="youtube" defaultValue={c?.youtube_url ?? ""} className="field font-normal" /></label>
       </div>
       <p className="text-sm text-haze">Prizes follow the bracket for paying members (Gold 60 / Silver 25 / Bronze 15 of the week pool; month ×4, year ×20). Voting runs in the last {(c as { deadline_hours?: number } | null)?.deadline_hours ?? 48} hours before the close.</p>

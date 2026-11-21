@@ -1,0 +1,6 @@
+-- Live From Leonida — schema v50 (applied 2026-11-21): one deadline per round.
+-- Uploads and votes both run from voting_opens to voting_closes; submissions_close = voting_closes.
+-- ensure_weekly_rounds now writes submissions_close = local_noon(d + 7); round_taking_clips only
+-- picks a round that has opened; open and upcoming rounds were updated; two empty duplicate
+-- rounds (bdba4a05…, 03879796…) were set to status 'closed' (kept, not deleted).
+-- Full function bodies: see the migration "schema_v50_one_round_deadline" in Supabase.

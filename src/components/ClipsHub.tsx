@@ -300,9 +300,8 @@ export function ClipsHub({ cat }: { cat: Cat }) {
           <div className="hub-round">
             {round ? (
               <>
-                <span className="lower-third text-sm"><span className="tag"><span className="rec" />{round.state === "open" ? "Entries open" : "Voting only"}</span><span className="txt">{round.title}</span></span>
-                <span>Entries close <b>{at(round.submissions_close_at)}</b></span>
-                <span>Voting ends <b>{at(new Date(+new Date(round.voting_closes_at) - 6e4).toISOString())}</b></span>
+                <span className="lower-third text-sm"><span className="tag"><span className="rec" />Round open</span><span className="txt">{round.title}</span></span>
+                <span>Send clips and vote until <b>{at(round.voting_closes_at)}</b></span>
                 {user && <span className="hub-bal">You have <b>{votesLeft}</b> vote{votesLeft === 1 ? "" : "s"} left this weekly round.</span>}
               </>
             ) : <span className="text-haze">The next weekly round opens Thursday at noon ({tz.replace("_", " ")}).</span>}
