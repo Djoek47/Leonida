@@ -189,3 +189,32 @@ export const TREE_SOURCES = [
   { label: "GameSpot: romance guide", href: "https://www.gamespot.com/articles/gta-6-romance-relationships/" },
   { label: "G2A: relationship guide", href: "https://www.g2a.com/news/gta-6-news/gta-6-relationship-guide/" },
 ];
+
+/** Where to spend GTA VI's 15 manual save slots. There's no mission replay and no saving
+ *  mid-mission, so a save made just before a choice is the only way back to it. Each slot is
+ *  made before `before` (free roam, after the previous mission) and covers the forks listed. */
+export type SaveSlot = { slot: number; ch: number; before: string; why: string; forks: string[]; key?: boolean };
+export const SAVE_PLAN: SaveSlot[] = [
+  { slot: 1, ch: 0, before: "Any time (overwrite it as you go)", why: "Your clean save. Never use cheats on it: cheats switch off trophies, so this is your Platinum file.", forks: [] },
+  { slot: 2, ch: 1, before: "Gone Fishing", why: "How you take the Kingfishers camp and your first long gun start shaping your profile.", forks: ["fishing", "gearup"] },
+  { slot: 3, ch: 1, before: "Hey Arnold!", why: "The first big call: what happens to Arnold.", forks: ["arnold", "shark"], key: true },
+  { slot: 4, ch: 1, before: "Feng Shui", why: "What you get ready for Lucia, and her first night out, set where the relationship starts.", forks: ["prep", "anchor"] },
+  { slot: 5, ch: 1, before: "Down to Earth", why: "The smugglers, the yacht day, her curfew and Brian's news. Lots of small relationship swings.", forks: ["smugglers", "jetski", "nine", "clockout", "retire"] },
+  { slot: 6, ch: 1, before: "Recalibration", why: "Point of no return. Everything but Family Savings is wiped and Chapter 1's leftovers lock. Bank up to $5,000 first.", forks: ["savings"], key: true },
+  { slot: 7, ch: 2, before: "Girls' Trip", why: "The Kolts at the car wash.", forks: ["kolts"] },
+  { slot: 8, ch: 2, before: "Afternoon Delight", why: "Robbing as a couple, the pawn shop and the $10,000 job.", forks: ["couple", "free2", "pawn", "dance"] },
+  { slot: 9, ch: 3, before: "Dealer's Choice", why: "Boobie's product, and who you spend free roam with in Vice City.", forks: ["both", "free3", "product"] },
+  { slot: 10, ch: 3, before: "Dubious Provenance", why: "Halifax and the statue, plus a run of jobs where a quiet or loud approach shows on your profile.", forks: ["halifax", "halifax2", "kitty", "police1", "buddy", "jewels", "sneakers"], key: true },
+  { slot: 11, ch: 3, before: "Company Property", why: "Pete's crates decide your time in the heist; Monty and the gator pool is a big one.", forks: ["crates", "monty", "bricks"], key: true },
+  { slot: 12, ch: 3, before: "The Cartel Heist", why: "No replay on heists. Save so you can run it again for a better take.", forks: [] },
+  { slot: 13, ch: 4, before: "Bad Driver! (it closes when Power Play starts)", why: "Felipe's fate, Eddie's pitch, Nate's offer and how you treat each other with money coming in.", forks: ["eddie", "steroids", "free4", "family", "felipe"], key: true },
+  { slot: 14, ch: 4, before: "VCIA Takedown", why: "The airport job, then the first vault: one bag or two.", forks: ["vault"] },
+  { slot: 15, ch: 5, before: "The End of the Road", why: "The ending. The game asks if you're ready: save first so you can see the other one.", forks: ["bridge"], key: true },
+];
+export const SAVE_RULES = [
+  "Pause → Game → Save Game. Free roam only: you can't save during a mission.",
+  "The game autosaves after every mission in its own slot. It never protects a choice you've already made.",
+  "Loading an older save overwrites the autosave. Make a manual save first.",
+  "There's no mission replay, so a save from just before a mission is the only way to play it again.",
+];
+export const saveFor = (forkId: string) => SAVE_PLAN.find((s) => s.forks[0] === forkId);

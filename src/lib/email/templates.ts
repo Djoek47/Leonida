@@ -442,3 +442,28 @@ export function newsDigestEmail(items: { title: string; source: string; link: st
     button("Open the news inbox", `${SITE}/console?tab=news`, L),
   ], [`${items.length} new GTA VI stories today.`, ...top.map((h) => `- ${h.title} (${h.source}) ${h.link}`), "", `${SITE}/console?tab=news`]);
 }
+
+/** Clip Market: a sale, an approval or a rejection, to the seller. */
+export function marketSellerEmail(kind: "sold" | "live" | "rejected", d: { title: string; id: string; cents?: number; note?: string }): Email {
+  setRank("free");
+  const url = `${SITE}/market/${d.id}`;
+  if (kind === "sold") {
+    const amt = `$${((d.cents ?? 0) / 100).toFixed(2)}`;
+    return sign(`You sold "${d.title}"`, `${amt} is in your wallet`, [
+      heading(`Sold. ${amt} is in your wallet.`, L),
+      para(`Someone just bought "${esc(d.title)}" on the Clip Market. Your share is in your wallet and you can cash it out like any other earnings.`, L),
+      button("Open your wallet", `${SITE}/wallet`, L),
+    ], [`You sold "${d.title}". ${amt} is in your wallet.`, `${SITE}/wallet`]);
+  }
+  if (kind === "live") return sign(`"${d.title}" is live on the Clip Market`, "Approved and for sale", [
+    heading("Your clip is on sale.", L),
+    para(`We checked "${esc(d.title)}" and it's live on the Clip Market now. Share the link to get your first buyers.`, L),
+    button("See your listing", url, L),
+  ], [`"${d.title}" is live on the Clip Market.`, url]);
+  return sign(`"${d.title}" needs a change`, "Our team left you a note", [
+    heading("Not approved yet.", L),
+    para(`We couldn't put "${esc(d.title)}" on sale as it is. Our note: ${esc(d.note ?? "")}`, L),
+    para("Fix the card or the screenshots and send it for review again from My clips.", L),
+    button("Open My clips", `${SITE}/market/mine`, L),
+  ], [`"${d.title}" wasn't approved: ${d.note ?? ""}`, `${SITE}/market/mine`]);
+}

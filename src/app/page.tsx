@@ -1,6 +1,7 @@
 import Link from "@/components/A";
 import { HeroReel } from "@/components/HeroReel";
 import { regions } from "@/lib/content";
+import { LivePrizeAmount, LivePrizePodium } from "@/components/LivePrize";
 
 const steps = [
   { t: "Send your clip", d: "Upload it with your gamertag." },
@@ -21,7 +22,7 @@ export default function Home() {
               <span className="shield">VI</span>
               <span className="lower-third"><span className="tag"><span className="rec" />Live</span><span className="txt">Vice City, Leonida</span></span>
             </div>
-            <h1 className="display mt-4 text-[clamp(2.1rem,4.2vw,3.8rem)]">Your best clip in Leonida pays <span className="sunset-text">$50</span> this week</h1>
+            <h1 className="display mt-4 text-[clamp(2.1rem,4.2vw,3.8rem)]">Your best clip in Leonida pays <LivePrizeAmount /> this week</h1>
           </div>
           <div className="flex flex-wrap gap-3 shrink-0">
             <Link href="/submit" className="btn bg-mango text-[#1c1710] hover:brightness-110">Send a clip</Link>
@@ -40,14 +41,7 @@ export default function Home() {
             </li>
           ))}
         </ol>
-        <div className="flex items-end gap-3 h-56" aria-label="Prize split: first $50, second $30, third $20">
-          {[["2nd", 30, "60%"], ["1st", 50, "100%"], ["3rd", 20, "42%"]].map(([p, v, h]) => (
-            <div key={p as string} className="flex-1 flex flex-col justify-end h-full">
-              <span className="display text-4xl md:text-5xl mb-2">${v}</span>
-              <div className={`${p === "1st" ? "bg-gulf text-white" : "bg-ink-2"} rounded-t-lg p-3 font-bold`} style={{ height: h as string }}>{p}</div>
-            </div>
-          ))}
-        </div>
+        <LivePrizePodium />
       </section>
 
       {/* How to earn */}

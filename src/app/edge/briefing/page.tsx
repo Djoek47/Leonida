@@ -3,6 +3,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Link from "@/components/A";
 import { sb } from "@/lib/supabase";
 import { useUser } from "@/lib/useUser";
+import { SaveGuide } from "@/components/SaveGuide";
 import { lockScroll } from "@/lib/scrollLock";
 import { CHAPTERS, MISSION_SOURCES, WHO, type Chapter, type Mission } from "@/lib/missions";
 import { INTEL, MONEY_ROUTE, intelSource, type ChoiceTag, type Intel } from "@/lib/missionIntel";
@@ -55,7 +56,7 @@ export default function MissionBriefing() {
     setCur(c); setView(c); setProg(loadProgress());
   }, []);
   const saveCur = useCallback((c: number) => { setCur(c); try { localStorage.setItem(KEY, String(c)); } catch {} }, []);
-  const saveProg = useCallback((p: Progress) => { setProg(p); try { localStorage.setItem(PKEY, JSON.stringify(p)); } catch {} }, []);
+  const saveProg = useCallback((p: Progress) => { setProg(p); try { localStorage.setItem(PKEY, JSON.stringify(p)); localStorage.setItem("lfl-mb-at", String(Date.now())); } catch {} }, []);
 
   useEffect(() => {
     if (loading || !allowed) return;
@@ -284,6 +285,8 @@ function ChapterView({ c, state, done, prog, onOpen }: { c: Chapter; state: "ope
           </aside>
         )}
       </div>
+
+      <SaveGuide ch={c.id} />
 
       <h3 className="mx-h3">Story missions</h3>
       <ol className="mx-grid">

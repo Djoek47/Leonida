@@ -45,6 +45,7 @@ const jsonLd = {
 const nav = [
   { href: "/clips", label: "Clips from Leonida" },
   { href: "/submit", label: "Send a clip" },
+  { href: "/market", label: "Clip Market" },
   { href: "/earn", label: "How to earn" },
   { href: "/edge", label: "The edge" },
   { href: "/leonida", label: "Leonida guide" },

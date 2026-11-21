@@ -33,7 +33,7 @@ export function CastList() {
             <p className="cast-ch-k"><span>{CH[ch]}</span>{all.length} {all.length === 1 ? "person" : "people"}</p>
             <ul className="cast-grid">
               {show.map((c) => (
-                <li key={c.name} className={`cast-card t${ch}`}>
+                <li key={c.name} className={`crew-card t${ch}`}>
                   <span className="cast-av" aria-hidden>{initials(c.name)}</span>
                   <div>
                     <b>{c.name}</b>
@@ -43,7 +43,7 @@ export function CastList() {
                 </li>
               ))}
               {veiled > 0 && (
-                <li className="cast-card is-veiled">
+                <li className="crew-card is-veiled">
                   <span className="cast-av" aria-hidden>?</span>
                   <div><b>{veiled} {veiled === 1 ? "person" : "people"} hidden</b><p>Switch spoilers on to see who.</p></div>
                 </li>

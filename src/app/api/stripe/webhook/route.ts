@@ -1,3 +1,5 @@
+import { sendEmail } from "@/lib/email/send";
+import { marketSellerEmail } from "@/lib/email/templates";
 import { NextRequest } from "next/server";
 import type Stripe from "stripe";
 import { admin, configured, env, notConfigured, stripe } from "@/lib/server";
@@ -44,6 +46,19 @@ export async function POST(req: NextRequest) {
   switch (event.type) {
     case "checkout.session.completed": {
       const s = event.data.object as Stripe.Checkout.Session;
+
+      if (s.metadata?.kind === "market") {
+        const { listing_id, buyer_id } = s.metadata;
+        const pi = typeof s.payment_intent === "string" ? s.payment_intent : s.payment_intent?.id;
+        if (listing_id && buyer_id && pi && s.payment_status === "paid") {
+          const { data: sale } = await db.rpc("record_market_sale", { p_listing: listing_id, p_buyer: buyer_id, p_payment_intent: pi });
+          if (sale?.seller_id && sale.seller_cents > 0) {
+            const [{ data: u }, { data: l }] = await Promise.all([db.auth.admin.getUserById(sale.seller_id), db.from("market_listings").select("title").eq("id", listing_id).single()]);
+            if (u?.user?.email) await sendEmail(u.user.email, marketSellerEmail("sold", { title: l?.title ?? "your clip", id: listing_id, cents: sale.seller_cents }), `market-sold-${sale.id}`, "market_sold").catch(() => null);
+          }
+        }
+        break;
+      }
 
       if (s.metadata?.kind === "download") {
         const { clip_id, player_id } = s.metadata;

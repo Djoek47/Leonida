@@ -3,7 +3,7 @@ import { Fragment, useEffect, useMemo, useState } from "react";
 import Link from "@/components/A";
 import { useUser } from "@/lib/useUser";
 import { CHAPTERS } from "@/lib/missions";
-import { ENDING_NOTE, FORKS, TREE_SOURCES, type Fork } from "@/lib/choiceTree";
+import { ENDING_NOTE, FORKS, saveFor, TREE_SOURCES, type Fork } from "@/lib/choiceTree";
 
 /** The Road: GTA VI's choices as one night drive through Leonida.
  *
@@ -120,9 +120,19 @@ export default function TheRoad() {
                     ) : (
                       forks.map((f) => {
                         const st = picks[f.id] !== undefined ? "done" : f.id === nextId ? "now" : "later";
-                        return f.multi
+                        const sv = saveFor(f.id);
+                        const node = f.multi
                           ? <Checklist key={f.id} f={f} pick={picks[f.id]} state={st} revealed={revealed} onPick={(m) => save({ ...picks, [f.id]: m })} onRewind={() => rewind(f)} />
                           : <ForkView key={f.id} f={f} pick={picks[f.id]} state={st} revealed={revealed} onPick={(i) => choose(f, i)} onRewind={() => rewind(f)} />;
+                        return sv ? (
+                          <Fragment key={f.id}>
+                            <div className={`road-save${sv.key ? " is-key" : ""}`}>
+                              <span className="road-save-disk" aria-hidden>💾</span>
+                              <span><b>Save point · slot {sv.slot} of 15</b><small>Save before <i>{sv.before}</i>. {sv.why}</small></span>
+                            </div>
+                            {node}
+                          </Fragment>
+                        ) : node;
                       })
                     )}
                   </Fragment>

@@ -1,99 +1,117 @@
 "use client";
 import { useEffect, useState } from "react";
 import Link from "@/components/A";
-import { EDGE_OPENS, LAUNCH } from "@/lib/content";
+import { useUser } from "@/lib/useUser";
+import { CHAPTERS } from "@/lib/missions";
+import { ENGINES } from "@/lib/economy";
+import { FORKS, SAVE_PLAN } from "@/lib/choiceTree";
 
-/** The Edge is behind a roadblock until the game is. Nothing to read here
- *  yet, deliberately: a closed road, a counter, and the one date that
- *  matters. The tools (Leonida Economist, Mission Briefing) move in the
- *  day Leonida opens.
- *
- *  Drop a file at public/media/video/edge-loop.mp4 and it becomes the
- *  backdrop; until then the painted road below stands in. Nothing else
- *  needs changing. */
+/** The Edge: a fork in the road. Left to Mission Briefing (and The Road), right to the
+ *  Leonida Economist. Each lane shows where you left off, read from this browser's progress. */
 const BACKDROP = "/media/video/edge-loop.mp4";
 const POSTER = "/media/art/jason_lucia_motel_portrait.webp";
+const usd = (n: number) => `$${n.toLocaleString("en-US")}`;
 
-const BEHIND = [
-  ["Leonida Economist", "Access every scheme to make money in Leonida. Hustler and Kingpin.", "/edge/economist"],
-  ["Mission Briefing", "Get all insights into GTA VI Missions, don\u2019t miss a thing. Street, Hustler and Kingpin.", "/edge/briefing"],
-] as const;
-
-function parts(ms: number) {
-  const s = Math.max(0, Math.floor(ms / 1000));
-  return [Math.floor(s / 86400), Math.floor(s / 3600) % 24, Math.floor(s / 60) % 60, s % 60]
-    .map((n) => String(n).padStart(2, "0"));
+type Session = { ch: number; done: number; total: number; last: string | null; next: string | null; at: number | null; forks: number; forksOpen: number; slot: number | null };
+function readSession(): Session {
+  let ch = 1, doneList: string[] = [], at: number | null = null, picks: Record<string, unknown> = {};
+  try { const v = Number(localStorage.getItem("lfl-chapter")); if (Number.isInteger(v) && v >= 0) ch = v; } catch {}
+  try { doneList = JSON.parse(localStorage.getItem("lfl-mb-progress") ?? "{}").done ?? []; } catch {}
+  try { const a = Number(localStorage.getItem("lfl-mb-at")); if (a > 0) at = a; } catch {}
+  try { picks = JSON.parse(localStorage.getItem("lfl-road") ?? "{}"); } catch {}
+  const c = CHAPTERS[Math.min(ch, CHAPTERS.length - 1)];
+  const story = c.missions.filter((m) => !m.optional);
+  const done = new Set(doneList);
+  const last = [...doneList].reverse().find((n) => c.missions.some((m) => m.name === n)) ?? null;
+  const next = story.find((m) => !done.has(m.name))?.name ?? null;
+  const open = FORKS.filter((f) => f.ch <= Math.max(1, ch));
+  const slot = SAVE_PLAN.find((s) => s.ch === ch && next && s.before.startsWith(next))?.slot ?? null;
+  return { ch, done: story.filter((m) => done.has(m.name)).length, total: story.length, last, next, at, forks: open.filter((f) => picks[f.id] !== undefined).length, forksOpen: open.length, slot };
 }
+const ago = (t: number | null) => {
+  if (!t) return null;
+  const m = Math.round((Date.now() - t) / 60000);
+  return m < 1 ? "just now" : m < 60 ? `${m} min ago` : m < 1440 ? `${Math.round(m / 60)} h ago` : `${Math.round(m / 1440)} days ago`;
+};
 
 export default function Edge() {
-  const [now, setNow] = useState<number | null>(null);
+  const { user, profile, paying, tier } = useUser();
+  const [s, setS] = useState<Session | null>(null);
   const [film, setFilm] = useState(false);
-  useEffect(() => {
-    setNow(Date.now());
-    const id = setInterval(() => setNow(Date.now()), 1000);
-    // Only show the video if one has actually been put there.
-    fetch(BACKDROP, { method: "HEAD" }).then((r) => setFilm(r.ok)).catch(() => {});
-    return () => clearInterval(id);
-  }, []);
-  const opens = new Date(EDGE_OPENS).getTime();
-  const open = now !== null && now >= opens;
-  const gameOut = now !== null && now >= new Date(LAUNCH).getTime();
-  const [d, h, m, s] = parts(now === null ? 0 : opens - now);
-  const longDay = (iso: string) => new Date(iso).toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric", timeZone: "America/Toronto" });
+  useEffect(() => { setS(readSession()); fetch(BACKDROP, { method: "HEAD" }).then((r) => setFilm(r.ok)).catch(() => {}); }, []);
+  const rank = profile?.is_admin ? 9 : paying ? tier.rank : 0;
+  const ch = Math.max(1, s?.ch ?? 1);
+  const open = ENGINES.filter((e) => e.ch <= ch);
+  const top = open.reduce((m, e) => Math.max(m, e.top ?? 0), 0);
+  const bestRep = open.filter((e) => e.repeat).sort((a, b) => (b.top ?? 0) - (a.top ?? 0))[0];
+  const fresh = ENGINES.filter((e) => e.ch === ch).length;
+  const pct = s && s.total ? Math.round((s.done / s.total) * 100) : 0;
 
   return (
-    <div className={`edge-road${film ? " has-film" : ""}`}>
-      {film && (
-        <video className="edge-film" src={BACKDROP} poster={POSTER}
-          autoPlay muted loop playsInline preload="metadata" aria-hidden />
-      )}
+    <div className={`edge-road is-open${film ? " has-film" : ""}`}>
+      {film && <video className="edge-film" src={BACKDROP} poster={POSTER} autoPlay muted loop playsInline preload="metadata" aria-hidden />}
       <div className="edge-horizon" aria-hidden />
       <div className="edge-lane" aria-hidden><i /><i /><i /><i /><i /><i /></div>
       <div className="edge-beam" aria-hidden />
       <div className="edge-motes" aria-hidden>{Array.from({ length: 14 }, (_, i) => <i key={i} style={{ "--m": i } as React.CSSProperties} />)}</div>
       <div className="edge-vig" aria-hidden />
 
-      <main className="edge-scene">
-        <p className="edge-k"><i className="edge-dot" aria-hidden />State route 6 · Leonida</p>
+      <main className="edge-scene eg">
+        <p className="edge-k"><i className="edge-dot" aria-hidden />State route 6 · Leonida · Road open</p>
+        <h1 className="eg-title">The <span>Edge</span></h1>
+        <p className="eg-sub">Your co-pilot for GTA VI. Pick a lane: know every mission and choice before you play it, or make the most money the fastest.</p>
 
-        <div className="edge-barrier">
-          <div className="edge-sign" role="img" aria-label="Road closed until two days after the game launches">
-            <span className="edge-stripe t" aria-hidden />
-            <h1>ROAD<br />CLOSED</h1>
-            <p>{gameOut ? "THE GAME IS OUT · THE EDGE OPENS IN 2 DAYS" : "THE EDGE OPENS 2 DAYS AFTER THE GAME"}</p>
-            <span className="edge-stripe b" aria-hidden />
-          </div>
-          <span className="edge-leg l" aria-hidden /><span className="edge-leg r" aria-hidden />
-          <span className="edge-lamp a" aria-hidden /><span className="edge-lamp b" aria-hidden />
+        <div className="eg-signs" aria-hidden>
+          <span className="eg-sign l"><i>←</i>MISSION BRIEFING</span>
+          <span className="eg-post" />
+          <span className="eg-sign r">ECONOMIST<i>→</i></span>
         </div>
 
-        {open ? (
-          <p className="edge-open">The barriers are coming down. First briefs land once the state&apos;s been played.</p>
-        ) : (
-          <>
-            <div className="edge-timer" role="timer" aria-label={`${+d} days ${+h} hours ${+m} minutes ${+s} seconds until launch`}>
-              {([["DAYS", d], ["HRS", h], ["MIN", m], ["SEC", s]] as const).map(([k, v]) => (
-                <span key={k} className="edge-cell">
-                  <b key={v} className="edge-digit" suppressHydrationWarning>{now === null ? "--" : v}</b>
-                  <small>{k}</small>
-                </span>
-              ))}
-            </div>
-            <p className="edge-when">
-              {gameOut ? "GTA VI is out" : `GTA VI lands ${longDay(LAUNCH)}`} · The Edge opens {longDay(EDGE_OPENS)}
-            </p>
-          </>
+        {s && (s.at || s.done > 0) && (
+          <div className="eg-resume">
+            <span className="eg-resume-dot" aria-hidden />
+            <p><b>Where you left off:</b> Chapter {s.ch}{s.last ? <>, finished <i>{s.last}</i></> : null}{s.next ? <>. Up next: <i>{s.next}</i></> : null}{s.at ? ` · saved ${ago(s.at)}` : ""}</p>
+            <Link href="/edge/briefing" className="eg-resume-go">Resume →</Link>
+          </div>
         )}
 
-        <ul className="edge-behind">
-          {BEHIND.map(([name, what, href], i) => (
-            <li key={name} style={{ "--i": i } as React.CSSProperties}>
-              {href ? <Link href={href} className="edge-card"><b>{name}<i aria-hidden>→</i></b><span>{what}</span></Link>
-                : <div className="edge-card"><b>{name}</b><span>{what}</span></div>}
-            </li>
-          ))}
-        </ul>
-        <p className="edge-foot">Built from real play, not rumours. That&apos;s why it waits for the game.</p>
+        <div className="eg-paths">
+          <Link href="/edge/briefing" className="eg-path is-brief">
+            <span className="eg-path-k">Lane A · Street and up {rank < 1 && <em>🔒</em>}</span>
+            <b className="eg-path-t">Mission Briefing</b>
+            <span className="eg-path-d">Every mission, step by step, with payouts, missables, choices and where to save.</span>
+            <span className="eg-prev">
+              <span className="eg-prev-row"><span>Chapter {ch} · {CHAPTERS[ch].title}</span><b>{s ? `${s.done}/${s.total}` : "—"}</b></span>
+              <span className="eg-bar"><i style={{ width: `${pct}%` }} /></span>
+              <span className="eg-prev-row"><span>Up next</span><b>{s?.next ?? "Pick your chapter"}</b></span>
+              {s?.slot && <span className="eg-prev-row is-save"><span>💾 Save first</span><b>Slot {s.slot}</b></span>}
+              <span className="eg-prev-row"><span>The Road</span><b>{s ? `${s.forks}/${s.forksOpen} choices made` : "—"}</b></span>
+            </span>
+            <span className="eg-go">Open the briefing →</span>
+          </Link>
+
+          <Link href="/edge/economist" className="eg-path is-econ">
+            <span className="eg-path-k">Lane B · Hustler and up {rank < 2 && <em>🔒</em>}</span>
+            <b className="eg-path-t">Leonida Economist</b>
+            <span className="eg-path-d">Every way to earn, how it grows chapter by chapter, where to sell and how to keep it.</span>
+            <span className="eg-prev">
+              <span className="eg-prev-row"><span>Biggest score open, Ch. {ch}</span><b className="is-gold">{usd(top)}</b></span>
+              <span className="eg-prev-row"><span>Money engines open</span><b>{open.length}{fresh ? ` (+${fresh} new)` : ""}</b></span>
+              <span className="eg-prev-row"><span>Best you can repeat</span><b>{bestRep?.name ?? "—"}</b></span>
+            </span>
+            <span className="eg-go">Open the Economist →</span>
+          </Link>
+        </div>
+
+        <div className="eg-access">
+          <p><b>How you get the Edge:</b> it comes with membership.</p>
+          <ul>
+            <li className={rank >= 1 ? "is-have" : ""}><span>Street</span>Mission Briefing and The Road</li>
+            <li className={rank >= 2 ? "is-have" : ""}><span>Hustler</span>Adds the Leonida Economist</li>
+            <li className={rank >= 3 ? "is-have" : ""}><span>Kingpin</span>Everything, plus the clip archive</li>
+          </ul>
+          {rank < 1 && <Link href={user ? "/pricing" : "/login?next=/edge"} className="btn btn-hot">{user ? "See the plans" : "Sign in"}</Link>}
+        </div>
       </main>
     </div>
   );
