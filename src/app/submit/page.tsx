@@ -234,6 +234,7 @@ function SendForm({ userId, cap, usedWeek, resetsAt, gamertag, platform }: { use
                 if (preview) URL.revokeObjectURL(preview); setPreview(f ? URL.createObjectURL(f) : null); setCoverAt(1); }}
               className="field file:mr-4 file:rounded file:border-0 file:bg-flamingo file:px-3 file:py-1.5 file:font-bold file:text-white" />
           : <input name="url" type="url" required className="field" placeholder="YouTube, TikTok, Twitch clip or PlayStation share link" />}
+        <p className="text-xs text-haze mt-1.5">Upload a clip under 600 MB, 1 to 3 minutes works best. MP4, MOV or WebM.</p>
         {mode === "file" && preview && len != null && (
           <div className="cover-pick mt-3">
             <span className="text-sm font-bold">Pick the cover moment</span>
