@@ -282,7 +282,7 @@ function SendForm({ userId, cap, usedWeek, resetsAt, gamertag, platform }: { use
       <label className="flex gap-3 items-start text-sm">
         <input type="checkbox" checked={agreed} onChange={(e) => setAgreed(e.target.checked)}
           className="mt-1 accent-[var(--flamingo)]" />
-        <span>This is my own gameplay, and Live From Leonida can edit it and publish it in its videos.
+        <span>I confirm this is my own gameplay.
           <span className="block text-haze">
             I&apos;ve read the <Link href="/rules" className="rules-link">contest rules</Link>.
           </span></span>
