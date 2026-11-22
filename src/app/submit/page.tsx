@@ -1,5 +1,6 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
+import { uploadVideo } from "@/lib/marketUpload";
 import Link from "@/components/A";
 import { sb } from "@/lib/supabase";
 import { useUser } from "@/lib/useUser";
@@ -97,6 +98,7 @@ function SendForm({ userId, cap, usedWeek, resetsAt, gamertag, platform }: { use
   const [mode, setMode] = useState<"file" | "link">("file");
   const [state, setState] = useState<"idle" | "sending" | "sent" | "error">("idle");
   const [err, setErr] = useState("");
+  const [pct, setPct] = useState<number | null>(null);
   // Which contest week this clip is submitted to. Every upload is a contest submission.
   const [rounds, setRounds] = useState<Contest[] | null>(null);
   const [roundId, setRoundId] = useState<string>("");
@@ -133,8 +135,16 @@ function SendForm({ userId, cap, usedWeek, resetsAt, gamertag, platform }: { use
       if (mode === "file" && file && file.size) {
         if (file.size >= MAX_BYTES) throw new Error("That file is 600 MB or over. Clips have to come in under 600 MB — trim it or paste a link instead.");
         storage_path = `${userId}/${crypto.randomUUID()}-${file.name.replace(/[^\w.-]/g, "_")}`;
-        const up = await c.storage.from("clips").upload(storage_path, file);
-        if (up.error) throw up.error;
+        // Chunked, resumable upload: big files go up in 6 MB pieces and survive a dropped connection.
+        setPct(0);
+        try {
+          await uploadVideo(file, storage_path, (sent, total) => setPct(Math.round((sent / total) * 100)), { bucket: "clips", upsert: false }).done;
+        } catch (e) {
+          const m = String((e as Error)?.message ?? e);
+          throw new Error(/maximum allowed size|413|Payload too large/i.test(m)
+            ? "That file is too big for our upload server right now. Try a shorter clip or paste a link, and we'll fix it on our side."
+            : "The upload stopped. Check your connection and try again.");
+        } finally { setPct(null); }
       }
       const { data: clip, error } = await c.from("clips").insert({
         contest_id: roundId, owner_id: userId, submitted_by: userId,
@@ -299,7 +309,7 @@ function SendForm({ userId, cap, usedWeek, resetsAt, gamertag, platform }: { use
       )}
       <button disabled={state === "sending" || atCap || !agreed || !roundId}
         className="btn btn-hot w-fit disabled:opacity-60">
-        {state === "sending" ? "Sending…" : "Send clip"}
+        {state === "sending" ? (pct != null ? `Uploading ${pct}%` : "Sending…") : "Send clip"}
       </button>
     </form>
   );

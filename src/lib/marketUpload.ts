@@ -5,7 +5,9 @@ import { sb } from "@/lib/supabase";
 /** Resumable upload to the private market-files bucket (Supabase's TUS endpoint), so a 5 GB
  *  file survives a dropped connection. The session token is re-read on every chunk, so a long
  *  upload doesn't fail when the token refreshes. */
-export function uploadVideo(file: File, objectName: string, onProgress: (sent: number, total: number) => void) {
+export function uploadVideo(file: File, objectName: string, onProgress: (sent: number, total: number) => void,
+  opts: { bucket?: string; upsert?: boolean } = {}) {
+  const bucketName = opts.bucket ?? "market-files";
   let up: tus.Upload | null = null;
   const done = new Promise<void>((resolve, reject) => {
     up = new tus.Upload(file, {
@@ -14,8 +16,8 @@ export function uploadVideo(file: File, objectName: string, onProgress: (sent: n
       chunkSize: 6 * 1024 * 1024,
       uploadDataDuringCreation: true,
       removeFingerprintOnSuccess: true,
-      headers: { "x-upsert": "true" },
-      metadata: { bucketName: "market-files", objectName, contentType: file.type || "video/mp4", cacheControl: "3600" },
+      headers: { "x-upsert": opts.upsert === false ? "false" : "true" },
+      metadata: { bucketName, objectName, contentType: file.type || "video/mp4", cacheControl: "3600" },
       onBeforeRequest: async (req) => {
         const t = (await sb()?.auth.getSession())?.data.session?.access_token;
         if (t) req.setHeader("authorization", `Bearer ${t}`);
