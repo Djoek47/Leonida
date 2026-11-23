@@ -1,4 +1,5 @@
 "use client";
+import { playUrl } from "@/lib/media";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { lockScroll } from "@/lib/scrollLock";
 import Link from "@/components/A";
@@ -68,13 +69,13 @@ const DEMO: Row[] = DEMO_CLIPS.map((c, i) => ({
 // player starts instantly. They last an hour; we reuse them for 50 minutes.
 const signed = new Map<string, { url: string; at: number }>();
 async function signFor(r: Row): Promise<string | null> {
-  const path = r.watermark_path ?? r.storage_path; const c = sb();
-  if (!c || !path) return null;
+  const path = r.watermark_path ?? r.storage_path;
+  if (!sb() || !path) return null;
   const hit = signed.get(path); if (hit && Date.now() - hit.at < 50 * 6e4) return hit.url;
-  const { data } = await c.storage.from("clips").createSignedUrl(path, 3600);
-  if (!data) return null;
-  signed.set(path, { url: data.signedUrl, at: Date.now() });
-  return data.signedUrl;
+  const url = await playUrl(r);
+  if (!url) return null;
+  signed.set(path, { url, at: Date.now() });
+  return url;
 }
 function warm(r: Row) {
   signFor(r).then((u) => { if (!u || document.querySelector(`link[href="${u}"]`)) return;

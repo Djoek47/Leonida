@@ -134,15 +134,16 @@ function SendForm({ userId, cap, usedWeek, resetsAt, gamertag, platform }: { use
 
       if (mode === "file" && file && file.size) {
         if (file.size >= MAX_BYTES) throw new Error("That file is 600 MB or over. Clips have to come in under 600 MB — trim it or paste a link instead.");
-        storage_path = `${userId}/${crypto.randomUUID()}-${file.name.replace(/[^\w.-]/g, "_")}`;
-        // Chunked, resumable upload: big files go up in 6 MB pieces and survive a dropped connection.
+        // Straight into Vercel Blob from the browser, in parallel parts for big files.
         setPct(0);
         try {
-          await uploadVideo(file, storage_path, (sent, total) => setPct(Math.round((sent / total) * 100)), { bucket: "clips", upsert: false }).done;
+          storage_path = await uploadVideo(file, `clips/${userId}/${crypto.randomUUID()}-${file.name.replace(/[^\w.-]/g, "_")}`,
+            (sent, total) => setPct(Math.round((sent / total) * 100))).done;
         } catch (e) {
           const m = String((e as Error)?.message ?? e);
-          throw new Error(/maximum allowed size|413|Payload too large/i.test(m)
-            ? "That file is too big for our upload server right now. Try a shorter clip or paste a link, and we'll fix it on our side."
+          throw new Error(/maximumSize|too large|413/i.test(m)
+            ? "That file is 600 MB or over. Trim it or paste a link instead."
+            : /content.?type|not allowed/i.test(m) ? "That file type isn't supported. Use MP4, MOV or WebM."
             : "The upload stopped. Check your connection and try again.");
         } finally { setPct(null); }
       }
@@ -154,7 +155,10 @@ function SendForm({ userId, cap, usedWeek, resetsAt, gamertag, platform }: { use
       }).select("id, contest_id").single();
       if (error) {
         // The row was refused, so nothing will ever point at the file. Take it back.
-        if (storage_path) await c.storage.from("clips").remove([storage_path]);
+        if (storage_path) {
+          const t = (await c.auth.getSession()).data.session?.access_token;
+          await fetch("/api/blob/discard", { method: "POST", headers: { "content-type": "application/json", ...(t ? { authorization: `Bearer ${t}` } : {}) }, body: JSON.stringify({ path: storage_path }) }).catch(() => {});
+        }
         throw error;
       }
       // A poster frame for the grids. Best effort: a clip with no thumbnail still plays.

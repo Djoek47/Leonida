@@ -1,0 +1,7 @@
+-- Live From Leonida — schema v51 (applied 2026-11-23).
+-- market_sellers is now a security_invoker view over market_seller_rows(), a SECURITY DEFINER
+-- function returning only public seller fields (id, name, verified, avatar_path, sales);
+-- anon/authenticated keep SELECT only. market_fee got a fixed search_path.
+-- Clip and Clip Market videos moved to the private Vercel Blob store "lfl-videos"
+-- (store_QTT55EYAgCzhX4Ii): storage_path values starting with "blob:" point there; others are
+-- older files still in the Supabase "clips" / "market-files" buckets.

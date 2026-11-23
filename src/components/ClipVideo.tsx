@@ -1,4 +1,5 @@
 "use client";
+import { playUrl } from "@/lib/media";
 import { useRef, useState } from "react";
 import { sb } from "@/lib/supabase";
 import type { Clip } from "@/lib/api";
@@ -23,10 +24,10 @@ export function ClipVideo({ clip, poster }: { clip: Clip; poster?: string }) {
     const c = sb();
     if (!c || !path) { setErr("This clip has no file to play."); return; }
     setBusy(true); setErr("");
-    const { data, error } = await c.storage.from("clips").createSignedUrl(path, 3600);
+    const u = await playUrl(clip);
     setBusy(false);
-    if (error || !data) setErr("That clip wouldn't load. Try again in a moment.");
-    else setUrl(data.signedUrl);
+    if (!u) setErr("That clip wouldn't load. Try again in a moment.");
+    else setUrl(u);
   }
 
   // Our fullscreen, not the browser's: the whole frame goes fullscreen, so the

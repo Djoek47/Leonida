@@ -1,4 +1,5 @@
 import { NextRequest } from "next/server";
+import { isBlob, signedGet } from "@/lib/blob";
 import { admin, configured, mockReady, notConfigured, userFromRequest } from "@/lib/server";
 
 export const runtime = "nodejs";
@@ -26,6 +27,7 @@ export async function POST(req: NextRequest) {
   }
   if (!allowed) return Response.json({ error: "Buy the clip to download it." }, { status: 403 });
 
+  if (isBlob(l.storage_path)) return Response.json({ url: await signedGet(l.storage_path, { download: true }) });
   const ext = l.storage_path.split(".").pop() || "mp4";
   const name = `${l.title.replace(/[^\w -]+/g, "").trim().slice(0, 60) || "clip"}.${ext}`;
   const { data, error } = await db.storage.from("market-files").createSignedUrl(l.storage_path, 3600, { download: name });

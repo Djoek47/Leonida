@@ -1,4 +1,5 @@
 "use client";
+import { playUrl } from "@/lib/media";
 import { Suspense, useEffect, useMemo, useRef, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import Link from "@/components/A";
@@ -53,7 +54,7 @@ function Stage({ round }: { round: Round }) {
   useEffect(() => {
     setUrl(null);
     const c = sb(); if (!c || !gold?.path) return;
-    c.storage.from("clips").createSignedUrl(gold.path, 3600).then(({ data }) => setUrl(data?.signedUrl ?? null));
+    playUrl({ id: gold.clip_id, storage_path: gold.path }).then(setUrl);
   }, [gold?.path]);
   const order = [2, 1, 3] as const; // silver left, gold centre, bronze right
   return (

@@ -1,4 +1,5 @@
 import { NextRequest } from "next/server";
+import { isBlob, signedGet } from "@/lib/blob";
 import { randomUUID } from "node:crypto";
 import { admin, configured, env, mockReady, notConfigured, stripe, userFromRequest } from "@/lib/server";
 
@@ -82,6 +83,7 @@ export async function POST(req: NextRequest) {
   // Paid for: hand over the original (the watermarked copy is for streaming).
   const path = clip.storage_path ?? clip.watermark_path;
   if (path) {
+    if (isBlob(path)) return Response.json({ file: await signedGet(path, { download: true }) });
     const name = `${clip.title.replace(/[^\w\- ]+/g, "").trim().slice(0, 60) || "clip"}${path.match(/\.\w+$/)?.[0] ?? ".mp4"}`;
     const { data, error } = await db.storage.from("clips").createSignedUrl(path, 3600, { download: name });
     if (error || !data) return Response.json({ error: "The file could not be prepared. Try again." }, { status: 500 });

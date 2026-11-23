@@ -1,4 +1,5 @@
 import { NextRequest } from "next/server";
+import { isBlob, signedGet } from "@/lib/blob";
 import { admin, userFromRequest } from "@/lib/server";
 import { sendEmail } from "@/lib/email/send";
 import { marketSellerEmail } from "@/lib/email/templates";
@@ -21,8 +22,10 @@ export async function GET(req: NextRequest) {
   const { data } = await db.from("market_listings").select("*").eq("status", status).order("updated_at", { ascending: true }).limit(50);
   const rows = await Promise.all((data ?? []).map(async (l) => {
     const { data: p } = await db.from("profiles").select("gamertag, display_name").eq("id", l.seller_id).single();
-    const { data: s } = l.storage_path ? await db.storage.from("market-files").createSignedUrl(l.storage_path, 3600) : { data: null };
-    return { ...l, storage_path: undefined, seller: p?.gamertag || p?.display_name || "Player", video: s?.signedUrl ?? null };
+    let video: string | null = null;
+    if (isBlob(l.storage_path)) video = await signedGet(l.storage_path, { seconds: 3600 });
+    else if (l.storage_path) video = (await db.storage.from("market-files").createSignedUrl(l.storage_path, 3600)).data?.signedUrl ?? null;
+    return { ...l, storage_path: undefined, seller: p?.gamertag || p?.display_name || "Player", video };
   }));
   return Response.json({ rows });
 }

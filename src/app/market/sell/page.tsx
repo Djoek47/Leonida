@@ -132,15 +132,14 @@ export default function Sell() {
         await c.from("market_listings").update({ ...fields, size_bytes: file!.size }).eq("id", id);
       }
       const ext = (file!.name.split(".").pop() || "mp4").toLowerCase();
-      const object = `${user.id}/${id}.${ext}`;
       setProg({ sent: 0, total: file!.size, t0: Date.now() });
-      await uploadVideo(file!, object, (sent, total) => setProg((p) => ({ sent, total, t0: p?.t0 ?? Date.now() }))).done;
-      const { error } = await c.from("market_listings").update({ storage_path: object, status: "pending" }).eq("id", id);
+      const stored = await uploadVideo(file!, `market/${user.id}/${id}.${ext}`, (sent, total) => setProg((p) => ({ sent, total, t0: p?.t0 ?? Date.now() }))).done;
+      const { error } = await c.from("market_listings").update({ storage_path: stored, status: "pending" }).eq("id", id);
       if (error) throw new Error(error.message);
       setDone(id);
     } catch (e) {
       const m = e instanceof Error ? e.message : String(e);
-      setErr(/413|too large|exceeded/i.test(m) ? "The storage refused a file that big. We've been told; try a smaller file for now." : m.slice(0, 200));
+      setErr(/413|too large|exceeded|maximumSize/i.test(m) ? "That file is over 5 GB. Trim it and try again." : /abort/i.test(m) ? "Upload stopped." : "The upload didn't finish. Check your connection and try again.");
     } finally { setBusy(false); }
   };
 
@@ -196,7 +195,7 @@ export default function Sell() {
               <section className="mk-panel">
                 <h2 className="mk-h2">Your video</h2>
                 <p className="text-haze">Up to 5 GB, any length. MP4, MOV, WebM or MKV. Buyers never see it before they pay: only the screenshots and your description.</p>
-                {mode === "resume" && <p className="mk-status mt-3">Your last upload didn&apos;t finish. Choose the same file and we&apos;ll pick up where it stopped.</p>}
+                {mode === "resume" && <p className="mk-status mt-3">Your last upload didn&apos;t finish. Choose the same file and we&apos;ll upload it again.</p>}
                 <label className={`mk-drop${file ? " has-file" : ""}`} onDragOver={(e) => e.preventDefault()} onDrop={(e) => { e.preventDefault(); pick(e.dataTransfer.files[0]); }}>
                   <input type="file" accept="video/mp4,video/quicktime,video/webm,video/x-matroska,.mkv" onChange={(e) => pick(e.target.files?.[0])} />
                   {file ? (

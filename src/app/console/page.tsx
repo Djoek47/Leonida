@@ -1,4 +1,5 @@
 "use client";
+import { playUrl } from "@/lib/media";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { sb } from "@/lib/supabase";
 import { useUser } from "@/lib/useUser";
@@ -412,8 +413,7 @@ function Review() {
     let off = false;
     (async () => {
       const got = await Promise.all(want.map(async (x) => {
-        const { data } = await c.storage.from("clips").createSignedUrl(x.storage_path!, 3600);
-        return [x.id, data?.signedUrl ?? ""] as const;
+        return [x.id, (await playUrl(x)) ?? ""] as const;
       }));
       if (!off) setUrls((u) => ({ ...u, ...Object.fromEntries(got.filter(([, v]) => v)) }));
     })();

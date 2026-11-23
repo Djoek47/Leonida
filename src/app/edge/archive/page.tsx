@@ -1,4 +1,5 @@
 "use client";
+import { playUrl } from "@/lib/media";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Link from "@/components/A";
 import { sb } from "@/lib/supabase";
@@ -150,9 +151,9 @@ export default function Archive() {
 function Player({ clip, onClose, onDownload }: { clip: Clip; onClose: () => void; onDownload: () => void }) {
   const [url, setUrl] = useState<string | null | undefined>(undefined);
   useEffect(() => {
-    const path = clip.watermark_path ?? clip.storage_path; const c = sb();
-    if (!c || !path) { setUrl(null); return; }
-    c.storage.from("clips").createSignedUrl(path, 3600).then(({ data }) => setUrl(data?.signedUrl ?? null));
+    const path = clip.watermark_path ?? clip.storage_path;
+    if (!sb() || !path) { setUrl(null); return; }
+    playUrl(clip).then(setUrl);
   }, [clip]);
   useEffect(() => { const k = (e: KeyboardEvent) => e.key === "Escape" && onClose(); addEventListener("keydown", k); return () => removeEventListener("keydown", k); }, [onClose]);
   return (
