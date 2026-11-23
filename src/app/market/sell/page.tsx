@@ -320,7 +320,7 @@ export default function Sell() {
                 <p className="text-sm text-haze">Your share goes into your wallet when the buyer&apos;s payment clears. Cash out from the wallet like any other earnings.</p>
                 {mode !== "edit" && (
                   <label className="mk-agree"><input type="checkbox" checked={agree} onChange={(e) => setAgree(e.target.checked)} />
-                    <span>This is my own gameplay, it matches the screenshots and description, and buyers may use the file. <Link href="/terms" className="underline">Terms</Link></span></label>
+                    <span>This is my own gameplay, it matches the screenshots and description, and buyers may use the file. I&apos;ve read the <Link href="/market/rules" className="underline">Clip Market rules</Link>.</span></label>
                 )}
                 {checks.length > 0 && <ul className="mk-checks">{checks.map((c) => <li key={c}>{c}</li>)}</ul>}
                 {prog && (

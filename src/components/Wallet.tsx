@@ -18,6 +18,8 @@ const KIND: Record<string, string> = {
   withdrawal: "Paid out to you",
   refund: "Refund",
   adjustment: "Adjustment",
+  market_sale: "Clip Market sale",
+  market_refund: "Clip Market refund (sale reversed)",
 };
 
 const DEMO: Entry[] = [

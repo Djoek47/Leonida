@@ -4076,3 +4076,21 @@ a.mk-card:hover, a.mk-card:focus-visible { transform: translateY(-4px); border-c
 .cp-frame img { width: 100%; height: 100%; object-fit: cover; }
 .cp-frame span { position: absolute; right: 3px; bottom: 3px; padding: 0 .3rem; border-radius: 4px; font-size: .65rem; font-weight: 800; background: rgba(0,0,0,.7); color: #fff; }
 .cp-frame:hover { opacity: 1; } .cp-frame.is-on { opacity: 1; border-color: var(--flamingo); box-shadow: 0 0 0 2px rgba(255,61,139,.3); }
+/* Console: Clip Market control room */
+.mkc-stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: .5rem; }
+.mkc-stats div { padding: .7rem .9rem; border-radius: 12px; background: var(--ink); border: 2px solid var(--line); }
+.mkc-stats dt { font-size: .66rem; font-weight: 900; letter-spacing: .12em; text-transform: uppercase; color: var(--haze); } .mkc-stats dd { font-size: 1.4rem; font-weight: 900; }
+.mkc-badge { padding: .15rem .5rem; border-radius: 999px; font-size: .62rem; letter-spacing: .08em; background: var(--line); color: inherit; }
+.mkc-badge.s-live { background: #00704a; color: #fff; } .mkc-badge.s-pending { background: #d29b00; color: #1c1306; } .mkc-badge.s-rejected, .mkc-badge.s-removed { background: #c2184b; color: #fff; } .mkc-badge.s-paused { background: #555; color: #fff; }
+.mkc-sales { display: grid; gap: .35rem; padding: .6rem; border-radius: 10px; background: var(--ink-2, rgba(0,0,0,.15)); }
+.mkc-sales li { display: flex; align-items: center; justify-content: space-between; gap: .6rem; font-size: .88rem; }
+.mkc-sales li small { display: block; font-size: .74rem; color: var(--haze); } .mkc-sales li em { font-style: normal; font-size: .78rem; color: var(--flamingo); font-weight: 700; }
+.mkc-sales li.is-refunded b { text-decoration: line-through; }
+.mkc-ask { display: grid; gap: .5rem; padding: .8rem .9rem; border-radius: 12px; border: 2px solid var(--flamingo); background: var(--ink); }
+/* Clip Market rules */
+.mkr-list { display: grid; gap: .8rem; }
+.mkr-sec { padding: 1rem 1.1rem; border-radius: 16px; background: rgba(255,255,255,.04); border: 1px solid rgba(255,255,255,.1); }
+.mkr-sec h2 { display: flex; align-items: center; gap: .55rem; font-weight: 900; font-size: 1.15rem; }
+.mkr-sec h2 span { width: 32px; height: 32px; display: grid; place-items: center; border-radius: 10px; background: linear-gradient(135deg, #ff3d8b, #ffb35c); font-size: 1rem; }
+.mkr-sec ul { margin-top: .6rem; display: grid; gap: .4rem; padding-left: 1.1rem; list-style: disc; font-size: .93rem; line-height: 1.45; opacity: .88; }
+:root[data-theme="day"] .mkr-sec { background: #fff; border-color: rgba(224,48,111,.2); }

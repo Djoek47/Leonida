@@ -48,7 +48,7 @@ export default function ListingPage({ params }: { params: Promise<{ id: string }
   useEffect(() => {
     if (!user || !l) return;
     const c = sb()!;
-    c.from("market_purchases").select("id").eq("listing_id", l.id).eq("buyer_id", user.id).maybeSingle().then(({ data }) => setOwned(Boolean(data)));
+    c.from("market_purchases").select("id").eq("listing_id", l.id).eq("buyer_id", user.id).is("refunded_at", null).maybeSingle().then(({ data }) => setOwned(Boolean(data)));
     if (mine) {
       c.from("market_threads").select("id, buyer_id, last_at, seller_seen_at").eq("listing_id", l.id).order("last_at", { ascending: false }).then(async ({ data }) => {
         const rows = (data ?? []) as ThreadRow[];
@@ -63,7 +63,7 @@ export default function ListingPage({ params }: { params: Promise<{ id: string }
   // After Stripe sends the buyer back, the webhook may take a moment: check again.
   useEffect(() => {
     if (!bought || owned || !user || !l) return;
-    const i = setInterval(() => sb()?.from("market_purchases").select("id").eq("listing_id", l.id).eq("buyer_id", user.id).maybeSingle().then(({ data }) => data && setOwned(true)), 2500);
+    const i = setInterval(() => sb()?.from("market_purchases").select("id").eq("listing_id", l.id).eq("buyer_id", user.id).is("refunded_at", null).maybeSingle().then(({ data }) => data && setOwned(true)), 2500);
     return () => clearInterval(i);
   }, [bought, owned, user, l]);
   useEffect(() => { if (!zoom) return; const undo = lockScroll(); const k = (e: KeyboardEvent) => { if (e.key === "Escape") setZoom(false); if (e.key === "ArrowRight") setShot((s) => (s + 1) % 5); if (e.key === "ArrowLeft") setShot((s) => (s + 4) % 5); }; addEventListener("keydown", k); return () => { removeEventListener("keydown", k); undo(); }; }, [zoom]);
@@ -157,7 +157,7 @@ export default function ListingPage({ params }: { params: Promise<{ id: string }
               ) : live ? (
                 <>
                   <button className="btn btn-hot w-full mk-buy-btn" onClick={buy} disabled={busy}>{busy ? "Opening checkout…" : `Buy for ${usd(l.price_cents)}`}</button>
-                  <p className="mk-split">{usd(l.price_cents - fee)} goes to {seller?.name ?? "the seller"}. Card payment by Stripe.</p>
+                  <p className="mk-split">{usd(l.price_cents - fee)} goes to {seller?.name ?? "the seller"}. Card payment by Stripe. <Link href="/market/rules" className="underline">Rules and refunds</Link></p>
                 </>
               ) : <p className="mk-split">Not for sale right now.</p>}
               {bought && !owned && <p className="mk-note" role="status">Payment received. Unlocking your download…</p>}

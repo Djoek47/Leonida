@@ -9,6 +9,7 @@ const TOPICS: [string, string, string][] = [
   ["payments", "Payments & payouts", "Plans, receipts, wallet, cash-outs, prizes"],
   ["clips", "My clips", "Upload, review status, takedown, downloads"],
   ["voting", "Voting & rounds", "Weekly rounds, vote balance, results"],
+  ["market", "Clip Market", "Buying or selling a clip, a listing, a refund"],
   ["bug", "Something's broken", "A page or button not doing what it should"],
   ["other", "Something else", ""],
 ];
@@ -16,6 +17,7 @@ const TOPICS: [string, string, string][] = [
 const QUICK: Record<string, [string, string][]> = {
   payments: [["When do I get download money?", "Download earnings become available after the earning month ends, at midnight on the 1st (Toronto time)."], ["When is a weekly prize paid?", "Weekly prizes are processed after the winner is announced and valid payment details are provided."]],
   voting: [["When does a round open and close?", "Each round runs Thursday noon to Thursday noon. While it\u2019s open you can send clips and vote. When it ends, both stop and the results come in."], ["Why can't I vote on a clip?", "Only approved clips in the open weekly round take votes, and one vote per clip, for good."]],
+  market: [["Can I get a refund?", "Yes if the file won't play, it clearly doesn't match its listing, it isn't the seller's own gameplay, or you were charged twice. Ask within 7 days and include the clip's name."], ["I removed my listing. What happens to buyers?", "They keep their copy, and you keep what you earned."]],
   clips: [["How long does review take?", "Usually within a day. You get an email either way."], ["Limits?", "Under 2 minutes and under 600 MB, up to 3 tags."]],
 };
 type Mine = { ref: string; subject: string; status: string; reply: string | null; created_at: string };
@@ -23,6 +25,7 @@ type Mine = { ref: string; subject: string; status: string; reply: string | null
 export default function Support() {
   const { user, profile } = useUser();
   const [topic, setTopic] = useState("account");
+  useEffect(() => { const t = new URLSearchParams(location.search).get("topic"); if (t && TOPICS.some(([k]) => k === t)) setTopic(t); }, []);
   const [email, setEmail] = useState("");
   const [subject, setSubject] = useState("");
   const [message, setMessage] = useState("");

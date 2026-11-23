@@ -38,7 +38,7 @@ export default function Mine() {
     const c = sb(); if (!c || !user) return;
     const [{ data: l }, { data: p }, { data: th }] = await Promise.all([
       c.from("market_listings").select(LISTING_COLS).eq("seller_id", user.id).neq("status", "removed").order("created_at", { ascending: false }),
-      c.from("market_purchases").select("listing_id, price_cents, seller_cents, created_at, buyer_id, seller_id").or(`buyer_id.eq.${user.id},seller_id.eq.${user.id}`).order("created_at", { ascending: false }),
+      c.from("market_purchases").select("listing_id, price_cents, seller_cents, created_at, buyer_id, seller_id").is("refunded_at", null).or(`buyer_id.eq.${user.id},seller_id.eq.${user.id}`).order("created_at", { ascending: false }),
       c.from("market_threads").select("*").or(`buyer_id.eq.${user.id},seller_id.eq.${user.id}`).order("last_at", { ascending: false }),
     ]);
     setMine((l ?? []) as Listing[]);

@@ -49,6 +49,7 @@ export default function Market() {
           <div className="mk-hero-cta">
             <Link href="/market/sell" className="btn btn-hot">Sell a clip</Link>
             <Link href={user ? "/market/mine" : "/login?next=/market/mine"} className="btn btn-ghost mk-ghost">My clips and messages</Link>
+            <Link href="/market/rules" className="btn btn-ghost mk-ghost">Rules and refunds</Link>
           </div>
         </div>
         <ol className="mk-steps">

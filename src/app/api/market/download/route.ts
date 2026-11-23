@@ -18,7 +18,7 @@ export async function POST(req: NextRequest) {
 
   let allowed = l.seller_id === me.id;
   if (!allowed) {
-    const { data: p } = await db.from("market_purchases").select("id").eq("listing_id", l.id).eq("buyer_id", me.id).maybeSingle();
+    const { data: p } = await db.from("market_purchases").select("id").eq("listing_id", l.id).eq("buyer_id", me.id).is("refunded_at", null).maybeSingle();
     allowed = Boolean(p);
   }
   if (!allowed) {

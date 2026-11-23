@@ -20,7 +20,8 @@ export async function POST(req: NextRequest) {
   if (!l || l.status !== "live" || !l.storage_path) return Response.json({ error: "That clip isn't for sale right now." }, { status: 404 });
   if (l.seller_id === me.id) return Response.json({ error: "That's your own clip." }, { status: 400 });
 
-  const { data: had } = await db.from("market_purchases").select("id").eq("listing_id", l.id).eq("buyer_id", me.id).maybeSingle();
+  const { data: had } = await db.from("market_purchases").select("id, refunded_at").eq("listing_id", l.id).eq("buyer_id", me.id).maybeSingle();
+  if (had?.refunded_at) return Response.json({ error: "You were refunded for this clip, so it can't be bought again from this account. Contact support if you want it back." }, { status: 400 });
   if (had) return Response.json({ owned: true });
 
   if (env.mock) {
