@@ -250,14 +250,7 @@ function SendForm({ userId, cap, usedWeek, resetsAt, gamertag, platform }: { use
           : <input name="url" type="url" required className="field" placeholder="YouTube, TikTok, Twitch clip or PlayStation share link" />}
         <p className="text-xs text-haze mt-1.5">Upload a clip under 600 MB, 1 to 3 minutes works best. MP4, MOV or WebM.</p>
         {mode === "file" && preview && len != null && (
-          <div className="cover-pick mt-3">
-            <span className="text-sm font-bold">Pick the cover moment</span>
-            <video src={preview} muted playsInline preload="auto" className="mt-2 w-full max-w-md rounded-lg border-2 border-line bg-black aspect-video"
-              ref={(v) => { if (v && Math.abs(v.currentTime - coverAt) > 0.2) v.currentTime = coverAt; }} />
-            <input type="range" min={0} max={Math.max(0, Math.floor(len * 10) / 10 - 0.1)} step={0.1} value={coverAt}
-              onChange={(e) => setCoverAt(Number(e.target.value))} className="mt-2 w-full max-w-md" aria-label="Cover moment" />
-            <p className="text-xs text-haze">At {mmss(coverAt)} — this frame is the thumbnail people see before they press play.</p>
-          </div>
+          <CoverPicker src={preview} len={len} at={coverAt} onPick={setCoverAt} />
         )}
         {len != null && (
           <p className="text-sm mt-1.5 font-semibold text-gulf">{mmss(len)}{len < 60 || len > 180 ? " · 1 to 3 minutes works best" : ""}</p>
@@ -381,3 +374,48 @@ function grabFrame(file: File, at?: number): Promise<Blob | null> {
     setTimeout(() => done(null), 8000);
   });
 }
+
+/** Choose your cover: eight frames from the clip to tap, a big preview, and a slider to fine-tune.
+ *  The chosen moment becomes the thumbnail everyone sees before they press play. */
+function CoverPicker({ src, len, at, onPick }: { src: string; len: number; at: number; onPick: (t: number) => void }) {
+  const [frames, setFrames] = useState<{ t: number; url: string }[]>([]);
+  useEffect(() => {
+    let off = false;
+    const v = document.createElement("video"); v.muted = true; v.playsInline = true; v.preload = "auto"; v.src = src;
+    const times = Array.from({ length: 8 }, (_, k) => Math.max(0.1, Math.min(len - 0.2, (len * (k + 0.5)) / 8)));
+    const out: { t: number; url: string }[] = [];
+    const grab = (k: number) => {
+      if (off || k >= times.length) { if (!off) setFrames(out); return; }
+      v.onseeked = () => {
+        const c = document.createElement("canvas"); c.width = 240; c.height = Math.round((v.videoHeight / (v.videoWidth || 16)) * 240) || 135;
+        try { c.getContext("2d")?.drawImage(v, 0, 0, c.width, c.height); out.push({ t: times[k], url: c.toDataURL("image/jpeg", 0.7) }); } catch {}
+        if (k % 2 === 1 && !off) setFrames([...out]);
+        grab(k + 1);
+      };
+      v.currentTime = times[k];
+    };
+    v.onloadeddata = () => grab(0);
+    return () => { off = true; v.removeAttribute("src"); v.load(); };
+  }, [src, len]);
+  return (
+    <div className="cover-pick mt-3">
+      <p className="text-sm font-bold">Choose your cover <span className="font-normal text-haze">· tap a frame, then fine-tune</span></p>
+      <div className="cp-strip" role="listbox" aria-label="Cover frames">
+        {frames.length === 0 && <span className="text-xs text-haze">Grabbing frames…</span>}
+        {frames.map((f) => (
+          <button key={f.t} type="button" role="option" aria-selected={Math.abs(f.t - at) < 0.3} onClick={() => onPick(f.t)}
+            className={`cp-frame${Math.abs(f.t - at) < 0.3 ? " is-on" : ""}`}>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src={f.url} alt={`Frame at ${mmss(f.t)}`} /><span>{mmss(f.t)}</span>
+          </button>
+        ))}
+      </div>
+      <video src={src} muted playsInline preload="auto" className="mt-2 w-full max-w-md rounded-lg border-2 border-line bg-black aspect-video"
+        ref={(v) => { if (v && Math.abs(v.currentTime - at) > 0.2) v.currentTime = at; }} />
+      <input type="range" min={0} max={Math.max(0, Math.floor(len * 10) / 10 - 0.1)} step={0.1} value={at}
+        onChange={(e) => onPick(Number(e.target.value))} className="mt-2 w-full max-w-md" aria-label="Fine-tune the cover moment" />
+      <p className="text-xs text-haze">Cover at {mmss(at)}. This is the thumbnail people see before they press play.</p>
+    </div>
+  );
+}
+
