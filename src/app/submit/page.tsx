@@ -1,11 +1,11 @@
 "use client";
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { uploadVideo } from "@/lib/marketUpload";
 import Link from "@/components/A";
 import { sb } from "@/lib/supabase";
 import { useUser } from "@/lib/useUser";
 import { TierMedal } from "@/components/TierMedal";
-import { contestClips, currentContest, openContests, mmss, platformName, type Clip, type Contest } from "@/lib/api";
+import { currentContest, openContests, mmss, platformName, type Clip, type Contest } from "@/lib/api";
 import { TagPicker } from "@/components/TagPicker";
 import { slugTag } from "@/lib/tags";
 import { DemoNote } from "@/components/DemoNote";
@@ -312,44 +312,97 @@ function SendForm({ userId, cap, usedWeek, resetsAt, gamertag, platform }: { use
   );
 }
 
+type ClaimRow = { id: string; title: string; gamertag: string; platform: string; owner_id: string | null; contest_id: string | null; created_at: string };
+/** Claim a clip: pick the week you saw it in (or all weeks), search by title or gamertag, recognise it
+ *  by its thumbnail, and tell staff how to check it's yours. Your own clips never show here. */
 function ClaimForm({ userId }: { userId: string }) {
-  const [clips, setClips] = useState<Clip[]>([]);
+  const [weeks, setWeeks] = useState<{ id: string; title: string }[]>([]);
+  const [week, setWeek] = useState("all");
   const [q, setQ] = useState("");
-  const [pick, setPick] = useState<Clip | null>(null);
+  const [rows, setRows] = useState<ClaimRow[] | null>(null);
+  const [mine, setMine] = useState<Set<string>>(new Set());
+  const [pick, setPick] = useState<ClaimRow | null>(null);
   const [done, setDone] = useState(false);
   const [err, setErr] = useState("");
-  useEffect(() => { currentContest().then((c) => contestClips(c.id)).then((cs) => setClips(cs.filter((x) => x.owner_id !== userId))); }, [userId]);
-  const shown = clips.filter((c) => (c.title + c.gamertag).toLowerCase().includes(q.toLowerCase()));
+  const SUPA = process.env.NEXT_PUBLIC_SUPABASE_URL;
+
+  useEffect(() => {
+    const c = sb(); if (!c) { setRows([]); return; }
+    c.from("contests").select("id, title, voting_opens").lte("voting_opens", new Date(Date.now() + 8 * 864e5).toISOString()).order("voting_opens", { ascending: false }).limit(30)
+      .then(({ data }) => setWeeks((data ?? []).map((w) => ({ id: w.id, title: w.title }))));
+    c.from("claims").select("clip_id").eq("claimant_id", userId).then(({ data }) => setMine(new Set((data ?? []).map((x) => x.clip_id as string))));
+  }, [userId]);
+
+  const search = useCallback(async () => {
+    const c = sb(); if (!c) { setRows([]); return; }
+    setRows(null); setPick(null);
+    const t = q.trim().replace(/[%,()]/g, "");
+    let query = c.from("clips").select("id, title, gamertag, platform, owner_id, contest_id, created_at")
+      .in("status", ["approved", "featured"]).or(`owner_id.is.null,owner_id.neq.${userId}`).order("created_at", { ascending: false }).limit(40);
+    if (week !== "all") query = query.eq("contest_id", week);
+    if (t) query = query.or(`title.ilike.%${t}%,gamertag.ilike.%${t}%`);
+    const { data, error } = await query;
+    if (error) { setErr("Search didn't work. Try again."); setRows([]); return; }
+    setRows((data as ClaimRow[]) ?? []);
+  }, [q, week, userId]);
+  useEffect(() => { search(); }, [week]); // eslint-disable-line react-hooks/exhaustive-deps
 
   async function claim(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     const c = sb();
     if (c && pick) {
       const { error } = await c.from("claims").insert({ clip_id: pick.id, claimant_id: userId, evidence: new FormData(e.currentTarget).get("evidence") });
-      if (error) { setErr(error.message); return; }
+      if (error) { setErr(error.message.includes("duplicate") ? "You've already claimed this clip. Staff will get back to you." : error.message); return; }
     }
     setDone(true);
   }
 
-  if (done) return <div className="mt-10 rounded-lg border border-gulf border-2 bg-ink p-6"><p className="display text-4xl">Claim sent</p><p className="text-haze mt-2">Staff will check it against the gamertag in the clip. If it&apos;s yours, the clip and any winnings move to your account.</p></div>;
+  if (done) return <div className="mt-10 rounded-lg border border-gulf border-2 bg-ink p-6"><p className="display text-4xl">Claim sent</p><p className="text-haze mt-2">Staff will check it against the gamertag in the clip. If it&apos;s yours, the clip and any winnings move to your account. You&apos;ll get an email either way.</p></div>;
 
   return (
     <div className="mt-8">
-      <p className="text-haze">Saw your gameplay in one of our videos, uploaded by us or by someone else? Find it and claim it.</p>
-      <input value={q} onChange={(e) => setQ(e.target.value)} className="field mt-4" placeholder="Search by title or gamertag" />
-      <ul className="mt-4 max-h-72 overflow-auto divide-y divide-line border border-line rounded">
-        {shown.map((c) => (
-          <li key={c.id}><button onClick={() => setPick(c)} className={`w-full text-left px-4 py-3 ${pick?.id === c.id ? "bg-ink-2" : "hover:bg-ink"}`}>
-            <span className="font-bold">{c.title}</span><span className="block text-sm text-haze">{c.gamertag} on {platformName[c.platform]}</span></button></li>
-        ))}
-        {shown.length === 0 && <li className="px-4 py-6 text-haze">No clips match. Try the gamertag shown in the video.</li>}
-      </ul>
+      <p className="text-haze">Saw your gameplay in one of our videos, uploaded by us or by someone else? Find it and claim it. Clips you uploaded yourself don&apos;t show here: they&apos;re already yours.</p>
+      <form className="claim-bar mt-4" onSubmit={(e) => { e.preventDefault(); search(); }}>
+        <label className="grid gap-1 text-sm font-bold">Week you saw it
+          <select value={week} onChange={(e) => setWeek(e.target.value)} className="field font-normal">
+            <option value="all">All weeks</option>
+            {weeks.map((w) => <option key={w.id} value={w.id}>{w.title}</option>)}
+          </select>
+        </label>
+        <label className="grid gap-1 text-sm font-bold flex-1">Title or gamertag <span className="font-normal text-haze">(optional)</span>
+          <input value={q} onChange={(e) => setQ(e.target.value)} className="field font-normal" placeholder="e.g. airboat chase, or the gamertag in the video" />
+        </label>
+        <button className="btn btn-hot self-end">Search</button>
+      </form>
+      {rows === null ? <p className="mt-4 text-haze">Searching…</p> : rows.length === 0 ? (
+        <p className="mt-4 rounded border border-line px-4 py-5 text-haze">No clips found{week !== "all" ? " for that week" : ""}{q ? ` matching “${q}”` : ""}. Try All weeks, or a shorter word. Only approved clips can be claimed.</p>
+      ) : (
+        <ul className="claim-grid mt-4">
+          {rows.map((c) => {
+            const claimed = mine.has(c.id);
+            return (
+              <li key={c.id}>
+                <button type="button" disabled={claimed} onClick={() => setPick(c)} className={`claim-card${pick?.id === c.id ? " is-on" : ""}`}>
+                  <span className="claim-thumb">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    {SUPA && c.owner_id ? <img src={`${SUPA}/storage/v1/object/public/thumbs/${c.owner_id}/${c.id}.jpg`} alt="" loading="lazy" onError={(e) => { (e.currentTarget as HTMLImageElement).style.visibility = "hidden"; }} /> : null}
+                  </span>
+                  <span className="claim-meta"><b>{c.title}</b><small>{c.gamertag} on {platformName[c.platform as keyof typeof platformName] ?? c.platform}</small>
+                    <small>{weeks.find((w) => w.id === c.contest_id)?.title ?? "Not in a contest week"}</small>
+                    {claimed && <em>Already claimed by you</em>}</span>
+                </button>
+              </li>
+            );
+          })}
+        </ul>
+      )}
+      {err && <p role="alert" className="mt-3 text-flamingo font-semibold">{err}</p>}
       {pick && (
         <form onSubmit={claim} className="mt-6 grid gap-4 [&>*]:min-w-0">
+          <p className="font-bold">Claiming &ldquo;{pick.title}&rdquo;</p>
           <label className="grid gap-1.5"><span className="font-bold">How can we tell it&apos;s yours?</span>
             <textarea name="evidence" required rows={3} className="field" placeholder="Link to the original capture, the date you recorded it, or anything only you would have." /></label>
-          {err && <p role="alert" className="text-flamingo font-semibold">{err}</p>}
-          <button className="btn btn-hot w-fit">Claim &ldquo;{pick.title}&rdquo;</button>
+          <button className="btn btn-hot w-fit">Send my claim</button>
         </form>
       )}
     </div>

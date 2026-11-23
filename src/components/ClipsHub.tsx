@@ -6,8 +6,8 @@ import Link from "@/components/A";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { sb } from "@/lib/supabase";
 import { useUser } from "@/lib/useUser";
-import { castVote, exactMoney, myVotes, platformName, type Clip } from "@/lib/api";
-import { DOWNLOAD, type TierId } from "@/lib/tiers";
+import { castVote, myVotes, platformName, type Clip } from "@/lib/api";
+import { type TierId } from "@/lib/tiers";
 import { CoinAvatar } from "@/components/CoinAvatar";
 import { TierMedal } from "@/components/TierMedal";
 import { ALL_TAGS, TAG_LABEL, FLAGGED_SLUGS, slugTag } from "@/lib/tags";
@@ -241,7 +241,7 @@ export function ClipsHub({ cat }: { cat: Cat }) {
     const j = (await res.json().catch(() => ({}))) as { file?: string; checkout?: string; error?: string; external?: boolean; archived?: boolean };
     if (j.checkout) { location.href = j.checkout; return; }
     if (j.archived) { setMsg("That clip's week is over, so it lives in the Kingpin archive now (livefromleonida.com/edge/archive)."); return; }
-    if (!j.file) { setMsg(j.error ?? (paying ? "Could not start the download." : `Downloads are for members, or ${exactMoney(DOWNLOAD.priceCents)} each.`)); return; }
+    if (!j.file) { setMsg(j.error ?? (paying ? "Could not start the download." : "Downloads come with a membership. Free accounts can stream every clip.")); return; }
     if (j.external) window.open(j.file, "_blank", "noopener"); else location.href = j.file;
     setOwned((o) => new Set(o).add(r.id));
     setMsg(r.owner_id !== user.id ? `Downloading. ${r.gamertag} gets their share.` : "Downloading.");

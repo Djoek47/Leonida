@@ -1,0 +1,2 @@
+-- v55: download_with_credit_for(p_clip, p_user) — server-side (service_role only) credit download for contest clips.
+-- Applied via migration schema_v55_download_credit_for. See the live definition for the body.

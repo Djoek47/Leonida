@@ -141,7 +141,7 @@ export default function Archive() {
         </ul>
       )}
       {rows && rows.length < total && <button className="ar-more" onClick={() => load(rows.length)}>Show more ({total - rows.length} left)</button>}
-      <p className="ar-note">Archive downloads work like any other: you pay once per clip, the creator gets their share, and fetching it again later is free.</p>
+      <p className="ar-note">Archive downloads work like any other contest clip: each one uses one of your monthly downloads, the creator gets their share, and downloading it again later is free.</p>
 
       {open && <Player clip={open} onClose={() => setOpen(null)} onDownload={() => download(open)} />}
     </div>

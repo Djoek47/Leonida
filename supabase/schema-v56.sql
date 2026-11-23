@@ -1,0 +1,4 @@
+-- v56 security audit (applied via migration schema_v56_security_audit):
+-- * wallet_split: anon could read any member's balance (guard allowed auth.uid() is null). Now: own row, admin, or server role.
+-- * publish_results, ensure_round_presets: PUBLIC execute removed (earlier revokes missed PUBLIC). service_role only.
+-- * Member/staff SECURITY DEFINER functions: execute removed from PUBLIC/anon, granted to authenticated + service_role.

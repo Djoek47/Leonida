@@ -1,17 +1,13 @@
 import { NextRequest } from "next/server";
 import { isBlob, signedGet } from "@/lib/blob";
-import { randomUUID } from "node:crypto";
-import { admin, configured, env, liveCustomer, mockReady, notConfigured, stripe, userFromRequest } from "@/lib/server";
+import { admin, configured, mockReady, notConfigured, userFromRequest } from "@/lib/server";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-/** Getting a clip's file.
- *
- *  Already paid for it (a credit, a card, or test mode): you get a signed,
- *  one-hour download link. Not yet: test mode records the sale on the spot;
- *  live mode opens a $0.99 Stripe checkout and the webhook records it, so the
- *  player is only credited once money has actually landed. */
+/** Getting a contest clip's file. Members spend one monthly download credit per new clip
+ *  (re-downloads are free); the creator is credited and paid at month-end. No card payment here:
+ *  Clip Market clips are a separate store with their own instant-pay checkout. */
 export async function POST(req: NextRequest) {
   if (!configured && !mockReady) return notConfigured();
 
@@ -51,33 +47,19 @@ export async function POST(req: NextRequest) {
   }
 
   if (!(await owned())) {
-    const { data: prof } = await db.from("profiles").select("tier, subscription_status, stripe_customer_id").eq("id", me.id).single();
-    const cust = await liveCustomer(me.id, prof?.stripe_customer_id);
-    const paying = prof && prof.tier !== "free" && ["active", "trialing", "past_due"].includes(prof.subscription_status ?? "");
-    if (!paying) return Response.json({ error: "Downloads are for members. Free accounts can stream every clip." }, { status: 403 });
-
-    if (env.mock) {
-      const { error } = await db.rpc("record_paid_download", { p_clip: clipId, p_downloader: me.id, p_payment_intent: `mock_${randomUUID()}` });
-      if (error) return Response.json({ error: error.message }, { status: 500 });
-    } else {
-      const { data: price } = await db.from("download_prices").select("price_cents, creator_cents").eq("id", true).single();
-      const amount = price?.price_cents ?? 99;
-      const toCreator = price?.creator_cents ?? 70;
-      const session = await stripe().checkout.sessions.create({
-        mode: "payment",
-        customer: cust,
-        customer_email: cust ? undefined : me.email,
-        client_reference_id: me.id,
-        line_items: [{ quantity: 1, price_data: { currency: "usd", unit_amount: amount, product_data: {
-          name: `Download: ${clip.title}`,
-          description: `$${(toCreator / 100).toFixed(2)} of this goes to the player who made the clip.`,
-        } } }],
-        metadata: { kind: "download", clip_id: clipId, player_id: me.id },
-        payment_intent_data: { metadata: { kind: "download", clip_id: clipId, player_id: me.id } },
-        success_url: `${env.siteUrl}/clips?downloaded=${clipId}`,
-        cancel_url: `${env.siteUrl}/clips`,
-      });
-      return Response.json({ checkout: session.url });
+    // Contest clips are part of the membership: each download spends one of the member's monthly
+    // credits (no card payment). The creator is credited and paid at month-end from subscriptions.
+    // Clip Market clips are separate: bought one by one at /api/market/buy, seller paid instantly.
+    const { error } = await db.rpc("download_with_credit_for", { p_clip: clipId, p_user: me.id });
+    if (error) {
+      if (error.message.includes("NOT_MEMBER")) return Response.json({ error: "Downloads come with a membership. Free accounts can stream every clip." }, { status: 403 });
+      if (error.message.includes("NO_CREDITS")) {
+        const { data: p } = await db.from("profiles").select("credits_reset_at").eq("id", me.id).single();
+        const when = p?.credits_reset_at ? new Date(p.credits_reset_at).toLocaleDateString("en-US", { month: "long", day: "numeric" }) : "your next billing date";
+        return Response.json({ error: `You've used this month's downloads. They renew on ${when}. A bigger plan gives you more.`, noCredits: true }, { status: 403 });
+      }
+      if (error.message.includes("NOT_AVAILABLE")) return Response.json({ error: "That clip is not available." }, { status: 404 });
+      return Response.json({ error: "The download couldn't start. Try again." }, { status: 500 });
     }
   }
 
