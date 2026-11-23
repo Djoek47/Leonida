@@ -77,7 +77,7 @@ export default function Gta6Clips() {
       </section>
 
       <section className="mt-10">
-        <h2 className="display text-3xl">Buy and download GTA 6 clips</h2>
+        <h2 className="display text-3xl">Download GTA 6 clips with your membership</h2>
         <p className="mt-3 text-haze">
           Making a TikTok, a YouTube video, a montage or a stream highlight? Members download clips with the monthly download credits that come with their plan,
           and creators agree to let members download their clips for their own videos. Higher plans include more downloads a month.

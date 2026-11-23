@@ -78,8 +78,8 @@ export default function Earn() {
             </div>
           </div>
           <div className="panel-enamel text-center">
-            <p className="k">Every download</p>
-            <p className="v">{usd(DOWNLOAD.priceCents / 100)}</p>
+            <p className="k">You earn per download</p>
+            <p className="v"><small className="text-[0.45em] align-middle mr-1">Up to</small>{usd(DOWNLOAD.priceCents / 100)}</p>
           </div>
         </div>
       </section>

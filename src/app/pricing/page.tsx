@@ -191,7 +191,7 @@ export default function Pricing() {
           </div>
 
           <div className="panel-steel">
-            <p className="k">Every download</p>
+            <p className="k">Creators earn per download</p>
             <p className="v"><small className="text-[0.45em] align-middle mr-1">Up to</small>$0.99</p>
                       </div>
 

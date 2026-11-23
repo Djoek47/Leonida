@@ -4,7 +4,7 @@ import Link from "@/components/A";
 import { sb } from "@/lib/supabase";
 import { useUser, type Profile } from "@/lib/useUser";
 import { DEMO_CLIPS, exactMoney, type Clip } from "@/lib/api";
-import { tierById, DOWNLOAD } from "@/lib/tiers";
+import { tierById } from "@/lib/tiers";
 import { StatusStrip, BadgeWall, type Badge } from "@/components/Gamification";
 import { TrophyCase } from "@/components/TrophyCase";
 import { ResubmitClip, useResubmitInfo } from "@/components/ResubmitClip";
@@ -159,8 +159,8 @@ export default function Dashboard() {
         </ol>
         <p className="deal-foot">
           <b>Downloading other players&apos; clips:</b>{" "}
-          {paying ? <>you have {credits} free download{credits === 1 ? "" : "s"} this month, then {exactMoney(DOWNLOAD.priceCents)} each.</>
-            : <>members get free downloads every month, then {exactMoney(DOWNLOAD.priceCents)} each. Free accounts stream everything.</>}{" "}
+          {paying ? <>you have {credits} download{credits === 1 ? "" : "s"} left this month, included in your plan. They renew every month, and a bigger plan gives you more.</>
+            : <>downloads come with a membership: every plan includes monthly downloads. Free accounts stream everything.</>}{" "}
           <Link href="/clips" className="underline">Browse clips</Link>
         </p>
       </details>

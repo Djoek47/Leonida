@@ -22,7 +22,7 @@ export function Receipts({ always = false }: { always?: boolean }) {
   if (!items) return always ? <p className="text-haze">Loading receipts…</p> : null;
   if (items.length === 0) return always ? (
     <section><h3 className="money-h">Receipts</h3>
-      <p className="text-haze">No payments yet. Every plan payment and paid download shows up here with its Stripe receipt.</p></section>
+      <p className="text-haze">No payments yet. Every plan payment and Clip Market purchase shows up here with its Stripe receipt.</p></section>
   ) : null;
   const shown = open || always ? items : items.slice(0, 3);
   return (
