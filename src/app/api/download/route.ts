@@ -1,6 +1,7 @@
 import { NextRequest } from "next/server";
 import { isBlob, signedGet } from "@/lib/blob";
 import { admin, configured, mockReady, notConfigured, userFromRequest } from "@/lib/server";
+import { clipDownloadName, extOf } from "@/lib/clipName";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -23,7 +24,7 @@ export async function POST(req: NextRequest) {
   };
 
   const { data: clip } = await db.from("clips")
-    .select("id, title, owner_id, status, storage_path, watermark_path, source_url").eq("id", clipId).single();
+    .select("id, title, gamertag, owner_id, status, storage_path, watermark_path, source_url").eq("id", clipId).single();
   // A creator can withdraw a clip. It then leaves the site for everyone, except the people who already
   // downloaded it: they keep it and can fetch it again, free, from their library.
   const keptByBuyer = clip?.status === "withdrawn" && (await owned());
@@ -66,11 +67,12 @@ export async function POST(req: NextRequest) {
   // Paid for: hand over the original (the watermarked copy is for streaming).
   const path = clip.storage_path ?? clip.watermark_path;
   if (path) {
-    if (isBlob(path)) return Response.json({ file: await signedGet(path, { download: true }) });
-    const name = `${clip.title.replace(/[^\w\- ]+/g, "").trim().slice(0, 60) || "clip"}${path.match(/\.\w+$/)?.[0] ?? ".mp4"}`;
+    // A real name: "GAMERTAG - Clip title - Live From Leonida.mp4", not the storage key.
+    const name = clipDownloadName(clip.gamertag, clip.title, extOf(path));
+    if (isBlob(path)) return Response.json({ file: await signedGet(path, { download: true }), name });
     const { data, error } = await db.storage.from("clips").createSignedUrl(path, 3600, { download: name });
     if (error || !data) return Response.json({ error: "The file could not be prepared. Try again." }, { status: 500 });
-    return Response.json({ file: data.signedUrl });
+    return Response.json({ file: data.signedUrl, name });
   }
   if (clip.source_url) return Response.json({ file: clip.source_url, external: true });
   return Response.json({ error: "This clip has no file attached." }, { status: 404 });

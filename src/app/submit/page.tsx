@@ -1,4 +1,5 @@
 "use client";
+import { clipStorageName } from "@/lib/clipName";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { uploadVideo } from "@/lib/marketUpload";
 import Link from "@/components/A";
@@ -137,7 +138,7 @@ function SendForm({ userId, cap, usedWeek, resetsAt, gamertag, platform }: { use
         // Straight into Vercel Blob from the browser, in parallel parts for big files.
         setPct(0);
         try {
-          storage_path = await uploadVideo(file, `clips/${userId}/${crypto.randomUUID()}-${file.name.replace(/[^\w.-]/g, "_")}`,
+          storage_path = await uploadVideo(file, `clips/${userId}/${clipStorageName(String(f.get("gamertag") ?? gamertag ?? ""), String(f.get("title") ?? ""), file.name)}`,
             (sent, total) => setPct(Math.round((sent / total) * 100))).done;
         } catch (e) {
           const m = String((e as Error)?.message ?? e);

@@ -1,4 +1,5 @@
 "use client";
+import { saveFile } from "@/lib/saveFile";
 import { playUrl } from "@/lib/media";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { lockScroll } from "@/lib/scrollLock";
@@ -239,11 +240,11 @@ export function ClipsHub({ cat }: { cat: Cat }) {
     setMsg("Getting the file…");
     const token = (await c.auth.getSession()).data.session?.access_token;
     const res = await fetch("/api/download", { method: "POST", headers: { "content-type": "application/json", ...(token ? { authorization: `Bearer ${token}` } : {}) }, body: JSON.stringify({ clipId: r.id }) });
-    const j = (await res.json().catch(() => ({}))) as { file?: string; checkout?: string; error?: string; external?: boolean; archived?: boolean };
+    const j = (await res.json().catch(() => ({}))) as { file?: string; name?: string; checkout?: string; error?: string; external?: boolean; archived?: boolean };
     if (j.checkout) { location.href = j.checkout; return; }
     if (j.archived) { setMsg("That clip's week is over, so it lives in the Kingpin archive now (livefromleonida.com/edge/archive)."); return; }
     if (!j.file) { setMsg(j.error ?? (paying ? "Could not start the download." : "Downloads come with a membership. Free accounts can stream every clip.")); return; }
-    if (j.external) window.open(j.file, "_blank", "noopener"); else location.href = j.file;
+    if (j.external) window.open(j.file, "_blank", "noopener"); else void saveFile(j.file, j.name);
     setOwned((o) => new Set(o).add(r.id));
     setMsg(r.owner_id !== user.id ? `Downloading. ${r.gamertag} gets their share.` : "Downloading.");
   }
@@ -257,8 +258,8 @@ export function ClipsHub({ cat }: { cat: Cat }) {
       if (stop) return;
       const token = (await sb()?.auth.getSession())?.data.session?.access_token;
       const res = await fetch("/api/download", { method: "POST", headers: { "content-type": "application/json", ...(token ? { authorization: `Bearer ${token}` } : {}) }, body: JSON.stringify({ clipId: id }) });
-      const j = (await res.json().catch(() => ({}))) as { file?: string; checkout?: string; external?: boolean };
-      if (j.file) { if (j.external) window.open(j.file, "_blank", "noopener"); else location.href = j.file; setMsg("Downloading. Thanks for paying the player."); return; }
+      const j = (await res.json().catch(() => ({}))) as { file?: string; name?: string; checkout?: string; external?: boolean };
+      if (j.file) { if (j.external) window.open(j.file, "_blank", "noopener"); else void saveFile(j.file, j.name); setMsg("Downloading. Thanks for paying the player."); return; }
       if (++tries < 8) setTimeout(go, 1500); else setMsg("Payment received. Open the clip and tap Download again in a moment — it won't charge twice.");
     };
     setMsg("Payment received. Getting your file…"); go();

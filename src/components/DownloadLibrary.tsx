@@ -1,4 +1,5 @@
 "use client";
+import { saveFile } from "@/lib/saveFile";
 import { useEffect, useState } from "react";
 import { sb } from "@/lib/supabase";
 import { useUser } from "@/lib/useUser";
@@ -24,10 +25,10 @@ export function DownloadLibrary() {
     setBusy(it.clip_id); setMsg("");
     const token = (await c.auth.getSession()).data.session?.access_token;
     const res = await fetch("/api/download", { method: "POST", headers: { "content-type": "application/json", ...(token ? { authorization: `Bearer ${token}` } : {}) }, body: JSON.stringify({ clipId: it.clip_id }) });
-    const j = (await res.json().catch(() => ({}))) as { file?: string; external?: boolean; error?: string };
+    const j = (await res.json().catch(() => ({}))) as { file?: string; name?: string; external?: boolean; error?: string };
     setBusy(null);
     if (!j.file) { setMsg(j.error ?? "Could not start the download."); return; }
-    if (j.external) window.open(j.file, "_blank", "noopener"); else location.href = j.file;
+    if (j.external) window.open(j.file, "_blank", "noopener"); else void saveFile(j.file, j.name);
   }
 
   if (!items.length) return null;

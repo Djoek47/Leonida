@@ -1,4 +1,5 @@
 "use client";
+import { saveFile } from "@/lib/saveFile";
 import { playUrl } from "@/lib/media";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Link from "@/components/A";
@@ -61,10 +62,10 @@ export default function Archive() {
     setMsg("Getting the file…");
     const token = (await s.auth.getSession()).data.session?.access_token;
     const res = await fetch("/api/download", { method: "POST", headers: { "content-type": "application/json", ...(token ? { authorization: `Bearer ${token}` } : {}) }, body: JSON.stringify({ clipId: c.id }) });
-    const j = (await res.json().catch(() => ({}))) as { file?: string; checkout?: string; error?: string; external?: boolean };
+    const j = (await res.json().catch(() => ({}))) as { file?: string; name?: string; checkout?: string; error?: string; external?: boolean };
     if (j.checkout) { location.href = j.checkout; return; }
     if (!j.file) { setMsg(j.error ?? "Could not start the download."); return; }
-    if (j.external) window.open(j.file, "_blank", "noopener"); else location.href = j.file;
+    if (j.external) window.open(j.file, "_blank", "noopener"); else void saveFile(j.file, j.name);
     setMsg(c.owner_id !== user?.id ? `Downloading. ${c.gamertag} gets their share.` : "Downloading.");
   }
 
