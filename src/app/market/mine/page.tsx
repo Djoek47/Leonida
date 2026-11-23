@@ -64,8 +64,9 @@ export default function Mine() {
   }, [user]);
   useEffect(() => { load(); }, [load]);
 
+  const [removeAsk, setRemoveAsk] = useState<Listing | null>(null);
   const setStatus = async (l: Listing, status: string) => {
-    if (status === "removed" && !confirm(`Take "${l.title}" off the market? Buyers who already bought it keep their download.`)) return;
+    setRemoveAsk(null);
     const { error } = await sb()!.from("market_listings").update({ status }).eq("id", l.id);
     setNote(error ? "Couldn't change that. Try again." : status === "paused" ? "Paused. It's hidden from the market until you relist it." : status === "live" ? "Back on the market." : status === "pending" ? "Sent back for review." : "Removed.");
     load();
@@ -80,6 +81,26 @@ export default function Mine() {
 
   return (
     <div className="mk-page">
+      {removeAsk && (
+        <div className="mk-rm-bg" onClick={() => setRemoveAsk(null)}>
+          <div className="mk-rm" role="alertdialog" aria-modal="true" aria-labelledby="mk-rm-t" onClick={(e) => e.stopPropagation()}>
+            <p className="mk-rm-k">Remove from the Clip Market</p>
+            <h2 id="mk-rm-t">Remove &ldquo;{removeAsk.title}&rdquo; for good?</h2>
+            <ul className="mk-rm-list">
+              <li><b>🛑 It comes off the market right away.</b> Nobody can find it, open it or buy it any more.</li>
+              <li><b>✅ Buyers keep their copy.</b> {removeAsk.sales_count > 0 ? `The ${removeAsk.sales_count} ${removeAsk.sales_count === 1 ? "person who" : "people who"} bought it` : "Anyone who bought it"} can still download it from their Bought tab.</li>
+              <li><b>💵 Your earnings stay.</b> Money from past sales is already in your wallet and isn&apos;t taken back.</li>
+              <li><b>⚠ This can&apos;t be undone.</b> To sell it again you&apos;d list it as a new clip, and it goes through review again.</li>
+            </ul>
+            {removeAsk.status === "live" && <p className="mk-rm-tip">Just need a break? <b>Pause</b> hides it from the market and you can relist it any time.</p>}
+            <div className="mk-rm-btns">
+              <button className="btn btn-ghost" onClick={() => setRemoveAsk(null)} autoFocus>Keep it listed</button>
+              {removeAsk.status === "live" && <button className="btn btn-ghost" onClick={() => setStatus(removeAsk, "paused")}>Pause instead</button>}
+              <button className="btn mk-rm-go" onClick={() => setStatus(removeAsk, "removed")}>Remove for good</button>
+            </div>
+          </div>
+        </div>
+      )}
       <div className="mk-wrap">
         <nav className="mk-crumbs"><Link href="/market">Clip Market</Link><span>›</span><span>My clips</span></nav>
         <div className="mk-mine-head">
@@ -123,7 +144,7 @@ export default function Mine() {
                       {l.status === "live" && <button className="btn btn-ghost" onClick={() => setStatus(l, "paused")}>Pause</button>}
                       {l.status === "paused" && <button className="btn btn-hot" onClick={() => setStatus(l, "live")}>Relist</button>}
                       {l.status === "rejected" && <button className="btn btn-hot" onClick={() => setStatus(l, "pending")}>Send for review again</button>}
-                      <button className="btn btn-ghost" onClick={() => setStatus(l, "removed")}>Remove</button>
+                      <button className="btn btn-ghost" onClick={() => setRemoveAsk(l)}>Remove</button>
                     </div>
                   </div>
                 </li>

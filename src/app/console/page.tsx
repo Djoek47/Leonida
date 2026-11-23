@@ -391,11 +391,15 @@ function Review() {
   const [note, setNote] = useState("");
   const vid = useRef<HTMLVideoElement>(null);
   const [coverMsg, setCoverMsg] = useState("");
+  const [loadErr, setLoadErr] = useState("");
 
   const load = useCallback(async () => {
     const c = sb();
     if (!c) { setClips(DEMO_CLIPS.map((x) => ({ ...x, status: "pending" }))); return; }
-    const { data } = await c.from("clips").select("*, contest:contests(title)").eq("status", "pending").order("created_at");
+    // Name the foreign key: with more than one possible path to contests, an unnamed embed
+    // comes back as HTTP 300 and the queue looked empty.
+    const { data, error } = await c.from("clips").select("*, contest:contests!clips_contest_id_fkey(title)").eq("status", "pending").order("created_at");
+    setLoadErr(error ? `Couldn't load the queue: ${error.message}` : "");
     setClips((data as Clip[]) ?? []);
   }, []);
   useEffect(() => { load(); }, [load]);
@@ -471,6 +475,7 @@ function Review() {
 
   if (!clip) return (
     <div>
+      {loadErr && <p role="alert" className="mb-3 rounded border-2 border-flamingo px-3 py-2 font-semibold">{loadErr}</p>}
       <p className="display text-4xl">Queue is empty.</p>
       <p className="text-haze mt-2">{done > 0 ? `${done} cleared this sitting. Nice work.` : "Nothing waiting on review."}</p>
       <button onClick={load} className="btn btn-ghost mt-4">Check again</button>
