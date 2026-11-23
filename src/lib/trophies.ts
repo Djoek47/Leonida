@@ -21,8 +21,8 @@ export const HUE: Record<string, [string, string, string]> = {
 };
 export const ACTION: Record<string, [string, string]> = {
   Audience: ["Send a clip", "/submit"], Uploads: ["Send a clip", "/submit"], Downloads: ["See your clips", "/dashboard"], Earnings: ["Send a clip", "/submit"],
-  Featuring: ["See the plans", "/pricing"], "Votes received": ["Send a clip", "/submit"], "Votes given": ["Vote on this week's clips", "/clips"],
-  "Return participation": ["Vote on this week's clips", "/clips"], Podium: ["Enter this week", "/submit"],
+  Featuring: ["See the plans", "/pricing"], "Votes received": ["Send a clip", "/submit"], "Votes given": ["Vote on this week's clips", "/clips/week"],
+  "Return participation": ["Vote on this week's clips", "/clips/week"], Podium: ["Enter this week", "/submit"],
 };
 export const fmt = (t: Pick<Trophy, "id" | "category">, n: number) =>
   t.category === "Earnings" ? `$${(n / 100).toLocaleString("en-US", n % 100 ? { minimumFractionDigits: 2, maximumFractionDigits: 2 } : {})}` : n.toLocaleString("en-US");

@@ -46,3 +46,18 @@ export async function userFromRequest(req: Request): Promise<{ id: string; email
 
 export const notConfigured = () =>
   Response.json({ error: "Payments are not switched on for this deployment yet." }, { status: 503 });
+
+/** The member's Stripe customer id, if it still exists in this Stripe mode. Accounts created
+ *  during testing can hold a test-mode id the live account has never seen ("No such customer"),
+ *  which made checkout fail with a 500. A stale id is cleared so a fresh customer is used. */
+export async function liveCustomer(userId: string, stored: string | null | undefined): Promise<string | undefined> {
+  if (!stored) return undefined;
+  try {
+    const c = await stripe().customers.retrieve(stored);
+    if (!("deleted" in c && c.deleted)) return stored;
+  } catch (e) {
+    if ((e as { code?: string }).code !== "resource_missing") throw e;
+  }
+  await admin().from("profiles").update({ stripe_customer_id: null }).eq("id", userId).eq("stripe_customer_id", stored);
+  return undefined;
+}

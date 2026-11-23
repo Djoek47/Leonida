@@ -36,9 +36,9 @@ type Stats = { clips: number; views: number; views_24h: number; new_today: numbe
 type Round = { id: string; title: string; state: string; timezone: string; starts_at: string; submissions_close_at: string; voting_closes_at: string };
 
 const CATS: [Cat, string, string][] = [
-  ["week", "This week's clips", "/clips"],
+  ["all", "All Videos", "/clips"],
+  ["week", "This week's clips", "/clips/week"],
   ["daily", "Daily Clips", "/clips/daily"],
-  ["all", "All Videos", "/clips/all"],
   ["featured", "Featured Clips", "/clips/featured"],
 ];
 const PAGE = 24;
@@ -330,7 +330,7 @@ export function ClipsHub({ cat }: { cat: Cat }) {
         {msg && (
           <div role="status" className="hub-toast">
             <span>{msg}</span>
-            {!user && <Link className="hub-toast-go" href="/login?next=/clips">Sign in</Link>}
+            {!user && <Link className="hub-toast-go" href="/login?next=/clips/week">Sign in</Link>}
             {user && !paying && msg.includes("Favorites") && <Link className="hub-toast-go" href="/pricing">See plans</Link>}
             <button type="button" aria-label="Dismiss" onClick={() => setMsg(null)}>×</button>
           </div>

@@ -50,7 +50,7 @@ function Shell({ tab, setTab, isOwner }: { tab: Tab; setTab: (t: Tab) => void; i
     ]);
     setCounts({ ...((st ?? {}) as Counts), support_open: sup ?? 0 });
   }, []);
-  useEffect(() => { load(); const id = setInterval(load, 30000); return () => clearInterval(id); }, [load]);
+  useEffect(() => { load(); const id = setInterval(load, 15000); window.addEventListener("focus", load); return () => { clearInterval(id); window.removeEventListener("focus", load); }; }, [load]);
   const urgent = ["clips_pending", "support_open", "gamertags_pending", "claims_open", "cashouts_waiting", "prizes_waiting"].reduce((n, k) => n + (counts[k] ?? 0), 0);
   useEffect(() => { document.title = urgent ? `(${urgent}) The Console` : "The Console"; }, [urgent]);
 
@@ -124,7 +124,7 @@ function Overview({ go }: { go: (t: Tab) => void }) {
     const { data } = await c.rpc("console_stats");
     setSt((data ?? {}) as Stats); setAt(new Date());
   }, []);
-  useEffect(() => { load(); const id = setInterval(load, 30000); return () => clearInterval(id); }, [load]);
+  useEffect(() => { load(); const id = setInterval(load, 15000); window.addEventListener("focus", load); return () => { clearInterval(id); window.removeEventListener("focus", load); }; }, [load]);
   if (!st) return <p className="text-haze">Counting…</p>;
   const n = (k: string) => (st[k] ?? 0) as number;
   const queues: [string, number, Tab][] = [
@@ -383,6 +383,22 @@ function Cashouts() {
   );
 }
 
+/** The four extra review actions, in plain words. */
+const MOD = [
+  { id: "feature", label: "Feature it", cta: "Feature it", done: "featured",
+    what: "Approves the clip and pins it in the Featured spot on the clips page. It stays in the contest too.",
+    noteLabel: "Why it's featured (optional, staff only)", placeholder: "Clip of the week pick, wild stunt…" },
+  { id: "remove_from_contest", label: "Out of the contest", cta: "Take it out of the contest", done: "out of the contest",
+    what: "Keeps the clip but stops it being voted on this week. It stays here in the queue: you can still approve it, and it then shows on the site as a normal clip with no votes.",
+    noteLabel: "Why (optional, sent to the member)", placeholder: "Great clip, but it doesn't fit this week's theme…" },
+  { id: "suspend", label: "Suspend", cta: "Suspend it", done: "suspended",
+    what: "Hides the clip from the site while you check something (a report, a rights question). Nothing is deleted and it can be put back later.",
+    noteLabel: "What you're checking (staff only)", placeholder: "Reported as someone else's footage…" },
+  { id: "withdraw", label: "Withdraw", cta: "Withdraw it", done: "withdrawn",
+    what: "Takes the clip down for good, as if the owner pulled it: off the site and out of the contest. Use it when the owner asks, or it clearly isn't theirs.",
+    noteLabel: "Reason (kept on record)", placeholder: "Owner asked / not their footage…" },
+] as const;
+
 function Review() {
   const [clips, setClips] = useState<Clip[]>([]);
   const [i, setI] = useState(0);
@@ -393,6 +409,8 @@ function Review() {
   const vid = useRef<HTMLVideoElement>(null);
   const [coverMsg, setCoverMsg] = useState("");
   const [loadErr, setLoadErr] = useState("");
+  const [ask, setAsk] = useState<(typeof MOD)[number] | null>(null);
+  const [askNote, setAskNote] = useState("");
 
   const load = useCallback(async () => {
     const c = sb();
@@ -404,6 +422,25 @@ function Review() {
     setClips((data as Clip[]) ?? []);
   }, []);
   useEffect(() => { load(); }, [load]);
+  // Live queue: new submissions slide in on their own (every 15 s and when the tab regains focus),
+  // without jumping away from the clip you're watching.
+  useEffect(() => {
+    const tick = async () => {
+      const c = sb(); if (!c || document.hidden) return;
+      const { data } = await c.from("clips").select("*, contest:contests!clips_contest_id_fkey(title)").eq("status", "pending").order("created_at");
+      if (!data) return;
+      const rows = data as Clip[];
+      setClips((cur) => {
+        const add = rows.filter((d) => !cur.some((x) => x.id === d.id));
+        const keep = cur.filter((x) => rows.some((d) => d.id === x.id));
+        if (!add.length && keep.length === cur.length) return cur;
+        if (add.length) setNote(`${add.length} new clip${add.length > 1 ? "s" : ""} just came in.`);
+        return [...keep, ...add];
+      });
+    };
+    const t = setInterval(tick, 15000); window.addEventListener("focus", tick);
+    return () => { clearInterval(t); window.removeEventListener("focus", tick); };
+  }, []);
 
   const clip = clips[i];
 
@@ -457,20 +494,25 @@ function Review() {
     setBusy(false);
   }, [clips, i, busy]);
 
-  const act = useCallback(async (action: string) => {
+  const act = useCallback(async (action: string, note: string) => {
     const cur = clips[i];
     if (!cur || busy) return;
-    const note = prompt(`Why? (kept on the record, and shown to them where it matters)`) ?? null;
-    if (note === null) return;
+    setAsk(null);
     setBusy(true);
     const c = sb();
     if (c) {
       const { error } = await c.rpc("console_clip_action", { p_clip: cur.id, p_action: action, p_note: note });
       if (error) { setBusy(false); setNote(error.message); return; }
     }
-    setClips((cs) => cs.filter((x) => x.id !== cur.id));
-    setI((n) => Math.min(n, clips.length - 2 < 0 ? 0 : clips.length - 2));
-    setNote(`${cur.title}: ${action.replace(/_/g, " ")}.`);
+    if (action === "remove_from_contest") {
+      // Still waiting on a decision: it just won't be voted on.
+      setClips((cs) => cs.map((x) => x.id === cur.id ? { ...x, for_contest: false } : x));
+      setNote(`${cur.title}: out of the contest. Approve it to show it on the site without votes.`);
+    } else {
+      setClips((cs) => cs.filter((x) => x.id !== cur.id));
+      setI((n) => Math.min(n, clips.length - 2 < 0 ? 0 : clips.length - 2));
+      setNote(`${cur.title}: ${MOD.find((m) => m.id === action)?.done ?? action}.`);
+    }
     setBusy(false);
   }, [clips, i, busy]);
 
@@ -552,24 +594,40 @@ function Review() {
           </p>
           {clip.for_contest !== false && <p className="text-sm font-bold">Entered for: <span className="text-gulf">{(clip as { contest?: { title?: string } | null }).contest?.title ?? "next weekly round"}</span>. Approve puts it in that contest; Disapprove keeps it out.</p>}
           <p className="text-xs text-haze">In {waited < 1 ? "under an hour" : `${waited} hours`} · sent {new Date(clip.created_at).toLocaleString("en-US")}</p>
-          <label className="grid gap-1 text-sm font-bold">Edited version link (Higgsfield or FFmpeg cut)<input name="edited" className="field font-normal" placeholder="https://" defaultValue={clip.edited_url ?? ""} /></label>
-          <label className="grid gap-1 text-sm font-bold">Seconds into the compilation video<input name="ts" type="number" min={0} className="field font-normal" defaultValue={clip.youtube_timestamp ?? ""} /></label>
           <label className="grid gap-1 text-sm font-bold">Note if not selecting (sent to the member)<input name="reason" className="field font-normal" placeholder="Not GTA VI, too short, someone else's footage…" /></label>
           <div className="flex flex-wrap gap-2 mt-2">
             <button disabled={busy} className="btn btn-hot disabled:opacity-60">Approve</button>
             <button type="button" disabled={busy} onClick={(e) => decide("rejected", new FormData(e.currentTarget.form!))} className="stop-btn"><span>Disapprove</span></button>
           </div>
+          <details className="mod-more">
+            <summary>For the weekly YouTube video <span>optional · fill in later</span></summary>
+            <p className="text-xs text-haze">Only if this clip goes into the weekly compilation. Leave both empty otherwise.</p>
+            <label className="grid gap-1 text-sm font-bold">Link to our edited version
+              <span className="text-xs font-normal text-haze">If we recut the clip (Higgsfield, FFmpeg), paste that file&apos;s link so the site shows the edit instead of the raw upload.</span>
+              <input name="edited" className="field font-normal" placeholder="https://" defaultValue={clip.edited_url ?? ""} /></label>
+            <label className="grid gap-1 text-sm font-bold">Where it starts in the weekly video (seconds)
+              <span className="text-xs font-normal text-haze">For example 135 for 2:15. The clip page then links straight to that moment on YouTube.</span>
+              <input name="ts" type="number" min={0} className="field font-normal" defaultValue={clip.youtube_timestamp ?? ""} /></label>
+          </details>
           <div className="mod-row">
-            <p className="mod-k">Also</p>
-            {([["suspend", "Suspend"], ["remove_from_contest", "Out of the contest"],
-               ["feature", "Feature it"], ["withdraw", "Withdraw"]] as const).map(([a, label]) => (
-              <button key={a} type="button" disabled={busy} onClick={() => act(a)} className="mod-btn">{label}</button>
+            <p className="mod-k">Other actions</p>
+            {MOD.map((m) => (
+              <button key={m.id} type="button" disabled={busy} onClick={() => { setAsk(m); setAskNote(""); }} className={`mod-btn${ask?.id === m.id ? " is-on" : ""}`}>{m.label}</button>
             ))}
           </div>
-          <p className="text-xs text-haze">
-            Nothing is erased. Suspended and withdrawn clips keep their file and their history —
-            the terms say we keep a copy.
-          </p>
+          {ask && (
+            <div className="mod-ask" role="dialog" aria-label={ask.label}>
+              <p className="mod-ask-t">{ask.label}</p>
+              <p className="mod-ask-p">{ask.what}</p>
+              <label className="grid gap-1 text-sm font-bold">{ask.noteLabel}
+                <input value={askNote} onChange={(e) => setAskNote(e.target.value)} className="field font-normal" placeholder={ask.placeholder} /></label>
+              <div className="flex gap-2 justify-end">
+                <button type="button" className="btn btn-ghost" onClick={() => setAsk(null)}>Cancel</button>
+                <button type="button" disabled={busy} className="btn btn-hot" onClick={() => act(ask.id, askNote.trim())}>{ask.cta}</button>
+              </div>
+            </div>
+          )}
+          <p className="text-xs text-haze">Nothing is ever deleted: every action keeps the file and its history.</p>
           {note && <p role="status" className="text-sm font-semibold text-gulf">{note}</p>}
         </form>
       </div>

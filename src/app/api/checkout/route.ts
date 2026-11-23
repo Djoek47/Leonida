@@ -1,5 +1,5 @@
 import { NextRequest } from "next/server";
-import { admin, configured, env, mockReady, notConfigured, stripe, userFromRequest } from "@/lib/server";
+import { admin, configured, env, liveCustomer, mockReady, notConfigured, stripe, userFromRequest } from "@/lib/server";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -85,7 +85,7 @@ export async function POST(req: NextRequest) {
     });
     return Response.json({ url: session.url });
   }
-  let customer = profile?.stripe_customer_id as string | undefined;
+  let customer = await liveCustomer(me.id, profile?.stripe_customer_id as string | undefined);
   if (!customer) {
     const c = await stripe().customers.create({ email: me.email, metadata: { player_id: me.id } });
     customer = c.id;

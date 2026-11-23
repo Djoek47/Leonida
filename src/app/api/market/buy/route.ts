@@ -1,6 +1,6 @@
 import { NextRequest } from "next/server";
 import { randomUUID } from "node:crypto";
-import { admin, configured, env, mockReady, notConfigured, stripe, userFromRequest } from "@/lib/server";
+import { admin, configured, env, liveCustomer, mockReady, notConfigured, stripe, userFromRequest } from "@/lib/server";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -34,14 +34,15 @@ export async function POST(req: NextRequest) {
     db.rpc("market_fee", { p_price: l.price_cents }),
     db.from("profiles").select("gamertag, display_name").eq("id", l.seller_id).single(),
   ]);
+  const cust = await liveCustomer(me.id, prof?.stripe_customer_id);
   const sellerName = seller?.gamertag || seller?.display_name || "the player";
   const toSeller = l.price_cents - (typeof fee === "number" ? fee : 0);
   const shot = `${env.supabaseUrl}/storage/v1/object/public/market-shots/${l.shots[0]}`;
   const meta = { kind: "market", listing_id: l.id, buyer_id: me.id };
   const session = await stripe().checkout.sessions.create({
     mode: "payment",
-    customer: prof?.stripe_customer_id ?? undefined,
-    customer_email: prof?.stripe_customer_id ? undefined : me.email,
+    customer: cust,
+    customer_email: cust ? undefined : me.email,
     client_reference_id: me.id,
     line_items: [{ quantity: 1, price_data: { currency: "usd", unit_amount: l.price_cents, product_data: {
       name: `Clip Market: ${l.title}`,

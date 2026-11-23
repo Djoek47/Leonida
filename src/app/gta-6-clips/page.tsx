@@ -100,7 +100,7 @@ export default function Gta6Clips() {
         <h2 className="display text-3xl">The weekly GTA 6 clip contest</h2>
         <p className="mt-3 text-haze">
           A new round opens every week. Everyone can vote, the top three clips split the weekly prize pool, and the pool grows as more members join.
-          Read the <Link href="/rules" className="font-black underline">contest rules</Link> or see <Link href="/clips" className="font-black underline">this week&apos;s clips</Link>.
+          Read the <Link href="/rules" className="font-black underline">contest rules</Link> or see <Link href="/clips/week" className="font-black underline">this week&apos;s clips</Link>.
         </p>
       </section>
 

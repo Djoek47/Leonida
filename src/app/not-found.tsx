@@ -10,7 +10,7 @@ export default function NotFound() {
       <p className="mt-4 text-lg text-haze">This road doesn&apos;t go anywhere in Leonida. The page moved, or it never existed.</p>
       <div className="mt-8 flex flex-wrap justify-center gap-3">
         <Link href="/" className="btn btn-hot">Back to the front page</Link>
-        <Link href="/clips" className="btn btn-ghost">This week&apos;s clips</Link>
+        <Link href="/clips/week" className="btn btn-ghost">This week&apos;s clips</Link>
       </div>
     </div>
   );

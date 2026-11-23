@@ -26,7 +26,7 @@ export default function Home() {
           </div>
           <div className="flex flex-wrap gap-3 shrink-0">
             <Link href="/submit" className="btn bg-mango text-[#1c1710] hover:brightness-110">Send a clip</Link>
-            <Link href="/clips" className="btn btn-ghost">Watch and vote</Link>
+            <Link href="/clips/week" className="btn btn-ghost">Watch and vote</Link>
           </div>
         </div>
       </section>

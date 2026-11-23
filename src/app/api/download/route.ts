@@ -1,7 +1,7 @@
 import { NextRequest } from "next/server";
 import { isBlob, signedGet } from "@/lib/blob";
 import { randomUUID } from "node:crypto";
-import { admin, configured, env, mockReady, notConfigured, stripe, userFromRequest } from "@/lib/server";
+import { admin, configured, env, liveCustomer, mockReady, notConfigured, stripe, userFromRequest } from "@/lib/server";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -52,6 +52,7 @@ export async function POST(req: NextRequest) {
 
   if (!(await owned())) {
     const { data: prof } = await db.from("profiles").select("tier, subscription_status, stripe_customer_id").eq("id", me.id).single();
+    const cust = await liveCustomer(me.id, prof?.stripe_customer_id);
     const paying = prof && prof.tier !== "free" && ["active", "trialing", "past_due"].includes(prof.subscription_status ?? "");
     if (!paying) return Response.json({ error: "Downloads are for members. Free accounts can stream every clip." }, { status: 403 });
 
@@ -64,8 +65,8 @@ export async function POST(req: NextRequest) {
       const toCreator = price?.creator_cents ?? 70;
       const session = await stripe().checkout.sessions.create({
         mode: "payment",
-        customer: prof?.stripe_customer_id ?? undefined,
-        customer_email: prof?.stripe_customer_id ? undefined : me.email,
+        customer: cust,
+        customer_email: cust ? undefined : me.email,
         client_reference_id: me.id,
         line_items: [{ quantity: 1, price_data: { currency: "usd", unit_amount: amount, product_data: {
           name: `Download: ${clip.title}`,

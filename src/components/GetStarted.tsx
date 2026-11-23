@@ -29,7 +29,7 @@ export function GetStarted({ account, onClaimed, onGamertag }: {
     [p.clip, "Send a clip", "▶", "/submit"],
     [p.gamertag, "Your gamertag", "◎", onGamertag],
     [p.payout, "Get-paid account", "$", "#payout"],
-    [p.voted, "Cast a vote", "★", "/clips"],
+    [p.voted, "Cast a vote", "★", "/clips/week"],
   ];
   const n = steps.filter(([d]) => d).length;
   const all = n === steps.length;

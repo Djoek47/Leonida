@@ -4064,3 +4064,10 @@ a.mk-card:hover, a.mk-card:focus-visible { transform: translateY(-4px); border-c
 .mk-rm-btns { display: flex; flex-wrap: wrap; gap: .5rem; justify-content: flex-end; }
 .mk-rm-go { background: #ff3d6b; color: #fff; border-color: #ff3d6b; } .mk-rm-go:hover { background: #e02a57; }
 :root[data-theme="day"] .mk-rm { background: #fffbf2; color: #1c140c; } :root[data-theme="day"] .mk-rm-list { color: rgba(28,20,12,.8); } :root[data-theme="day"] .mk-rm-list b { color: #1c140c; }
+/* Console review: other actions explained */
+.mod-more { border: 1.5px solid var(--line); border-radius: 12px; padding: .6rem .8rem; display: grid; gap: .6rem; }
+.mod-more summary { cursor: pointer; font-weight: 800; font-size: .9rem; } .mod-more summary span { font-weight: 600; font-size: .75rem; color: var(--haze); margin-left: .4rem; }
+.mod-more[open] { padding-bottom: .9rem; }
+.mod-btn.is-on { border-color: var(--gulf); color: var(--gulf); }
+.mod-ask { display: grid; gap: .6rem; padding: .9rem 1rem; border-radius: 14px; border: 2px solid var(--gulf); background: var(--ink); }
+.mod-ask-t { font-weight: 900; font-size: 1.05rem; } .mod-ask-p { font-size: .88rem; color: var(--haze); line-height: 1.4; }
