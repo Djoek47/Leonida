@@ -103,6 +103,11 @@ export default function Edge() {
           </Link>
         </div>
 
+        <Link href="/edge/play" className="eg-archive is-pp">
+          <span className="eg-archive-ico" aria-hidden>📱</span>
+          <span><b>Perfect Play</b><small>Mission Briefing and The Road in one light screen for your phone: next mission, the choices, when to save.</small></span>
+          <span className="eg-go">Open ▶</span>
+        </Link>
         <Link href="/edge/archive" className={`eg-archive${rank >= 3 ? " is-open" : ""}`}>
           <span className="eg-archive-ico" aria-hidden>{rank >= 3 ? "🎞" : "🔒"}</span>
           <span><b>Clip archive</b><small>Every clip from every closed week, with podiums and downloads. {rank >= 3 ? "Yours with Kingpin." : "Kingpin only."}</small></span>

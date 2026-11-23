@@ -4,6 +4,7 @@ import Link from "@/components/A";
 import { sb } from "@/lib/supabase";
 import { useUser } from "@/lib/useUser";
 import { ART, img, shotFor } from "@/lib/briefingArt";
+import { resetAll } from "@/lib/perfectPlay";
 import { SaveGuide } from "@/components/SaveGuide";
 import { lockScroll } from "@/lib/scrollLock";
 import { CHAPTERS, MISSION_SOURCES, WHO, type Chapter, type Mission } from "@/lib/missions";
@@ -22,6 +23,12 @@ const KEY = "lfl-chapter";
 const PKEY = "lfl-mb-progress";
 const PEEK = 2;
 
+const HELP = [
+  { t: "Set your chapter", p: "Pick the chapter you're on. Everything after it stays hidden, so nothing spoils the story. Clearing a chapter moves you on by itself." },
+  { t: "Open a mission", p: "Tap a mission card for the full briefing: every objective, the pay, what you can miss and the choices inside it." },
+  { t: "Tick as you play", p: "Tick objectives as you go, then mark the mission done. Up next always points to your next story mission." },
+  { t: "On your phone? Use Perfect Play", p: "Perfect Play is the light version: one mission at a time, quick Done buttons, the choices and save points. It shares this progress." },
+];
 const money = (n: number) => `$${n.toLocaleString("en-US")}`;
 const TAG: Record<ChoiceTag, string> = { pro: "Professional", violent: "Violent", rel: "Relationship", money: "Money", item: "Gear", story: "Story", none: "No effect" };
 
@@ -45,6 +52,9 @@ export default function MissionBriefing() {
     try { const v = Number(localStorage.getItem(KEY)); c = Number.isInteger(v) && v >= 0 && v < CHAPTERS.length ? v : 0; } catch {}
     setCur(c); setView(c); setProg(loadProgress());
   }, []);
+  const [help, setHelp] = useState<number | null>(null);
+  const [resetAsk, setResetAsk] = useState(false);
+  useEffect(() => { try { if (!localStorage.getItem("lfl-mb-help")) setHelp(0); } catch {} }, []);
   const saveCur = useCallback((c: number) => { setCur(c); try { localStorage.setItem(KEY, String(c)); } catch {} }, []);
   const saveProg = useCallback((p: Progress) => { setProg(p); try { localStorage.setItem(PKEY, JSON.stringify(p)); localStorage.setItem("lfl-mb-at", String(Date.now())); } catch {} }, []);
 
@@ -119,6 +129,32 @@ export default function MissionBriefing() {
       <p className="dash-kicker"><Link href="/edge" className="underline underline-offset-4">The Edge</Link> · Street, Hustler and Kingpin</p>
       <h1 className="display text-5xl md:text-6xl mt-1">Mission Briefing</h1>
       <p className="mt-2 text-haze max-w-2xl">Play along. Open the mission you&apos;re on, tick each objective as you do it, grab the payout, hit next. Nothing past your chapter is shown.</p>
+
+      <Link href="/edge/play" className="mx-pp">
+        <img src="/brand/live-from-leonida-avatar-180.png" alt="" />
+        <span><b>Perfect Play</b><small>The light version for your phone: one mission at a time, the choices, and the save points. Same progress as this page.</small></span>
+        <em>Open ▶</em>
+      </Link>
+      <div className="mx-tools">
+        <button onClick={() => setHelp(0)}>? How this works</button>
+        <button onClick={() => setResetAsk(true)}>↺ Reset my progress</button>
+      </div>
+      {resetAsk && (
+        <div className="mx-reset" role="alertdialog" aria-label="Reset progress">
+          <p><b>Start over?</b> This clears every mission you ticked, your logged choices on The Road and your save slots, on this device. It can&apos;t be undone.</p>
+          <div><button className="btn btn-ghost" onClick={() => setResetAsk(false)}>Keep my progress</button>
+            <button className="btn btn-hot" onClick={() => { resetAll(); try { localStorage.removeItem("lfl-saves"); } catch {} setProg({ done: [], steps: {} }); saveCur(0); setView(0); setResetAsk(false); setToast("Fresh start · Prologue"); setTimeout(() => setToast(null), 2600); }}>Reset</button></div>
+        </div>
+      )}
+      {help !== null && (
+        <div className="mx-help" role="dialog" aria-label="How Mission Briefing works">
+          <p className="dash-kicker">Step {help + 1} of {HELP.length}</p>
+          <p className="mx-help-t">{HELP[help].t}</p>
+          <p className="mx-help-p">{HELP[help].p}</p>
+          <div className="mx-help-b"><button className="btn btn-ghost" onClick={() => { setHelp(null); try { localStorage.setItem("lfl-mb-help", "1"); } catch {} }}>Close</button>
+            {help < HELP.length - 1 ? <button className="btn btn-hot" onClick={() => setHelp(help + 1)}>Next</button> : <button className="btn btn-hot" onClick={() => { setHelp(null); try { localStorage.setItem("lfl-mb-help", "1"); } catch {} }}>Got it</button>}</div>
+        </div>
+      )}
 
       <section className="mx-hud mt-7" aria-label="Your campaign">
         <div className="mx-ring" style={{ "--p": pct } as React.CSSProperties} role="img" aria-label={`${pct}% of the story done`}>
