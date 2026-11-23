@@ -153,7 +153,7 @@ export default function Mine() {
                   <button onClick={() => setOpen(open === t.id ? null : t.id)}>
                     <span className="mk-seller-av" aria-hidden>{other.slice(0, 1).toUpperCase()}</span>
                     <span><b>{other}</b><small>{iAmBuyer ? "You asked about" : "Asking about"} <i>{titles[t.listing_id] ?? "a clip"}</i></small></span>
-                    <time>{new Date(t.last_at).toLocaleDateString()}</time>
+                    <time>{new Date(t.last_at).toLocaleDateString("en-US")}</time>
                   </button>
                   {open === t.id && (
                     <div className="mk-convo-body">

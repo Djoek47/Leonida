@@ -28,7 +28,7 @@ const DEMO: Entry[] = [
 
 function When({ iso }: { iso: string }) {
   const [t, setT] = useState("");
-  useEffect(() => { setT(new Date(iso).toLocaleDateString()); }, [iso]);
+  useEffect(() => { setT(new Date(iso).toLocaleDateString("en-US")); }, [iso]);
   return <span suppressHydrationWarning>{t}</span>;
 }
 
@@ -79,7 +79,7 @@ export function Wallet({ payoutReady }: { payoutReady: boolean }) {
   const total = entries.reduce((n, e) => n + e.amount_cents, 0);
   const balance = split ? split.available_cents : total;   // what can actually be withdrawn
   const pending = split?.pending_cents ?? 0;
-  const releaseOn = split ? new Date(split.releases_at).toLocaleDateString(undefined, { month: "long", day: "numeric", year: "numeric" }) : "";
+  const releaseOn = split ? new Date(split.releases_at).toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" }) : "";
   const payouts = entries.filter((e) => e.kind === "withdrawal");
 
   async function withdraw(e: React.FormEvent) {

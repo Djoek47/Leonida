@@ -132,7 +132,7 @@ export default function Archive() {
                 <p className="ar-meta">{c.gamertag}{c.platform ? ` · ${c.platform}` : ""}</p>
                 {!week && <p className="ar-week">{c.contest_title}</p>}
                 <div className="ar-foot">
-                  <span>▲ {c.votes} votes</span><span>👁 {(c.view_count ?? 0).toLocaleString()}</span>
+                  <span>▲ {c.votes} votes</span><span>👁 {(c.view_count ?? 0).toLocaleString("en-US")}</span>
                   <button className="ar-dl" onClick={() => download(c)}>⬇ Download</button>
                 </div>
               </div>
@@ -168,7 +168,7 @@ function Player({ clip, onClose, onDownload }: { clip: Clip; onClose: () => void
         <div className="ar-sheet-body">
           <div><p className="ar-kicker">{clip.contest_title}{clip.place ? ` · ${MEDAL[clip.place]} ${PLACE[clip.place]}` : ""}</p>
             <p className="font-black text-xl">{clip.title}</p>
-            <p className="text-haze text-sm">{clip.gamertag} · {clip.votes} votes · {(clip.view_count ?? 0).toLocaleString()} views</p></div>
+            <p className="text-haze text-sm">{clip.gamertag} · {clip.votes} votes · {(clip.view_count ?? 0).toLocaleString("en-US")} views</p></div>
           <button className="btn btn-hot" onClick={onDownload}>⬇ Download</button>
         </div>
       </div>

@@ -51,7 +51,7 @@ function ago(iso: string) {
   const m = Math.max(1, Math.round((Date.now() - +new Date(iso)) / 6e4));
   if (m < 60) return `${m} min ago`;
   const h = Math.round(m / 60); if (h < 24) return `${h} hr ago`;
-  const d = Math.round(h / 24); return d < 30 ? `${d} day${d === 1 ? "" : "s"} ago` : new Date(iso).toLocaleDateString();
+  const d = Math.round(h / 24); return d < 30 ? `${d} day${d === 1 ? "" : "s"} ago` : new Date(iso).toLocaleDateString("en-US");
 }
 const tl = (t: string) => TAG_LABEL[t] ?? t;
 function anonKey() {
@@ -213,7 +213,7 @@ export function ClipsHub({ cat }: { cat: Cat }) {
   const maxVotes = account?.votes ?? tier.votes;
   const votesLeft = Math.max(0, maxVotes - voted.length);
   const tz = round?.timezone ?? stats?.timezone ?? "America/Toronto";
-  const at = (iso: string) => new Date(iso).toLocaleString(undefined, { weekday: "short", month: "short", day: "numeric", hour: "numeric", minute: "2-digit", timeZone: tz, timeZoneName: "short" });
+  const at = (iso: string) => new Date(iso).toLocaleString("en-US", { weekday: "long", hour: "numeric", minute: "2-digit", timeZone: tz, timeZoneName: "short" });
 
   async function vote(r: Row) {
     if (!user) { setMsg("Sign in to vote. It's free."); return; }

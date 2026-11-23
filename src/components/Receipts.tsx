@@ -34,7 +34,7 @@ export function Receipts({ always = false }: { always?: boolean }) {
             <span className="what">
               <b className="truncate">{i.what}</b>
               <small>
-                {new Date(i.at).toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" })}
+                {new Date(i.at).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}
                 {i.number ? ` · ${i.number}` : ""}
                 <span className={`rc-status ml-2 ${i.status === "paid" ? "ok" : ""}`}>{i.status}</span>
               </small>

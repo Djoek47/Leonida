@@ -45,7 +45,7 @@ export default function WalletPage() {
           <div className="who">
             <p className="display text-4xl">{plan.label}</p>
             {paying
-              ? <p className="text-sm text-haze mt-1">{exactMoney(price)} {profile.billing_period === "annual" ? "a year" : "a month"}{profile.current_period_end ? ` · renews ${new Date(profile.current_period_end).toLocaleDateString()}` : ""}</p>
+              ? <p className="text-sm text-haze mt-1">{exactMoney(price)} {profile.billing_period === "annual" ? "a year" : "a month"}{profile.current_period_end ? ` · renews ${new Date(profile.current_period_end).toLocaleDateString("en-US")}` : ""}</p>
               : <p className="text-sm text-haze mt-1">No card on file. Free forever.</p>}
           </div>
           <div className="plan-acts">

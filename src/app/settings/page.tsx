@@ -262,10 +262,10 @@ export default function Settings() {
           <p>
             <strong className="capitalize">{tier === "free" ? "Free" : tier}</strong>
             {paying && profile.current_period_end && (
-              <span className="text-haze"> · renews {new Date(profile.current_period_end).toLocaleDateString()}</span>
+              <span className="text-haze"> · renews {new Date(profile.current_period_end).toLocaleDateString("en-US")}</span>
             )}
           </p>
-          {ends && <p className="w-full text-sm font-semibold text-flamingo">Cancelled. Your perks stay on until {new Date(ends).toLocaleDateString()}, then you move to Free.</p>}
+          {ends && <p className="w-full text-sm font-semibold text-flamingo">Cancelled. Your perks stay on until {new Date(ends).toLocaleDateString("en-US")}, then you move to Free.</p>}
           <div className="flex flex-wrap gap-2">
             <Link href="/pricing" className="btn btn-ghost">{paying ? "Change plan" : "See plans"}</Link>
             {paying && !ends && (

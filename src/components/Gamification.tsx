@@ -201,7 +201,7 @@ function VoteGauge() {
     c.rpc("my_vote_balance").then(({ data }) => setB(((data ?? [])[0] as typeof b) ?? null));
   }, []);
   if (!b) return null;
-  const reset = b.resets_at ? new Date(b.resets_at).toLocaleDateString(undefined, { weekday: "long", month: "long", day: "numeric" }) : "";
+  const reset = b.resets_at ? new Date(b.resets_at).toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric" }) : "";
   return (
     <div className="gauge" title="Only you can see this.">
       <span className="vote-pips" aria-hidden>

@@ -61,7 +61,7 @@ export function PrizeLadder({ payers, variant = "slope", onPick }: { payers: num
 
               <span className="tank-mid">
                 {surface && <span className="tank-flag">We&apos;re here</span>}
-                {next && toGo > 0 && <span className="tank-flag tank-flag-next">{toGo.toLocaleString()} to go</span>}
+                {next && toGo > 0 && <span className="tank-flag tank-flag-next">{toGo.toLocaleString("en-US")} to go</span>}
               </span>
 
               <span className="tank-right">

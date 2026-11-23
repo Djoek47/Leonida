@@ -319,7 +319,7 @@ export function LeonidaMap() {
       <aside className="lmap-side">
         <div className="lmap-head">
           <span className="lmap-vi" aria-hidden>VI</span>
-          <div><b>Leonida map</b><small>{places.length.toLocaleString()} places · tap any for details</small></div>
+          <div><b>Leonida map</b><small>{places.length.toLocaleString("en-US")} places · tap any for details</small></div>
         </div>
         <label className="lmap-search">
           <span aria-hidden>🔎</span>

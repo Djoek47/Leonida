@@ -1,5 +1,5 @@
 "use client";
-import { uploadPresigned } from "@vercel/blob/client";
+import { upload } from "@vercel/blob/client";
 import { sb } from "@/lib/supabase";
 
 /** Upload a video straight from the browser into the private Vercel Blob store ("lfl-videos").
@@ -12,7 +12,7 @@ export function uploadVideo(file: File, pathname: string, onProgress: (sent: num
   const done = (async () => {
     const token = (await sb()?.auth.getSession())?.data.session?.access_token;
     if (!token) throw new Error("Sign in again, then retry the upload.");
-    await uploadPresigned(pathname, file, {
+    await upload(pathname, file, {
       access: "private",
       handleUploadUrl: "/api/blob/upload",
       headers: { authorization: `Bearer ${token}` },

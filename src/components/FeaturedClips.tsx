@@ -35,7 +35,7 @@ export function FeaturedClips({ clips }: { clips: Clip[] }) {
   const eligible = clips.filter((c) => ["approved", "featured"].includes(c.status)
     && !rows.some((r) => r.clip_id === c.id && ["scheduled", "active"].includes(r.status)));
   const title = (id: string) => clips.find((c) => c.id === id)?.title ?? "Clip";
-  const fmt = (t: string | null) => (t ? new Date(t).toLocaleString(undefined, { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" }) : "—");
+  const fmt = (t: string | null) => (t ? new Date(t).toLocaleString("en-US", { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" }) : "—");
   const left = (t: string | null) => {
     if (!t) return "";
     const ms = new Date(t).getTime() - now;

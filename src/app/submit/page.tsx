@@ -80,8 +80,8 @@ function RoundWindow() {
   const closes = new Date(c.voting_closes).getTime();
   const now = Date.now();
   const live = now >= opens && now < closes && !["closed", "paid"].includes(c.status);
-  const when = (t: number) => new Date(t).toLocaleString(undefined,
-    { weekday: "long", month: "short", day: "numeric", hour: "numeric", minute: "2-digit" });
+  const when = (t: number) => new Date(t).toLocaleString("en-US",
+    { weekday: "long", hour: "numeric", minute: "2-digit", timeZone: "America/Toronto", timeZoneName: "short" });
   return (
     <section className={`round-window${live ? "" : " shut"}`}>
       <p className="rw-k">{live ? "● Round open" : "Next round"}</p>
@@ -204,7 +204,7 @@ function SendForm({ userId, cap, usedWeek, resetsAt, gamertag, platform }: { use
       {entered && (
         <p className="mt-2 font-bold">
           {entered.state === "scheduled"
-            ? <>Submitted for the next weekly round. Status: Pending review. Voting opens {new Date(entered.starts_at).toLocaleString(undefined, { weekday: "long", month: "short", day: "numeric", hour: "numeric", minute: "2-digit", timeZone: entered.timezone })} ({entered.timezone.replace("_", " ")} time).</>
+            ? <>Submitted for the next weekly round. Status: Pending review. Voting opens {new Date(entered.starts_at).toLocaleString("en-US", { weekday: "long", hour: "numeric", minute: "2-digit", timeZone: entered.timezone })} ({entered.timezone.replace("_", " ")} time).</>
             : <>Submitted for {entered.title}. Status: Pending review.</>}
         </p>
       )}
@@ -275,8 +275,8 @@ function SendForm({ userId, cap, usedWeek, resetsAt, gamertag, platform }: { use
                 <span>
                   <b>{r.title}</b>
                   <small>
-                    Open until {new Date(r.voting_closes).toLocaleString(undefined,
-                      { weekday: "short", month: "short", day: "numeric", hour: "numeric", minute: "2-digit", timeZone: "America/Toronto", timeZoneName: "short" })}
+                    Open until {new Date(r.voting_closes).toLocaleString("en-US",
+                      { weekday: "long", hour: "numeric", minute: "2-digit", timeZone: "America/Toronto", timeZoneName: "short" })}
                   </small>
                 </span>
               </label>

@@ -14,7 +14,7 @@ export const quotaOf = (allowance: number, used: number, resets_at: string | nul
 export function resetLabel(iso: string | null): string {
   if (!iso) return "when this round\u2019s entries close";
   const d = new Date(iso);
-  const day = new Intl.DateTimeFormat("en-US", { timeZone: "America/New_York", weekday: "short", month: "short", day: "numeric" }).format(d);
+  const day = new Intl.DateTimeFormat("en-US", { timeZone: "America/New_York", weekday: "long" }).format(d);
   const t = new Intl.DateTimeFormat("en-US", { timeZone: "America/New_York", hour: "numeric", minute: "2-digit" }).format(d)
     .replace(" AM", " a.m.").replace(" PM", " p.m.");
   return `${day}, ${t} Eastern Time`;

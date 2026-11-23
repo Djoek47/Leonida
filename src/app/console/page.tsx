@@ -156,7 +156,7 @@ function Overview({ go }: { go: (t: Tab) => void }) {
       {st.contest && (
         <p className="mt-6 text-sm font-semibold">
           Round: <b>{st.contest.title}</b> · {st.contest.status} · pool {money(st.contest.pool_cents)} ·
-          voting closes {new Date(st.contest.voting_closes).toLocaleString()}
+          voting closes {new Date(st.contest.voting_closes).toLocaleString("en-US")}
         </p>
       )}
       <dl className="mt-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
@@ -170,7 +170,7 @@ function Overview({ go }: { go: (t: Tab) => void }) {
       </dl>
       <h2 className="display mt-10 text-2xl">Money</h2>
       <div className="mt-3"><MoneyPanel compact /></div>
-      <p className="mt-6 text-xs text-haze">Refreshes every 30 seconds{at ? ` · last at ${at.toLocaleTimeString()}` : ""}.</p>
+      <p className="mt-6 text-xs text-haze">Refreshes every 30 seconds{at ? ` · last at ${at.toLocaleTimeString("en-US")}` : ""}.</p>
     </div>
   );
 }
@@ -218,7 +218,7 @@ function Gamertags() {
               <p className="text-xl font-extrabold">{r.gamertag}</p>
               <p className="text-sm text-haze">{(platformName as Record<string, string>)[r.platform] ?? r.platform} · {r.display_name} · {r.clips} clip{r.clips === 1 ? "" : "s"}</p>
             </div>
-            <p className="text-xs text-haze mt-1">Asked {r.requested_at ? new Date(r.requested_at).toLocaleString() : "—"}</p>
+            <p className="text-xs text-haze mt-1">Asked {r.requested_at ? new Date(r.requested_at).toLocaleString("en-US") : "—"}</p>
             {r.verify_method === "photo" ? (
               photos[r.id]
                 // eslint-disable-next-line @next/next/no-img-element
@@ -278,7 +278,7 @@ function People() {
             ["Free", bt.free ?? 0, "streaming and voting"], ["Sent a clip", sn("uploaders"), "people who uploaded"],
             ["In this round", sn("clips_in_round"), "clips competing"], ["To review", sn("clips_pending"), "clips waiting"]] as [string, number, string][]).map(([k, v, d]) => (
             <div key={k} className="set-card !mt-0 !p-3"><dt className="text-[11px] font-black uppercase tracking-wide text-haze">{k}</dt>
-              <dd className="display text-3xl">{v.toLocaleString()}</dd><dd className="text-[11px] text-haze">{d}</dd></div>
+              <dd className="display text-3xl">{v.toLocaleString("en-US")}</dd><dd className="text-[11px] text-haze">{d}</dd></div>
           ))}
         </dl>
       )}
@@ -308,7 +308,7 @@ function People() {
                     <td className="py-2.5 pr-4">{hide(money(r.wallet_cents))}</td>
                     <td className="py-2.5 pr-4">{hide(money(r.pending_cents))}</td>
                     <td className="py-2.5 pr-4">{r.clips}</td>
-                    <td className="py-2.5 pr-4">{new Date(r.created_at).toLocaleDateString()}</td>
+                    <td className="py-2.5 pr-4">{new Date(r.created_at).toLocaleDateString("en-US")}</td>
                   </tr>
                 );
               })}
@@ -366,7 +366,7 @@ function Cashouts() {
             <li key={r.id}>
               <span className="what">
                 <b>{names[r.creator_id] ?? r.creator_id.slice(0, 8)}</b>
-                <small>{r.method} · {r.handle ?? "no handle saved"} · asked {new Date(r.created_at).toLocaleString()}</small>
+                <small>{r.method} · {r.handle ?? "no handle saved"} · asked {new Date(r.created_at).toLocaleString("en-US")}</small>
               </span>
               <span className="amt in">{money(r.amount_cents)}</span>
               <span className="flex gap-1.5">
@@ -545,7 +545,7 @@ function Review() {
             {clip.for_contest === false ? " · not for the contest" : ""}
           </p>
           {clip.for_contest !== false && <p className="text-sm font-bold">Entered for: <span className="text-gulf">{(clip as { contest?: { title?: string } | null }).contest?.title ?? "next weekly round"}</span>. Approve puts it in that contest; Disapprove keeps it out.</p>}
-          <p className="text-xs text-haze">In {waited < 1 ? "under an hour" : `${waited} hours`} · sent {new Date(clip.created_at).toLocaleString()}</p>
+          <p className="text-xs text-haze">In {waited < 1 ? "under an hour" : `${waited} hours`} · sent {new Date(clip.created_at).toLocaleString("en-US")}</p>
           <label className="grid gap-1 text-sm font-bold">Edited version link (Higgsfield or FFmpeg cut)<input name="edited" className="field font-normal" placeholder="https://" defaultValue={clip.edited_url ?? ""} /></label>
           <label className="grid gap-1 text-sm font-bold">Seconds into the compilation video<input name="ts" type="number" min={0} className="field font-normal" defaultValue={clip.youtube_timestamp ?? ""} /></label>
           <label className="grid gap-1 text-sm font-bold">Note if not selecting (sent to the member)<input name="reason" className="field font-normal" placeholder="Not GTA VI, too short, someone else's footage…" /></label>
@@ -834,8 +834,8 @@ function PoolPanel() {
       <ul className="mt-2 text-sm text-haze grid gap-1">
         {BRACKETS.map((b) => (
           <li key={b.label}>
-            <b className="text-foam">{b.label} members</b> → ${b.pool.toLocaleString()} ·
-            {" "}gold ${b.gold.toLocaleString()}, silver ${b.silver.toLocaleString()}, bronze ${b.bronze.toLocaleString()}
+            <b className="text-foam">{b.label} members</b> → ${b.pool.toLocaleString("en-US")} ·
+            {" "}gold ${b.gold.toLocaleString("en-US")}, silver ${b.silver.toLocaleString("en-US")}, bronze ${b.bronze.toLocaleString("en-US")}
           </li>
         ))}
       </ul>
@@ -1137,7 +1137,7 @@ function Wallets() {
               <li key={m.id} className="bg-ink px-4 py-3 flex items-baseline justify-between gap-4">
                 <span className="min-w-0">
                   <span className="font-semibold block truncate">{m.kind.replace(/_/g, " ")}</span>
-                  <span className="text-xs text-haze">{new Date(m.created_at).toLocaleString()}{m.note ? ` · ${m.note}` : ""}</span>
+                  <span className="text-xs text-haze">{new Date(m.created_at).toLocaleString("en-US")}{m.note ? ` · ${m.note}` : ""}</span>
                 </span>
                 <span className={`font-black tabular-nums shrink-0 ${m.amount_cents > 0 ? "text-gulf" : "text-flamingo"}`}>
                   {m.amount_cents > 0 ? "+" : "−"}{money(Math.abs(m.amount_cents))}
@@ -1241,7 +1241,7 @@ function SupportDesk() {
             <p className="font-extrabold">{t.subject} <span className="text-xs text-haze">#{t.ref} · {t.topic}</span></p>
             <span className={`feat-chip ${t.status === "open" ? "scheduled" : "active"}`}>{t.status}</span>
           </div>
-          <p className="text-sm text-haze">{t.email} · {new Date(t.created_at).toLocaleString()}{t.context?.tier ? ` · ${String(t.context.tier)}` : ""}{t.context?.gamertag ? ` · ${String(t.context.gamertag)}` : ""}</p>
+          <p className="text-sm text-haze">{t.email} · {new Date(t.created_at).toLocaleString("en-US")}{t.context?.tier ? ` · ${String(t.context.tier)}` : ""}{t.context?.gamertag ? ` · ${String(t.context.gamertag)}` : ""}</p>
           <p className="mt-2 whitespace-pre-wrap">{t.message}</p>
           {t.reply && <p className="mt-2 rounded bg-ink-2 p-2 text-sm"><b>Reply sent:</b> {t.reply}</p>}
           <textarea className="field mt-3 min-h-[5rem]" placeholder="Reply (emails the member)…" value={draft[t.id] ?? ""} onChange={(e) => setDraft({ ...draft, [t.id]: e.target.value })} />
@@ -1266,7 +1266,7 @@ function RoundResults() {
     <ul className="grid gap-3">{rows.map((r) => (
       <li key={r.contest_id + r.result_version} className="rounded-lg border-2 border-line bg-ink p-4">
         <p className="font-extrabold">{r.outcome === "winner" ? "Winner decided" : r.outcome === "no_entries" ? "No entries — no winner" : "Needs review: " + r.outcome.replace("review_", "").replace("_", " ")}</p>
-        <p className="text-sm text-haze">Round {r.contest_id.slice(0, 8)} · finalized {new Date(r.finalized_at).toLocaleString()}</p>
+        <p className="text-sm text-haze">Round {r.contest_id.slice(0, 8)} · finalized {new Date(r.finalized_at).toLocaleString("en-US")}</p>
         <ol className="mt-2 text-sm">{r.tally.slice(0, 5).map((t, i) => <li key={t.clip}>{i + 1}. {t.clip.slice(0, 8)} — {t.votes} votes</li>)}</ol>
       </li>
     ))}</ul>
@@ -1338,7 +1338,7 @@ function Briefings() {
               <li key={r.id} className="flex flex-wrap items-center gap-3 rounded-lg border-2 border-line bg-ink p-3">
                 <div className="min-w-0 flex-1">
                   <p className="font-extrabold truncate">{r.title}</p>
-                  <p className="text-xs text-haze">{r.published ? `Published ${r.published_at ? new Date(r.published_at).toLocaleDateString() : ""}` : "Draft"}{r.mission ? ` · ${r.mission}` : ""}</p>
+                  <p className="text-xs text-haze">{r.published ? `Published ${r.published_at ? new Date(r.published_at).toLocaleDateString("en-US") : ""}` : "Draft"}{r.mission ? ` · ${r.mission}` : ""}</p>
                 </div>
                 <button className="text-sm font-bold underline" onClick={() => { setEdit(r); window.scrollTo({ top: 0, behavior: "smooth" }); }}>Edit</button>
                 <button className="text-sm font-bold underline" onClick={() => toggle(r)}>{r.published ? "Unpublish" : "Publish"}</button>

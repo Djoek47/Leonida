@@ -177,7 +177,7 @@ export default function ListingPage({ params }: { params: Promise<{ id: string }
                   {inbox.map((r) => (
                     <li key={r.id}>
                       <button onClick={() => setOpenThread(openThread === r.id ? null : r.id)} className={new Date(r.last_at) > new Date(r.seller_seen_at) ? "is-new" : ""}>
-                        <b>{r.name}</b><small>{new Date(r.last_at).toLocaleDateString()}</small>
+                        <b>{r.name}</b><small>{new Date(r.last_at).toLocaleDateString("en-US")}</small>
                       </button>
                       {openThread === r.id && user && <Thread threadId={r.id} me={user.id} otherName={r.name} role="seller" />}
                     </li>

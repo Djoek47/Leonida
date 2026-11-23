@@ -98,7 +98,7 @@ export default function Support() {
                 {mine.length === 0 ? <p className="mt-1 text-sm text-haze">None yet.</p> : (
                   <ul className="mt-2 grid gap-3">{mine.map((t) => (
                     <li key={t.ref} className="text-sm"><b>{t.subject}</b> <span className={`feat-chip ${t.status === "open" ? "scheduled" : "active"}`}>{t.status}</span>
-                      <p className="text-haze text-xs">#{t.ref} · {new Date(t.created_at).toLocaleDateString()}</p>
+                      <p className="text-haze text-xs">#{t.ref} · {new Date(t.created_at).toLocaleDateString("en-US")}</p>
                       {t.reply && <p className="mt-1 rounded bg-ink-2 p-2">{t.reply}</p>}</li>
                   ))}</ul>
                 )}

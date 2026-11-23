@@ -43,7 +43,7 @@ export default function PoolBug() {
         <p className="ov-tag text-[12px] tracking-[0.25em]">ON THE STACK</p>
         <p className="led-text display text-[56px] leading-none my-1">{dollars(r.pool_cents)}</p>
         <p className="text-white/75 text-[15px] font-bold">
-          {r.paying_users.toLocaleString()} members{left ? ` · ${left} left` : ""}
+          {r.paying_users.toLocaleString("en-US")} members{left ? ` · ${left} left` : ""}
         </p>
       </div>
     </div>
