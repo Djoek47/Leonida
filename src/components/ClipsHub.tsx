@@ -2,6 +2,7 @@
 import { playUrl } from "@/lib/media";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { lockScroll } from "@/lib/scrollLock";
+import { useFrameFullscreen, lockedVideoProps } from "@/lib/frameFullscreen";
 import Link from "@/components/A";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { sb } from "@/lib/supabase";
@@ -508,6 +509,7 @@ function Player({ r, list, fav, voted, mine, showVote, onClose, onPick, onFav, o
   const [views, setViews] = useState(r.view_count);
   const counted = useRef<string | null>(null);
   const frame = useRef<HTMLDivElement>(null);
+  const fs = useFrameFullscreen(frame);
   useEffect(() => {
     setUrl(null); setErr(""); setViews(r.view_count);
     const c = sb(); const path = r.watermark_path ?? r.storage_path;
@@ -530,10 +532,10 @@ function Player({ r, list, fav, voted, mine, showVote, onClose, onPick, onFav, o
     <div className="hub-scrim theater" onClick={onClose}>
       <div role="dialog" aria-modal="true" aria-label={r.title} className="hub-theater" onClick={(e) => e.stopPropagation()}>
         <div className="hub-stage">
-          <div ref={frame} className="clip-frame relative aspect-video bg-black">
+          <div ref={frame} className={`clip-frame relative aspect-video bg-black${fs.frameClass}`}>
             {url && isFile && (
-              <video key={url} src={url} poster={thumbOf(r)} controls autoPlay playsInline preload="auto" onPlay={counted1}
-                controlsList="nodownload noremoteplayback" disablePictureInPicture onContextMenu={(e) => e.preventDefault()} className="h-full w-full object-contain" />
+              <video key={url} src={url} poster={thumbOf(r)} controls autoPlay {...lockedVideoProps} preload="auto" onPlay={counted1}
+                onDoubleClick={fs.onVideoDoubleClick} onContextMenu={(e) => e.preventDefault()} className="h-full w-full object-contain" />
             )}
             {url && !isFile && <div className="grid h-full place-items-center"><a href={url} target="_blank" rel="noreferrer" onClick={counted1} className="btn btn-hot">Watch on the original site ↗</a></div>}
             {!url && !err && <div className="grid h-full place-items-center"><span className="block size-8 animate-spin rounded-full border-2 border-white border-t-transparent" /></div>}
@@ -542,6 +544,9 @@ function Player({ r, list, fav, voted, mine, showVote, onClose, onPick, onFav, o
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img src="/brand/live-from-leonida-avatar-180.png" alt="" /><span><b>@{r.gamertag}</b><i>livefromleonida.com</i></span>
             </div>}
+            {url && isFile && <button type="button" onClick={fs.toggle} className="clip-full" aria-label="Fullscreen">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg>
+            </button>}
           </div>
           <div className="mt-4 flex flex-wrap items-start gap-4">
             <div className="min-w-0 flex-1">

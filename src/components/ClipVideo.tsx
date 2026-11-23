@@ -2,6 +2,7 @@
 import { playUrl } from "@/lib/media";
 import { useRef, useState } from "react";
 import { sb } from "@/lib/supabase";
+import { useFrameFullscreen, lockedVideoProps } from "@/lib/frameFullscreen";
 import type { Clip } from "@/lib/api";
 
 /** Plays an uploaded clip in place.
@@ -32,24 +33,20 @@ export function ClipVideo({ clip, poster }: { clip: Clip; poster?: string }) {
 
   // Our fullscreen, not the browser's: the whole frame goes fullscreen, so the
   // watermark stays on top of the picture instead of being left behind.
-  function full() {
-    const el = frame.current; if (!el) return;
-    if (document.fullscreenElement) document.exitFullscreen(); else el.requestFullscreen?.();
-  }
+  const fs = useFrameFullscreen(frame);
 
   if (url) {
     return (
-      <div ref={frame} className="clip-frame absolute inset-0 bg-black">
-        <video src={url} poster={poster} controls autoPlay playsInline
-          controlsList="nofullscreen nodownload noremoteplayback" disablePictureInPicture
-          onContextMenu={(e) => e.preventDefault()}
+      <div ref={frame} className={`clip-frame absolute inset-0 bg-black${fs.frameClass}`}>
+        <video src={url} poster={poster} controls autoPlay {...lockedVideoProps}
+          onDoubleClick={fs.onVideoDoubleClick} onContextMenu={(e) => e.preventDefault()}
           className="h-full w-full object-contain" />
         <div className="clip-mark" aria-hidden>
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src="/brand/live-from-leonida-avatar-180.png" alt="" />
           <span><b>@{clip.gamertag}</b><i>livefromleonida.com</i></span>
         </div>
-        <button type="button" onClick={full} className="clip-full" aria-label="Fullscreen">
+        <button type="button" onClick={fs.toggle} className="clip-full" aria-label="Fullscreen">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg>
         </button>
       </div>

@@ -50,7 +50,7 @@ const nav = [
   { href: "/edge", label: "The edge" },
   { href: "/leonida", label: "Leonida guide" },
   { href: "/pricing", label: "Join" },
-  { href: "/chat", label: "Chat" },
+  { href: "/online", label: "Online & RP" },
 ];
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

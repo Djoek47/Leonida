@@ -1013,6 +1013,12 @@ body:has(.overlay-root) > *:not(:has(.overlay-root)) { display: none; }
   border-radius: 8px; background: rgba(0,0,0,.55); color: #fff; }
 .clip-full svg { width: 1.1rem; height: 1.1rem; }
 .clip-frame:fullscreen .clip-mark { font-size: 22px; }
+/* Fill-the-screen fallback where element fullscreen isn't available (iPhone Safari): watermark stays on. */
+.clip-frame.is-pseudo-full { position: fixed !important; inset: 0 !important; z-index: 2147483000; width: 100vw !important; height: 100dvh !important; aspect-ratio: auto !important; border-radius: 0 !important; background: #000; }
+.clip-frame.is-pseudo-full video { width: 100%; height: 100%; object-fit: contain; }
+.clip-frame.is-pseudo-full .clip-mark, .clip-frame:fullscreen .clip-mark { z-index: 5; }
+.clip-frame.is-pseudo-full .clip-full { bottom: calc(3.6rem + env(safe-area-inset-bottom)); }
+.ar-video.clip-frame video { width: 100%; height: 100%; object-fit: contain; }
 
 /* ───────── Dashboard, dressed in the member's own plan ─────────
    The whole page re-points the site's colour tokens, so every panel, field,
@@ -3944,8 +3950,20 @@ a.mk-card:hover, a.mk-card:focus-visible { transform: translateY(-4px); border-c
 
 /* ───────── Perfect Play (light, phone-first companion) ───────── */
 .pp-wrap { position: fixed; inset: 0; z-index: 90; display: grid; place-items: center; background: radial-gradient(120% 80% at 50% 0%, #2a1250 0%, #0b0614 60%); }
-.pp-app { position: relative; width: 100%; height: 100dvh; max-width: 460px; display: flex; flex-direction: column; overflow: hidden; color: #fff; background: linear-gradient(180deg, #160b2a 0%, #0d0718 100%); font-family: var(--font-overpass), system-ui, sans-serif; }
-@media (min-width: 700px) { .pp-app { height: min(920px, calc(100dvh - 40px)); border-radius: 34px; border: 1.5px solid rgba(255,255,255,.12); box-shadow: 0 40px 90px -30px #000, 0 0 0 10px #05030a; } }
+.pp-app { position: relative; width: 100%; height: 100dvh; max-width: none; display: flex; flex-direction: column; overflow: hidden; color: #fff; background: linear-gradient(180deg, #160b2a 0%, #0d0718 100%); font-family: var(--font-overpass), system-ui, sans-serif; }
+/* Fits the screen it's on: full-bleed on phones (incl. foldables), full-screen on PC with content centred at a readable width. No device frame. */
+.pp-top, .pp-chapters, .pp-main { width: 100%; margin-inline: auto; }
+@media (min-width: 700px) {
+  .pp-app { background: radial-gradient(120% 70% at 50% 0%, #2a1250 0%, #160b2a 45%, #0d0718 100%); }
+  .pp-top, .pp-chapters, .pp-main { max-width: 860px; }
+  .pp-top { padding-top: 1.2rem; }
+  .pp-main { padding-inline: 1.2rem; gap: 1rem; }
+  .pp-ch { flex-basis: 72px; }
+  .pp-shot { height: 260px; background-position: center 28%; }
+  .pp-sheet-bg { justify-content: center; }
+  .pp-sheet { max-width: 760px; }
+}
+@media (min-width: 1200px) { .pp-top, .pp-chapters, .pp-main { max-width: 980px; } }
 .pp-k { font-size: .66rem; font-weight: 900; letter-spacing: .16em; text-transform: uppercase; color: rgba(255,255,255,.62); }
 .pp-top { display: flex; align-items: center; gap: .5rem; padding: max(.8rem, env(safe-area-inset-top)) .9rem .5rem; }
 .pp-icon { width: 38px; height: 38px; border-radius: 12px; display: grid; place-items: center; font-weight: 900; font-size: 1.1rem; background: rgba(255,255,255,.07); color: #fff; }
@@ -4104,3 +4122,49 @@ a.mk-card:hover, a.mk-card:focus-visible { transform: translateY(-4px); border-c
 .claim-thumb { aspect-ratio: 16 / 9; background: linear-gradient(135deg, #2a1f10, #0f0a05); } .claim-thumb img { width: 100%; height: 100%; object-fit: cover; }
 .claim-meta { display: grid; gap: .1rem; padding: .55rem .7rem .7rem; } .claim-meta b { font-weight: 800; line-height: 1.2; }
 .claim-meta small { font-size: .76rem; color: var(--haze); } .claim-meta em { font-style: normal; font-size: .74rem; font-weight: 800; color: var(--gulf); }
+
+/* ——— Online & RP: the closed road, with an intel board underneath ——— */
+.ol-road { min-height: 72vh; }
+.ol-status .edge-cell b { letter-spacing: .06em; }
+.ol-main { position: relative; display: grid; gap: 1.6rem; padding: 2.4rem 1rem 4rem; color: #f2e7d2;
+  background: linear-gradient(#0b0906, #0f0c09 40%, #0b0906); }
+.ol-main > * { width: min(100%, 52rem); margin-inline: auto; }
+.ol-switch { display: grid; grid-template-columns: 1fr 1fr; gap: .6rem; }
+.ol-switch button { display: grid; gap: .15rem; padding: .9rem 1rem; border-radius: 12px; text-align: left; font-weight: 900; font-size: 1.15rem;
+  color: #a9977a; background: rgba(255,255,255,.03); border: 1px solid rgba(217,180,106,.22); transition: all .2s; }
+.ol-switch button span { font-size: .62rem; letter-spacing: .2em; text-transform: uppercase; color: #8d7c62; }
+.ol-switch button.is-on { color: #f2e7d2; border-color: #e8842b; background: linear-gradient(135deg, rgba(232,132,43,.16), rgba(232,132,43,.04)); box-shadow: 0 12px 30px -16px rgba(232,132,43,.8); }
+.ol-switch button.is-on span { color: #e8842b; }
+.ol-lane { display: grid; gap: 1rem; animation: edge-pop .45s ease both; }
+.ol-h { font-weight: 900; font-stretch: 80%; font-size: clamp(1.6rem, 4vw, 2.2rem); line-height: 1.05; }
+.ol-h3 { margin-top: .6rem; font-size: .7rem; font-weight: 900; letter-spacing: .22em; text-transform: uppercase; color: #e0bd78; }
+/* the status board: a departures board for features */
+.ol-board { display: grid; border-radius: 12px; overflow: hidden; border: 2px solid #2a2219; background: #050302; }
+.ol-board li { display: flex; justify-content: space-between; align-items: center; gap: 1rem; padding: .75rem 1rem; border-top: 1px solid #1c160f; }
+.ol-board li:first-child { border-top: 0; }
+.ol-board span { font-size: .85rem; font-weight: 700; color: #a9977a; }
+.ol-board b { display: flex; align-items: center; gap: .5rem; text-align: right; font-family: "Doto", monospace; font-weight: 900; font-size: .95rem; color: #ff8c3c; text-shadow: 0 0 8px rgba(255,120,40,.55); }
+.ol-board b i { flex: none; width: 8px; height: 8px; border-radius: 50%; background: #ff6a2a; box-shadow: 0 0 8px rgba(255,106,42,.9); }
+.ol-board li.is-ok b { color: #5fe3a1; text-shadow: 0 0 8px rgba(60,220,140,.5); }
+.ol-board li.is-ok b i { background: #2ef2a0; box-shadow: 0 0 8px rgba(46,242,160,.9); }
+@media (max-width: 520px) { .ol-board li { flex-direction: column; align-items: flex-start; gap: .25rem; } .ol-board b { text-align: left; } }
+/* the intel feed */
+.ol-feed { display: grid; gap: .9rem; position: relative; padding-left: 1.2rem; }
+.ol-feed::before { content: ""; position: absolute; left: .3rem; top: .4rem; bottom: .4rem; width: 2px; background: repeating-linear-gradient(#d9b44a 0 10px, transparent 10px 20px); opacity: .5; }
+.ol-feed li { position: relative; display: grid; gap: .35rem; animation: edge-pop .5s cubic-bezier(.2,1.4,.4,1) both; animation-delay: calc(var(--i, 0) * .07s); }
+.ol-feed li::before { content: ""; position: absolute; left: -1.2rem; top: .3rem; width: 12px; height: 12px; border-radius: 50%; background: #0b0906; border: 2px solid #e8842b; }
+.ol-when { display: flex; align-items: center; gap: .6rem; font-size: .72rem; font-weight: 900; letter-spacing: .08em; text-transform: uppercase; color: #8d7c62; }
+.ol-tag { font-style: normal; padding: .12rem .5rem; border-radius: 999px; font-size: .62rem; letter-spacing: .12em; border: 1px solid; }
+.ol-tag.is-confirmed { color: #5fe3a1; border-color: rgba(95,227,161,.5); background: rgba(46,242,160,.08); }
+.ol-tag.is-reported { color: #ffcf6a; border-color: rgba(255,207,106,.5); background: rgba(255,190,60,.08); }
+.ol-tag.is-datamine { color: #8fd0ff; border-color: rgba(143,208,255,.5); background: rgba(80,170,255,.08); }
+.ol-card b { font-size: 1rem; color: #f2e7d2; }
+.ol-card span { display: block; margin-top: .3rem; font-size: .88rem; line-height: 1.55; color: #c9b896; }
+.ol-card small { display: block; margin-top: .5rem; font-size: .7rem; font-weight: 800; letter-spacing: .06em; color: #8d7c62; }
+.ol-meanwhile { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 1rem; padding: 1.1rem 1.2rem; border-radius: 14px;
+  background: linear-gradient(135deg, rgba(0,112,74,.35), rgba(0,112,74,.12)); border: 2px solid rgba(255,255,255,.18); }
+.ol-k { font-size: .66rem; font-weight: 900; letter-spacing: .2em; text-transform: uppercase; color: #9ff0c8; }
+.ol-mt { margin-top: .2rem; font-weight: 800; color: #fff; }
+.ol-ctas { display: flex; gap: .6rem; flex-wrap: wrap; }
+.ol-foot { font-size: .74rem; line-height: 1.6; color: #8d7c62; }
+@media (prefers-reduced-motion: reduce) { .ol-lane, .ol-feed li { animation: none; } }

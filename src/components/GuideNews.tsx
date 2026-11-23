@@ -24,7 +24,7 @@ export function GuideNews() {
       <div className="mt-10">
         <TopicCards />
       </div>
-      <p className="mt-10 text-sm text-haze">Got a source we missed? Drop it in <Link href="/chat" className="underline">Chat</Link>.</p>
+      <p className="mt-10 text-sm text-haze">Waiting on GTA Online or RP? Follow it on <Link href="/online" className="underline">Online &amp; RP</Link>.</p>
     </section>
   );
 }

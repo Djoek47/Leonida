@@ -3,6 +3,7 @@ import { playUrl } from "@/lib/media";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Link from "@/components/A";
 import { sb } from "@/lib/supabase";
+import { useFrameFullscreen, lockedVideoProps } from "@/lib/frameFullscreen";
 import { useUser } from "@/lib/useUser";
 
 /** Kingpin clip archive: every clip from every closed week, its placement and votes, playable and
@@ -155,13 +156,24 @@ function Player({ clip, onClose, onDownload }: { clip: Clip; onClose: () => void
     if (!sb() || !path) { setUrl(null); return; }
     playUrl(clip).then(setUrl);
   }, [clip]);
+  const frame = useRef<HTMLDivElement>(null);
+  const fs = useFrameFullscreen(frame);
   useEffect(() => { const k = (e: KeyboardEvent) => e.key === "Escape" && onClose(); addEventListener("keydown", k); return () => removeEventListener("keydown", k); }, [onClose]);
   return (
     <div className="ar-modal" role="dialog" aria-modal="true" aria-label={clip.title} onClick={onClose}>
       <div className="ar-sheet" onClick={(e) => e.stopPropagation()}>
         <button className="ar-x" onClick={onClose} aria-label="Close">✕</button>
-        <div className="ar-video">
-          {url ? <video src={url} poster={thumb(clip)} controls autoPlay playsInline /> : url === null ? (
+        <div ref={frame} className={`ar-video clip-frame relative${fs.frameClass}`}>
+          {url ? <>
+            <video src={url} poster={thumb(clip)} controls autoPlay {...lockedVideoProps} onDoubleClick={fs.onVideoDoubleClick} onContextMenu={(e) => e.preventDefault()} />
+            <div className="clip-mark" aria-hidden>
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src="/brand/live-from-leonida-avatar-180.png" alt="" /><span><b>@{clip.gamertag}</b><i>livefromleonida.com</i></span>
+            </div>
+            <button type="button" onClick={fs.toggle} className="clip-full" aria-label="Fullscreen">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg>
+            </button>
+          </> : url === null ? (
             clip.source_url ? <a href={clip.source_url} target="_blank" rel="noopener noreferrer" className="btn btn-hot">Watch on the original site ↗</a> : <p className="text-haze">No playable file for this clip.</p>
           ) : <p className="text-haze">Loading…</p>}
         </div>
