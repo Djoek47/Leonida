@@ -12,7 +12,7 @@ import { Research } from "./Research";
 import { News } from "./News";
 import { Market } from "./Market";
 
-type Tab = "overview" | "cashouts" | "review" | "gamertags" | "contest" | "payouts" | "creators" | "wallets" | "people" | "claims" | "drops" | "staff" | "support" | "rounds" | "money" | "presets" | "briefings" | "research" | "news" | "market";
+type Tab = "overview" | "cashouts" | "review" | "gamertags" | "contest" | "payouts" | "creators" | "wallets" | "people" | "claims" | "drops" | "staff" | "support" | "rounds" | "money" | "presets" | "briefings" | "research" | "news" | "market" | "overlays";
 type Row = Record<string, unknown> & { id: string };
 
 export default function Admin() {
@@ -36,7 +36,7 @@ const NAV: { group: string; items: [Tab, string, string?][] }[] = [
   { group: "Today", items: [["overview", "Overview"], ["review", "Clip queue", "clips_pending"], ["support", "Support", "support_open"], ["gamertags", "Gamertags", "gamertags_pending"], ["claims", "Claims", "claims_open"]] },
   { group: "Money", items: [["money", "Money"], ["cashouts", "Cash-out requests", "cashouts_waiting"], ["payouts", "Prize payouts", "prizes_waiting"], ["creators", "Creator payouts"], ["wallets", "Member money"]] },
   { group: "Rounds", items: [["contest", "Weekly round"], ["presets", "Upcoming weeks"], ["rounds", "Round results"], ["drops", "Daily Drops"]] },
-  { group: "Content", items: [["briefings", "Mission Briefing"], ["research", "Research"], ["news", "News + ticker"], ["market", "Clip Market"]] },
+  { group: "Content", items: [["briefings", "Mission Briefing"], ["research", "Research"], ["news", "News + ticker"], ["market", "Clip Market"], ["overlays", "Stream overlays"]] },
   { group: "Community", items: [["people", "People"], ["staff", "Staff and settings"]] },
 ];
 
@@ -95,6 +95,7 @@ function Shell({ tab, setTab, isOwner }: { tab: Tab; setTab: (t: Tab) => void; i
             actions={[["verifying", "Checking gamertag"], ["sent", "Mark paid"], ["held", "Hold"]]} refField="payout_ref" />}
           {tab === "claims" && <Table table="claims" filter={["status", ["open"]]} cols={["clip_id", "claimant_id", "evidence"]} actions={[["approved", "Approve"], ["rejected", "Reject"]]} />}
           {tab === "staff" && <Staff isOwner={isOwner} />}
+          {tab === "overlays" && <OverlayPanel />}
           {tab === "creators" && <CreatorPayouts />}
           {tab === "drops" && <Drops />}
           {tab === "briefings" && <Briefings />}
@@ -770,47 +771,83 @@ function FeatureSwitch({ isOwner }: { isOwner: boolean }) {
 }
 
 function Staff({ isOwner }: { isOwner: boolean }) {
-  const [people, setPeople] = useState<Person[]>([]);
+  // Only people who already hold a staff role are listed. Anyone else is found by search, one at
+  // a time, and every change is confirmed: making someone staff should never be a casual click.
+  const [staff, setStaff] = useState<Person[]>([]);
   const [q, setQ] = useState("");
+  const [found, setFound] = useState<Person[] | null>(null);
+  const [pend, setPend] = useState<{ p: Person; role: string } | null>(null);
   const [note, setNote] = useState("");
-  useEffect(() => {
+  const loadStaff = useCallback(async () => {
     const s = sb();
-    if (!s) { setPeople([
+    if (!s) { setStaff([
       { id: "demo", display_name: "ViceCityVandal", gamertag: "ViceCityVandal", role: "owner", tier: "kingpin" },
       { id: "a", display_name: "KeysKingpin", gamertag: "KeysKingpin", role: "reviewer", tier: "hustler" },
-      { id: "b", display_name: "SwampSaint", gamertag: "SwampSaint", role: "member", tier: "street" },
-      { id: "c", display_name: "NeonDrifter", gamertag: "NeonDrifter", role: "moderator", tier: "kingpin" },
     ]); return; }
-    s.from("profiles").select("id,display_name,gamertag,role,tier").order("role").limit(200).then(({ data }) => setPeople((data as Person[]) ?? []));
+    const { data } = await s.from("profiles").select("id,display_name,gamertag,role,tier").neq("role", "member").order("role").limit(100);
+    setStaff((data as Person[]) ?? []);
   }, []);
-  async function setRole(p: Person, role: string) {
-    const s = sb(); if (s) { const { error } = await s.rpc("set_role", { p_user: p.id, p_role: role }); if (error) { setNote(error.message); return; } }
-    setPeople((xs) => xs.map((x) => x.id === p.id ? { ...x, role } : x)); setNote(`${p.display_name} is now ${role}.`);
+  useEffect(() => { loadStaff(); }, [loadStaff]);
+  useEffect(() => {
+    const t = q.trim().replace(/[%,()]/g, "");
+    if (t.length < 2) { setFound(null); return; }
+    const h = setTimeout(async () => {
+      const s = sb(); if (!s) { setFound([]); return; }
+      const { data } = await s.from("profiles").select("id,display_name,gamertag,role,tier").or(`display_name.ilike.%${t}%,gamertag.ilike.%${t}%`).limit(8);
+      setFound((data as Person[]) ?? []);
+    }, 300);
+    return () => clearTimeout(h);
+  }, [q]);
+  async function confirmRole() {
+    if (!pend) return;
+    const { p, role } = pend;
+    const s = sb(); if (s) { const { error } = await s.rpc("set_role", { p_user: p.id, p_role: role }); if (error) { setNote(error.message); setPend(null); return; } }
+    setNote(`${p.display_name} is now ${ROLES.find(([v]) => v === role)?.[1].split(":")[0] ?? role}.`);
+    setPend(null); setFound((f) => f?.map((x) => x.id === p.id ? { ...x, role } : x) ?? f); loadStaff();
   }
-  const shown = people.filter((p) => `${p.display_name} ${p.gamertag ?? ""}`.toLowerCase().includes(q.toLowerCase()));
+  const row = (p: Person) => (
+    <li key={p.id} className="py-3 flex flex-wrap items-center gap-3">
+      <span className="flex-1 min-w-0"><span className="font-bold">{p.display_name}</span>{p.tier !== "street" && p.tier && <span className="ml-2 text-[10px] font-black uppercase tracking-wide text-white bg-gulf px-1.5 py-0.5 rounded">{p.tier}</span>}<span className="block text-sm text-haze truncate">{p.gamertag}</span></span>
+      <select disabled={!isOwner} value={p.role} onChange={(e) => setPend({ p, role: e.target.value })} className="field !w-auto">
+        {ROLES.map(([v, l]) => <option key={v} value={v}>{l}</option>)}
+      </select>
+    </li>
+  );
   return (
     <div className="grid gap-10">
     <FeatureSwitch isOwner={isOwner} />
     <div className="grid gap-10 lg:grid-cols-[1.5fr_1fr]">
       <section>
         <h2 className="text-xl font-extrabold">Staff</h2>
-        <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Find someone by name or gamertag" className="field mt-3" />
+        <p className="text-sm text-haze mt-1">Everyone with a role beyond member. {isOwner ? "To add someone, search for them below." : "Only owners can change roles."}</p>
         <ul className="mt-3 divide-y divide-line border-y border-line">
-          {shown.map((p) => (
-            <li key={p.id} className="py-3 flex flex-wrap items-center gap-3">
-              <span className="flex-1 min-w-0"><span className="font-bold">{p.display_name}</span>{p.tier !== "street" && <span className="ml-2 text-[10px] font-black uppercase tracking-wide text-white bg-gulf px-1.5 py-0.5 rounded">{p.tier}</span>}<span className="block text-sm text-haze truncate">{p.gamertag}</span></span>
-              <select disabled={!isOwner} value={p.role} onChange={(e) => setRole(p, e.target.value)} className="field !w-auto">
-                {ROLES.map(([v, l]) => <option key={v} value={v}>{l}</option>)}
-              </select>
-            </li>
-          ))}
+          {staff.map(row)}
+          {staff.length === 0 && <li className="py-4 text-haze">No staff yet.</li>}
         </ul>
-        {!isOwner && <p className="mt-2 text-sm text-haze">Only owners can change roles.</p>}
+        {isOwner && (
+          <div className="mt-6">
+            <h3 className="font-extrabold">Add someone</h3>
+            <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search a name or gamertag (2+ letters)" className="field mt-2" />
+            {found && (
+              <ul className="mt-2 divide-y divide-line border-y border-line">
+                {found.map(row)}
+                {found.length === 0 && <li className="py-3 text-haze">Nobody matches that.</li>}
+              </ul>
+            )}
+          </div>
+        )}
+        {pend && (
+          <div role="alertdialog" aria-label="Confirm role change" className="mt-4 rounded-lg border-2 border-flamingo bg-ink p-4 grid gap-3">
+            <p className="font-bold">Make {pend.p.display_name} {ROLES.find(([v]) => v === pend.role)?.[1] ?? pend.role}?</p>
+            {pend.role === "owner" && <p className="text-sm text-haze">Owners see everything, move money and can change anyone&apos;s role, including yours.</p>}
+            {pend.role === "member" && <p className="text-sm text-haze">They lose access to the console straight away.</p>}
+            <div className="flex gap-2 justify-end"><button className="btn btn-ghost" onClick={() => setPend(null)}>Cancel</button><button className="btn btn-hot" onClick={confirmRole}>Confirm</button></div>
+          </div>
+        )}
+        {note && <p role="status" className="mt-4 font-semibold text-gulf">{note}</p>}
       </section>
       <section>
         <PoolPanel />
-        <OverlayPanel />
-        {note && <p role="status" className="mt-4 font-semibold text-gulf">{note}</p>}
       </section>
     </div>
     </div>
