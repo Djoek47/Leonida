@@ -193,28 +193,42 @@ export const TREE_SOURCES = [
 /** Where to spend GTA VI's 15 manual save slots. There's no mission replay and no saving
  *  mid-mission, so a save made just before a choice is the only way back to it. Each slot is
  *  made before `before` (free roam, after the previous mission) and covers the forks listed. */
-export type SaveSlot = { slot: number; ch: number; before: string; why: string; forks: string[]; key?: boolean };
+/** How to spend GTA VI's 15 manual slots (plus the one autosave the game manages itself).
+ *  kind: "clean" = trophy-safe master file · "rolling" = two slots you alternate after every
+ *  mission · "choice" = a save just before a decision. keep: never overwrite it. Choice saves
+ *  that aren't `keep` can be recycled once their chapter is behind you; `reuses` names the
+ *  earlier save a later one overwrites, so the whole story fits in 15. */
+export type SaveKind = "clean" | "rolling" | "choice";
+export type SaveSlot = {
+  id: string; slot: number; ch: number; before: string; why: string; forks: string[];
+  kind: SaveKind; keep: boolean; key?: boolean; tag: string; reuses?: string; freeAfter?: string;
+};
 export const SAVE_PLAN: SaveSlot[] = [
-  { slot: 1, ch: 0, before: "Any time (overwrite it as you go)", why: "Your clean save. Never use cheats on it: cheats switch off trophies, so this is your Platinum file.", forks: [] },
-  { slot: 2, ch: 1, before: "Gone Fishing", why: "How you take the Kingfishers camp and your first long gun start shaping your profile.", forks: ["fishing", "gearup"] },
-  { slot: 3, ch: 1, before: "Hey Arnold!", why: "The first big call: what happens to Arnold.", forks: ["arnold", "shark"], key: true },
-  { slot: 4, ch: 1, before: "Feng Shui", why: "What you get ready for Lucia, and her first night out, set where the relationship starts.", forks: ["prep", "anchor"] },
-  { slot: 5, ch: 1, before: "Down to Earth", why: "The smugglers, the yacht day, her curfew and Brian's news. Lots of small relationship swings.", forks: ["smugglers", "jetski", "nine", "clockout", "retire"] },
-  { slot: 6, ch: 1, before: "Recalibration", why: "Point of no return. Everything but Family Savings is wiped and Chapter 1's leftovers lock. Bank up to $5,000 first.", forks: ["savings"], key: true },
-  { slot: 7, ch: 2, before: "Girls' Trip", why: "The Kolts at the car wash.", forks: ["kolts"] },
-  { slot: 8, ch: 2, before: "Afternoon Delight", why: "Robbing as a couple, the pawn shop and the $10,000 job.", forks: ["couple", "free2", "pawn", "dance"] },
-  { slot: 9, ch: 3, before: "Dealer's Choice", why: "Boobie's product, and who you spend free roam with in Vice City.", forks: ["both", "free3", "product"] },
-  { slot: 10, ch: 3, before: "Dubious Provenance", why: "Halifax and the statue, plus a run of jobs where a quiet or loud approach shows on your profile.", forks: ["halifax", "halifax2", "kitty", "police1", "buddy", "jewels", "sneakers"], key: true },
-  { slot: 11, ch: 3, before: "Company Property", why: "Pete's crates decide your time in the heist; Monty and the gator pool is a big one.", forks: ["crates", "monty", "bricks"], key: true },
-  { slot: 12, ch: 3, before: "The Cartel Heist", why: "No replay on heists. Save so you can run it again for a better take.", forks: [] },
-  { slot: 13, ch: 4, before: "Bad Driver! (it closes when Power Play starts)", why: "Felipe's fate, Eddie's pitch, Nate's offer and how you treat each other with money coming in.", forks: ["eddie", "steroids", "free4", "family", "felipe"], key: true },
-  { slot: 14, ch: 4, before: "VCIA Takedown", why: "The airport job, then the first vault: one bag or two.", forks: ["vault"] },
-  { slot: 15, ch: 5, before: "The End of the Road", why: "The ending. The game asks if you're ready: save first so you can see the other one.", forks: ["bridge"], key: true },
+  { id: "clean", slot: 1, ch: 0, kind: "clean", keep: true, tag: "Clean file", before: "Your first free roam (saving opens at Jason's house after Brian's first job)", why: "Your Platinum file. Overwrite it as you go, but never with cheats on: cheats switch off trophies. If anything breaks, this is the file you trust.", forks: [] },
+  { id: "rollA", slot: 2, ch: 0, kind: "rolling", keep: false, tag: "Rolling A", before: "After every mission (alternate with slot 3)", why: "Save here after one mission and in slot 3 after the next. If a save goes bad or a mission ends badly, the other one is only a mission behind.", forks: [] },
+  { id: "rollB", slot: 3, ch: 0, kind: "rolling", keep: false, tag: "Rolling B", before: "After every mission (alternate with slot 2)", why: "The partner to slot 2. Two rolling slots mean you never overwrite your only recent save.", forks: [] },
+
+  { id: "fishing", slot: 4, ch: 1, kind: "choice", keep: false, tag: "Ch 1 · Gone Fishing", freeAfter: "Recalibration", before: "Gone Fishing", why: "How you take the Kingfishers camp and your first long gun start shaping your profile.", forks: ["fishing", "gearup"] },
+  { id: "arnold", slot: 5, ch: 1, kind: "choice", keep: true, key: true, tag: "Ch 1 · Arnold", before: "Hey Arnold!", why: "The first big call: what happens to Arnold.", forks: ["arnold", "shark"] },
+  { id: "fengshui", slot: 6, ch: 1, kind: "choice", keep: false, tag: "Ch 1 · Feng Shui", freeAfter: "Recalibration", before: "Feng Shui", why: "What you get ready for Lucia, and her first night out, set where the relationship starts.", forks: ["prep", "anchor"] },
+  { id: "earth", slot: 7, ch: 1, kind: "choice", keep: false, tag: "Ch 1 · Down to Earth", before: "Down to Earth", why: "The smugglers, the yacht day, her curfew and Brian's news. Lots of small relationship swings.", forks: ["smugglers", "jetski", "nine", "clockout", "retire"] },
+  { id: "recal", slot: 8, ch: 1, kind: "choice", keep: true, key: true, tag: "Ch 1 · Recalibration", before: "Recalibration", why: "Point of no return. Everything but Family Savings is wiped and Chapter 1's leftovers lock. Bank up to $5,000 first, sell any drugs, then save.", forks: ["savings"] },
+  { id: "girls", slot: 9, ch: 2, kind: "choice", keep: false, tag: "Ch 2 · Girls' Trip", before: "Girls' Trip", why: "The Kolts at the car wash.", forks: ["kolts"] },
+  { id: "delight", slot: 10, ch: 2, kind: "choice", keep: false, tag: "Ch 2 · Afternoon Delight", before: "Afternoon Delight", why: "Robbing as a couple, the pawn shop and the $10,000 job.", forks: ["couple", "free2", "pawn", "dance"] },
+  { id: "dealer", slot: 4, ch: 3, kind: "choice", keep: false, tag: "Ch 3 · Dealer's Choice", reuses: "Gone Fishing (Ch 1)", before: "Dealer's Choice", why: "Boobie's product, and who you spend free roam with in Vice City.", forks: ["both", "free3", "product"] },
+  { id: "halifax", slot: 11, ch: 3, kind: "choice", keep: true, key: true, tag: "Ch 3 · Halifax", before: "Dubious Provenance", why: "Halifax and the statue, plus a run of jobs where a quiet or loud approach shows on your profile.", forks: ["halifax", "halifax2", "kitty", "police1", "buddy", "jewels", "sneakers"] },
+  { id: "crates", slot: 12, ch: 3, kind: "choice", keep: true, key: true, tag: "Ch 3 · Company Property", before: "Company Property", why: "Pete's crates decide your time in the heist; Monty and the gator pool is a big one.", forks: ["crates", "monty", "bricks"] },
+  { id: "cartel", slot: 13, ch: 3, kind: "choice", keep: true, tag: "Ch 3 · Cartel Heist", before: "The Cartel Heist", why: "No replay on heists. Save so you can run it again for a better take.", forks: [] },
+  { id: "felipe", slot: 14, ch: 4, kind: "choice", keep: true, key: true, tag: "Ch 4 · Felipe", before: "Bad Driver! (it closes when Power Play starts)", why: "Felipe's fate, Eddie's pitch, Nate's offer and how you treat each other with money coming in.", forks: ["eddie", "steroids", "free4", "family", "felipe"] },
+  { id: "vcia", slot: 6, ch: 4, kind: "choice", keep: false, tag: "Ch 4 · VCIA Takedown", reuses: "Feng Shui (Ch 1)", before: "VCIA Takedown", why: "The airport job, then the first vault: one bag or two.", forks: ["vault"] },
+  { id: "ending", slot: 15, ch: 5, kind: "choice", keep: true, key: true, tag: "Ch 5 · The ending", before: "The End of the Road", why: "The ending. The game asks if you're ready: save first so you can see the other one.", forks: ["bridge"] },
 ];
 export const SAVE_RULES = [
-  "Pause → Game → Save Game. Free roam only: you can't save during a mission.",
-  "The game autosaves after every mission in its own slot. It never protects a choice you've already made.",
-  "Loading an older save overwrites the autosave. Make a manual save first.",
-  "There's no mission replay, so a save from just before a mission is the only way to play it again.",
+  "15 manual slots plus 1 autosave. Pause → Game → Save Game, in free roam only: never mid-mission, and not during the Prologue.",
+  "The autosave fires after missions, when you're Wasted or Busted, and after big open-world events. It never protects a choice you've already made.",
+  "There's no mission replay. A save from just before a mission is the only way to play it again.",
+  "Cheats switch off trophies. Keep them off your clean file (slot 1).",
 ];
+/** Saves are tracked per save (two saves can share a slot once one is recycled). */
+export const SAVES_KEY = "lfl-saves-v2";
 export const saveFor = (forkId: string) => SAVE_PLAN.find((s) => s.forks[0] === forkId);

@@ -4,7 +4,7 @@ import Link from "@/components/A";
 import { useUser } from "@/lib/useUser";
 import { CHAPTERS, WHO, type Mission } from "@/lib/missions";
 import { INTEL, MONEY_ROUTE } from "@/lib/missionIntel";
-import { type Fork } from "@/lib/choiceTree";
+import { type Fork, SAVES_KEY } from "@/lib/choiceTree";
 import { img, shotFor } from "@/lib/briefingArt";
 import { EconPanel } from "./EconPanel";
 import {
@@ -16,7 +16,7 @@ import {
  *  Opens on your next mission. Tap Done, log the choice you made, and it rolls on.
  *  Same device storage as the full Briefing and The Road, so all three stay in sync. */
 const money = (n: number) => `$${n.toLocaleString("en-US")}`;
-const SAVES = "lfl-saves";
+const SAVES = SAVES_KEY;
 const TOUR = [
   { t: "Your chapters", p: "The strip up top is your story. Rings fill as you clear missions. Tap a chapter to see its list and tick anything you've already done." },
   { t: "Your next mission", p: "The card is what to play now: one line on what to do, the pay, and a save reminder when a big choice is coming." },
@@ -36,7 +36,7 @@ export default function PerfectPlay() {
   const [econ, setEcon] = useState(false);
   useEffect(() => { try { setEcon(localStorage.getItem("lfl-pp-econ") === "1"); } catch {} }, []);
   const toggleEcon = (on?: boolean) => setEcon((v) => { const n = on ?? !v; try { localStorage.setItem("lfl-pp-econ", n ? "1" : "0"); } catch {} return n; });
-  const [saves, setSaves] = useState<number[]>([]);
+  const [saves, setSaves] = useState<string[]>([]);
   const [sheet, setSheet] = useState<null | { kind: "chapter"; ch: number } | { kind: "ask"; m: Mission; ch: number } | { kind: "menu" } | { kind: "reset" }>(null);
   const [steps, setSteps] = useState(false);
   const [tour, setTour] = useState<number | null>(null);
@@ -60,7 +60,7 @@ export default function PerfectPlay() {
     const n = { ...picks, [f.id]: v }; setPicks(n); savePicks(n);
   }, [picks]);
 
-  const toggleSave = (slot: number) => {
+  const toggleSave = (slot: string) => {
     const n = saves.includes(slot) ? saves.filter((s) => s !== slot) : [...saves, slot];
     setSaves(n); try { localStorage.setItem(SAVES, JSON.stringify(n)); } catch {}
   };
@@ -149,10 +149,10 @@ export default function PerfectPlay() {
               </div>
 
               {save && (
-                <button className={`pp-save${saves.includes(save.slot) ? " is-on" : ""}`} onClick={() => toggleSave(save.slot)}>
+                <button className={`pp-save${saves.includes(save.id) ? " is-on" : ""}`} onClick={() => toggleSave(save.id)}>
                   <span aria-hidden>💾</span>
-                  <span><b>{saves.includes(save.slot) ? `Saved in slot ${save.slot}` : `Save to slot ${save.slot} first`}</b><small>{save.why}</small></span>
-                  <i aria-hidden>{saves.includes(save.slot) ? "✓" : ""}</i>
+                  <span><b>{saves.includes(save.id) ? `Saved in slot ${save.slot}` : `Save to slot ${save.slot} first`}</b><small>{save.reuses ? `Overwrites your ${save.reuses} save. ` : ""}{save.keep ? "Keep this one. " : ""}{save.why}</small></span>
+                  <i aria-hidden>{saves.includes(save.id) ? "✓" : ""}</i>
                 </button>
               )}
 

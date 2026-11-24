@@ -4213,3 +4213,38 @@ a.mk-card:hover, a.mk-card:focus-visible { transform: translateY(-4px); border-c
 }
 @media (min-width: 1400px) { .pp-econ { flex-basis: 400px; } }
 @media (prefers-reduced-motion: reduce) { .pp-econ { animation: none; } }
+
+/* ——— Save planner: slot map, badges, stakes ——— */
+.sv { --sv-clean: #eafcff; --sv-roll: #b18cff; --sv-keep: #ffd23f; --sv-reuse: #2ef2d0; }
+.sv-sub b { color: #2ef2d0; }
+.sv-btns { flex-wrap: wrap; }
+.sv-map { display: grid; grid-template-columns: repeat(15, minmax(0, 1fr)); gap: .35rem; margin-top: 1rem; }
+@media (max-width: 760px) { .sv-map { grid-template-columns: repeat(5, minmax(0, 1fr)); } }
+.sv-slot { --c: rgba(234,252,255,.25); display: grid; justify-items: center; gap: .15rem; padding: .45rem .15rem .4rem; border-radius: 12px; min-width: 0;
+  background: rgba(255,255,255,.03); border: 2px solid var(--c); transition: transform .15s, background .15s; }
+.sv-slot:hover, .sv-slot.is-focus { transform: translateY(-2px); background: rgba(255,255,255,.08); }
+.sv-slot.is-focus { box-shadow: 0 0 0 2px #0a121b, 0 0 0 4px var(--c); }
+.sv-slot b { font-weight: 900; font-size: 1rem; line-height: 1; color: var(--c); }
+.sv-slot small { width: 100%; overflow-wrap: anywhere; hyphens: auto; font-size: .56rem; font-weight: 800; line-height: 1.15; text-align: center; color: rgba(234,252,255,.7); overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
+.sv-slot.is-clean { --c: var(--sv-clean); } .sv-slot.is-roll { --c: var(--sv-roll); } .sv-slot.is-keep { --c: var(--sv-keep); } .sv-slot.is-reuse { --c: var(--sv-reuse); }
+.sv-slot.is-free { border-style: dashed; } .sv-slot.is-free small { color: rgba(234,252,255,.4); }
+.sv-slot.is-got { background: color-mix(in srgb, var(--c) 18%, transparent); }
+.sv-legend { display: flex; flex-wrap: wrap; gap: .25rem .9rem; margin-top: .5rem; font-size: .7rem; font-weight: 800; color: rgba(234,252,255,.6); }
+.sv-legend i { display: inline-block; width: 10px; height: 10px; margin-right: .3rem; border-radius: 3px; vertical-align: -1px; border: 2px solid; }
+.sv-legend .is-clean { border-color: var(--sv-clean); } .sv-legend .is-roll { border-color: var(--sv-roll); } .sv-legend .is-keep { border-color: var(--sv-keep); } .sv-legend .is-reuse { border-color: var(--sv-reuse); } .sv-legend .is-free { border-color: rgba(234,252,255,.3); border-style: dashed; }
+.sv-list li.is-keep { border-color: rgba(255,210,63,.5); } .sv-list li.is-roll { border-color: rgba(177,140,255,.45); } .sv-list li.is-clean { border-color: rgba(234,252,255,.4); }
+.sv-list li.is-got { opacity: .6; }
+.sv-list li.is-keep .sv-disk { border-color: var(--sv-keep); background: rgba(255,210,63,.14); }
+.sv-list li.is-roll .sv-disk { border-color: var(--sv-roll); background: rgba(177,140,255,.14); }
+.sv-list li.is-clean .sv-disk { border-color: var(--sv-clean); background: rgba(234,252,255,.1); }
+.sv-k { display: flex; flex-wrap: wrap; align-items: center; gap: .5rem; margin-bottom: .2rem; font-size: .66rem !important; font-weight: 900; letter-spacing: .1em; text-transform: uppercase; }
+.sv-badge { padding: .12rem .45rem; border-radius: 5px; color: #071318; }
+.sv-badge.is-clean { background: var(--sv-clean); } .sv-badge.is-roll { background: var(--sv-roll); } .sv-badge.is-keep { background: var(--sv-keep); } .sv-badge.is-reuse { background: var(--sv-reuse); }
+.sv-reuse { margin-top: .35rem; font-size: .8rem !important; color: #8ff7e6 !important; }
+.sv-stakes { display: flex; flex-wrap: wrap; gap: .3rem; margin-top: .45rem; align-items: center; }
+.sv-stakes span { font-size: .66rem; font-weight: 900; letter-spacing: .1em; text-transform: uppercase; color: rgba(234,252,255,.5); }
+.sv-stakes i { font-style: normal; font-size: .74rem; font-weight: 700; padding: .15rem .5rem; border-radius: 999px; background: rgba(255,255,255,.06); border: 1px solid rgba(255,255,255,.12); }
+.sv-stakes i.is-big { border-color: rgba(255,210,63,.6); color: #ffe38a; }
+.sv-trap { margin-top: .9rem; padding: .7rem .85rem; border-radius: 12px; font-size: .84rem; line-height: 1.5; color: #ffe2a6; background: rgba(255,170,40,.1); border: 1px solid rgba(255,170,40,.35); }
+.sv-trap b { color: #ffd23f; }
+@media (max-width: 640px) { .sv-rules { grid-template-columns: 1fr; } }
