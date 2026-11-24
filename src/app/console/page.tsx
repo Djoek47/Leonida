@@ -399,6 +399,16 @@ const MOD = [
     noteLabel: "Reason (kept on record)", placeholder: "Owner asked / not their footage…" },
 ] as const;
 
+/** Starts burning the watermark into clip files (runs on the server after it answers). */
+async function startWatermark(body: { clip: string } | { backlog: true }) {
+  const c = sb(); if (!c) return { ok: false, msg: "Demo mode: nothing ran." };
+  const token = (await c.auth.getSession()).data.session?.access_token;
+  const r = await fetch("/api/clips/watermark", { method: "POST", headers: { "content-type": "application/json", ...(token ? { authorization: `Bearer ${token}` } : {}) }, body: JSON.stringify(body) }).catch(() => null);
+  if (!r) return { ok: false, msg: "Couldn't reach the server." };
+  const j = await r.json().catch(() => ({})) as { error?: string };
+  return r.ok ? { ok: true, msg: "" } : { ok: false, msg: j.error ?? `Error ${r.status}` };
+}
+
 function Review() {
   const [clips, setClips] = useState<Clip[]>([]);
   const [i, setI] = useState(0);
@@ -490,7 +500,9 @@ function Review() {
     setClips((cs) => cs.filter((x) => x.id !== cur.id));
     setI((n) => Math.min(n, clips.length - 2 < 0 ? 0 : clips.length - 2));
     setDone((n) => n + 1);
-    setNote(`${status === "approved" ? "Approved for the contest" : "Not selected"}: ${cur.title}`);
+    // Approved clips get the watermark burned into the file straight away (takes a minute or two).
+    if (status === "approved") void startWatermark({ clip: cur.id });
+    setNote(`${status === "approved" ? "Approved for the contest · watermarking the file now" : "Not selected"}: ${cur.title}`);
     setBusy(false);
   }, [clips, i, busy]);
 
@@ -537,6 +549,13 @@ function Review() {
         <span className="q-keys">A approve · R reject · J/K move · Space play</span>
       </div>
 
+      <div className="mt-4 flex flex-wrap items-center gap-3 text-sm">
+        <button className="btn btn-ghost !py-1.5 text-sm" onClick={async () => {
+          const r = await startWatermark({ backlog: true });
+          setNote(r.ok ? "Watermarking older live clips in the background. It works through as many as fit in one run; the daily job finishes the rest." : r.msg);
+        }}>Watermark older clips</button>
+        <span className="text-haze">New approvals get a burned-in watermark automatically.</span>
+      </div>
       <div className="grid gap-8 lg:grid-cols-[1.6fr_1fr] mt-5">
         <div>
           <div className="aspect-video bg-ink-2 rounded-lg overflow-hidden grid place-items-center">
