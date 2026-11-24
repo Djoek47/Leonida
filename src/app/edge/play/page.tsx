@@ -32,10 +32,10 @@ export default function PerfectPlay() {
   const [reach, setReach] = useState(0);
   const [picks, setPicks] = useState<Picks>({});
   const [perfect, setPerfect] = useState(false);
-  // The Economist side panel: off unless the player opens it; remembered on this device.
+  // The Economist pop-up: closed until the player opens it.
   const [econ, setEcon] = useState(false);
-  useEffect(() => { try { setEcon(localStorage.getItem("lfl-pp-econ") === "1"); } catch {} }, []);
-  const toggleEcon = (on?: boolean) => setEcon((v) => { const n = on ?? !v; try { localStorage.setItem("lfl-pp-econ", n ? "1" : "0"); } catch {} return n; });
+  const toggleEcon = (on?: boolean) => setEcon((v) => on ?? !v);
+  useEffect(() => { if (!econ) return; const k = (e: KeyboardEvent) => { if (e.key === "Escape") setEcon(false); }; addEventListener("keydown", k); return () => removeEventListener("keydown", k); }, [econ]);
   const [saves, setSaves] = useState<string[]>([]);
   const [sheet, setSheet] = useState<null | { kind: "chapter"; ch: number } | { kind: "ask"; m: Mission; ch: number } | { kind: "menu" } | { kind: "reset" }>(null);
   const [steps, setSteps] = useState(false);
@@ -101,7 +101,8 @@ export default function PerfectPlay() {
 
   const econCh = now?.ch ?? reach;
   return (
-    <Frame split={econ} side={econ ? <EconPanel ch={econCh} missionName={now?.m.name} missionCash={intel?.cash} onClose={() => toggleEcon(false)} /> : null}>
+    <Frame>
+      <div className="pp-head">
       <header className="pp-top">
         <Link href="/edge/briefing" className="pp-icon" aria-label="Back to the full briefing">←</Link>
         <p className="pp-brand"><img src="/brand/live-from-leonida-avatar-180.png" alt="" /> Perfect Play</p>
@@ -124,6 +125,7 @@ export default function PerfectPlay() {
           );
         })}
       </nav>
+      </div>
 
       <main className="pp-main">
         {!now ? (
@@ -201,6 +203,14 @@ export default function PerfectPlay() {
       </main>
 
       {toast && <p className="pp-toast" role="status">{toast}</p>}
+
+      {econ && (
+        <div className="pp-econ-bg" onClick={() => toggleEcon(false)}>
+          <div onClick={(e) => e.stopPropagation()} role="dialog" aria-modal="true" aria-label="Economist">
+            <EconPanel ch={econCh} missionName={now?.m.name} missionCash={intel?.cash} onClose={() => toggleEcon(false)} />
+          </div>
+        </div>
+      )}
 
       {sheet && (
         <div className="pp-sheet-bg" onClick={() => setSheet(null)}>
@@ -304,11 +314,10 @@ function Row({ m, on, onToggle }: { m: Mission; on: boolean; onToggle: (m: Missi
   );
 }
 
-function Frame({ children, split, side }: { children: React.ReactNode; split?: boolean; side?: React.ReactNode }) {
+function Frame({ children }: { children: React.ReactNode }) {
   useEffect(() => { const o = document.body.style.overflow; document.body.style.overflow = "hidden"; return () => { document.body.style.overflow = o; }; }, []);
-  if (!split) return <div className="pp-wrap"><div className="pp-app">{children}</div></div>;
-  // Split: missions on one side, the Economist on the other (stacked top/bottom on phones).
-  return <div className="pp-wrap"><div className="pp-split"><div className="pp-app">{children}</div>{side}</div></div>;
+  // One scrolling layer for the whole screen (header pinned): the pattern that scrolls reliably on every phone and tablet.
+  return <div className="pp-wrap"><div className="pp-app">{children}</div></div>;
 }
 function Splash() {
   return (
