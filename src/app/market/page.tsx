@@ -5,7 +5,7 @@ import { sb } from "@/lib/supabase";
 import { useUser } from "@/lib/useUser";
 import { ClipEmblem } from "@/components/ClipEmblem";
 import { MarketCard } from "@/components/market/MarketCard";
-import { LISTING_COLS, TAGS, shotUrl, type Listing, type MarketTag, type Seller } from "@/lib/market";
+import { LISTING_COLS, PRICE_MAX, PRICE_MIN, TAGS, feeFor, shotUrl, usd, type Listing, type MarketTag, type Seller } from "@/lib/market";
 
 /** Clip Market: every live listing as a shop card. Filter by tag, price and length. */
 type Sort = "new" | "popular" | "low" | "high";
@@ -102,9 +102,25 @@ export default function Market() {
             <h2 className="display text-4xl">Got a clip worth paying for?</h2>
             <p className="text-haze mt-1 max-w-xl">Set your own price from $1 to $20. Files up to 5 GB. You keep 80% of every sale (we keep at least 50¢ to cover card fees), paid into your wallet.</p>
           </div>
+          <TakeSlider />
           <Link href="/market/sell" className="btn btn-hot">Start selling</Link>
         </section>
       </div>
+    </div>
+  );
+}
+
+/** The price slider from the Clip Market promo: drag a price, see what lands in your wallet. */
+function TakeSlider() {
+  const [c, setC] = useState(500);
+  const you = c - feeFor(c);
+  return (
+    <div className="mk-take">
+      <label className="mk-take-row"><span>Your price</span><b className="mk-take-price">{usd(c)}</b></label>
+      <input type="range" min={PRICE_MIN} max={PRICE_MAX} step={100} value={c} onChange={(e) => setC(Number(e.target.value))} aria-label="Example price"
+        style={{ "--p": `${((c - PRICE_MIN) / (PRICE_MAX - PRICE_MIN)) * 100}%` } as React.CSSProperties} />
+      <div className="mk-take-ends"><span>{usd(PRICE_MIN)}</span><span>{usd(PRICE_MAX)}</span></div>
+      <div className="mk-take-you"><span>You get, every sale</span><b>{usd(you)}</b></div>
     </div>
   );
 }

@@ -186,7 +186,7 @@ export default function MissionBriefing() {
             <button key={c.id} onClick={() => setView(c.id)} aria-current={view === c.id ? "page" : undefined}
               className={`mx-level${view === c.id ? " is-on" : ""}${lock ? " is-lock" : ""}${clear ? " is-clear" : ""}`}>
               <span className="mx-level-k">{c.id === 0 ? "Intro" : `Chapter ${c.id}`}{clear ? " ✓" : ""}</span>
-              <span className="mx-level-t">{c.id <= reach ? c.title : lock ? "🔒 Locked" : "Up next"}</span>
+              <span className="mx-level-t">{c.id <= reach ? c.title : lock ? <><i className="mx-redact" aria-hidden /><span className="mx-sealed">🔒 Sealed</span></> : "Up next"}</span>
               <span className="mx-level-bar"><i style={{ width: `${c.id <= reach ? (d / s.length) * 100 : 0}%` }} /></span>
             </button>
           );

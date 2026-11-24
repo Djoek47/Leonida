@@ -102,6 +102,9 @@ export default function TheRoad() {
             <div className="road-dash" role="group" aria-label="Your drive">
               <div className="road-gauge"><span className="road-gauge-k">Forks driven</span><b>{done}<small>/{visible.length}</small></b></div>
               <div className="road-gauge is-heart"><span className="road-gauge-k">Romance moments</span><b>{visible.filter((f) => f.romance && picks[f.id] !== undefined).length}<small>/{visible.filter((f) => f.romance).length}</small></b></div>
+              <div className="road-gauge is-prof"><span className="road-gauge-k">Your profile</span>
+                <div className="road-needle" aria-label={`Leaning ${PROFILE[tally.lean]}`}><i style={{ left: `${done ? 8 + (tally.lean / 3) * 84 : 50}%` }} /></div>
+                <span className="road-needle-ends"><span>Psycho</span><span>Professional</span></span></div>
               <div className="road-gauge"><span className="road-gauge-k">You&apos;re on</span><b className="text-base">{CHAPTERS[Math.min(reach, CHAPTERS.length - 1)].label}</b></div>
               <button className={`road-switch${spoil ? " is-on" : ""}`} onClick={() => setSpoil((v) => !v)} aria-pressed={spoil}>
                 <span className="road-switch-track"><i /></span>
@@ -148,6 +151,7 @@ export default function TheRoad() {
             </div>
 
             <section className={`road-end${allDone ? " is-done" : ""}`} aria-live="polite">
+              {!allDone && !spoil && <div className="road-bridge" aria-hidden><span className="road-bridge-sign"><b>EXIT 5 · THE BRIDGE</b><small>ENDING SEALED 🔒</small></span><span className="road-bridge-bar" /></div>}
               <p className="road-end-k">{allDone ? (reachedEnd ? "The end of your road" : "Your road so far") : "Finish the drive to unseal your story"}</p>
               {allDone || spoil ? (
                 <>
@@ -206,11 +210,12 @@ function ForkView({ f, pick, state, revealed, onPick, onRewind }: { f: Fork; pic
   return (
     <div id={`fork-${f.id}`} className={`fork is-${state}${f.big ? " is-big" : ""}${f.romance ? " is-heart" : ""}`}>
       <div className="fork-node">
-        <span className="fork-dot">{state === "now" ? <Car /> : f.romance ? "♥" : null}</span>
         <span className="fork-mission">{f.romance && <em className="is-heart">♥ Jason &amp; Lucia</em>}{f.big && !f.romance && <em>Key decision</em>}{f.mission}</span>
         <p className="fork-prompt">{f.prompt}</p>
+        <span className="fork-dot">{state === "now" ? <Car /> : f.romance ? "♥" : null}</span>
       </div>
       <svg className="fork-svg" viewBox="0 0 100 60" preserveAspectRatio="none" aria-hidden>
+        {xs.map((x, i) => <path key={"a" + i} d={`M50 0 C50 32, ${x} 26, ${x} 60`} className={`asph${pick === i ? " is-lit" : pick !== undefined ? " is-closed" : ""}`} vectorEffect="non-scaling-stroke" />)}
         {xs.map((x, i) => <path key={i} d={`M50 0 C50 32, ${x} 26, ${x} 60`} className={pick === undefined ? "lane" : pick === i ? "lane is-lit" : "lane is-closed"} vectorEffect="non-scaling-stroke" />)}
       </svg>
       <div className="fork-opts" style={{ gridTemplateColumns: `repeat(${n}, minmax(0, 1fr))` }}>
@@ -219,11 +224,10 @@ function ForkView({ f, pick, state, revealed, onPick, onRewind }: { f: Fork; pic
           return (
             <button key={o.pick} onClick={() => !chosen && onPick(i)} disabled={state === "later"} aria-pressed={chosen} title={closed ? "Switch to this lane" : undefined}
               className={`fork-opt${chosen ? " is-chosen" : ""}${closed ? " is-closed" : ""}`}>
-              <span className="fork-lane">Lane {String.fromCharCode(65 + i)}</span>
-              <b>{o.pick}</b>
+              <span className="fork-sign"><span className="fork-lane">Lane {String.fromCharCode(65 + i)}</span><b>{o.pick}</b><span className="fork-arrow" aria-hidden>{n === 2 ? (i ? "→" : "←") : ["↖", "↑", "↗"][i] ?? "↑"}</span></span>
               {revealed
                 ? <span className="fork-out">{o.outcome}</span>
-                : <span className="fork-redact" aria-label="Outcome sealed"><i /><i /><i style={{ width: "55%" }} /></span>}
+                : <span className="fork-seal" aria-label="Outcome sealed">🔒 Sealed</span>}
               {chosen && <span className="fork-stamp">Your road</span>}
               {closed && <span className="fork-closed"><span className="fork-closed-a">Road closed</span><span className="fork-closed-b">↪ Switch lane</span></span>}
             </button>
@@ -231,6 +235,7 @@ function ForkView({ f, pick, state, revealed, onPick, onRewind }: { f: Fork; pic
         })}
       </div>
       <svg className="fork-svg is-merge" viewBox="0 0 100 40" preserveAspectRatio="none" aria-hidden>
+        {xs.map((x, i) => <path key={"a" + i} d={`M${x} 0 C${x} 18, 50 18, 50 40`} className={`asph${pick === i ? " is-lit" : pick !== undefined ? " is-closed" : ""}`} vectorEffect="non-scaling-stroke" />)}
         {xs.map((x, i) => <path key={i} d={`M${x} 0 C${x} 18, 50 18, 50 40`} className={pick === undefined ? "lane" : pick === i ? "lane is-lit" : "lane is-closed"} vectorEffect="non-scaling-stroke" />)}
       </svg>
       {state === "done" && <button className="fork-rewind" onClick={onRewind}>↺ Clear from here</button>}
@@ -275,9 +280,9 @@ function Checklist({ f, pick, state, revealed, onPick, onRewind }: { f: Fork; pi
 
 function Car() {
   return (
-    <svg viewBox="0 0 40 24" className="fork-car" aria-label="You are here">
-      <path d="M4 16 L8 8 Q10 5 14 5 H26 Q30 5 32 8 L36 16 Q38 16 38 18 V20 H2 V18 Q2 16 4 16 Z" />
-      <circle cx="11" cy="20" r="3.2" /><circle cx="29" cy="20" r="3.2" />
+    <svg viewBox="0 0 96 170" className="fork-car" aria-label="You are here">
+      <rect x="12" y="8" width="72" height="154" rx="26" fill="#ffc23d" /><rect x="20" y="40" width="56" height="34" rx="10" fill="#1a0b2e" /><rect x="22" y="104" width="52" height="30" rx="10" fill="#1a0b2e" />
+      <rect x="16" y="10" width="18" height="8" rx="4" fill="#fff" /><rect x="62" y="10" width="18" height="8" rx="4" fill="#fff" /><rect x="16" y="152" width="18" height="7" rx="3" fill="#ff2b4a" /><rect x="62" y="152" width="18" height="7" rx="3" fill="#ff2b4a" />
     </svg>
   );
 }

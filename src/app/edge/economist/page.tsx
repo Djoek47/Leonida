@@ -241,6 +241,7 @@ export default function Economist() {
             </section>
 
             <div id="eco-keep" className="ec-h ec-anchor"><h2><span className="ec-n">4</span>Keep it</h2><p>Cash in your pocket can be lost. Bank it, then move it to Family Savings where nobody can touch it.</p></div>
+            <PocketBank />
             <Ladder />
 
             <section className="ec-rules" aria-label="Cash rules">
@@ -359,5 +360,28 @@ function Ladder() {
         </ol>
       </div>
     </section>
+  );
+}
+
+/** Pocket vs bank, from the Economist promo: bank your cash, then see what getting busted costs. */
+function PocketBank() {
+  const [pocket, setPocket] = useState(18400);
+  const [bank, setBank] = useState(6200);
+  const [busted, setBusted] = useState(false);
+  const fmt = (n: number) => `$${n.toLocaleString("en-US")}`;
+  return (
+    <div className="ec-pb" aria-label="Pocket cash versus bank, a quick demo">
+      <div className={`ec-pb-acct is-pocket${busted ? " is-busted" : ""}`}>
+        <span className="ec-pb-k">👖 Pocket cash · can be lost</span><b>{fmt(pocket)}</b>
+        {busted && <span className="ec-pb-stamp">Busted</span>}
+      </div>
+      <div className="ec-pb-acct is-bank"><span className="ec-pb-k">🏦 BuckMe bank · safe</span><b>{fmt(bank)}</b></div>
+      <div className="ec-pb-btns">
+        <button className="btn btn-hot" disabled={!pocket} onClick={() => { setBank(bank + pocket); setPocket(0); setBusted(false); }}>Bank it at an ATM</button>
+        <button className="ec-pb-bust" onClick={() => { setBusted(true); setPocket(0); }}>Get busted</button>
+        <button className="ec-pb-reset" onClick={() => { setPocket(18400); setBank(6200); setBusted(false); }}>↺ Reset</button>
+      </div>
+      <p className="ec-pb-note">{busted ? (bank > 6200 ? "Busted, but you'd banked it: nothing lost except a small BuckMe fee." : "Busted with cash in your pocket: all of it is gone.") : "Try it: get busted first, then reset and bank it first."}</p>
+    </div>
   );
 }
