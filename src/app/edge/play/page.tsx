@@ -6,6 +6,7 @@ import { CHAPTERS, WHO, type Mission } from "@/lib/missions";
 import { INTEL, MONEY_ROUTE } from "@/lib/missionIntel";
 import { type Fork } from "@/lib/choiceTree";
 import { img, shotFor } from "@/lib/briefingArt";
+import { EconPanel } from "./EconPanel";
 import {
   forksFor, loadAll, markTour, nextUp, perfectPick, picked, resetAll, saveBefore, savePerfect, savePicks,
   saveProg, saveReach, story, tourSeen, type Picks, type Progress,
@@ -31,6 +32,10 @@ export default function PerfectPlay() {
   const [reach, setReach] = useState(0);
   const [picks, setPicks] = useState<Picks>({});
   const [perfect, setPerfect] = useState(false);
+  // The Economist side panel: off unless the player opens it; remembered on this device.
+  const [econ, setEcon] = useState(false);
+  useEffect(() => { try { setEcon(localStorage.getItem("lfl-pp-econ") === "1"); } catch {} }, []);
+  const toggleEcon = (on?: boolean) => setEcon((v) => { const n = on ?? !v; try { localStorage.setItem("lfl-pp-econ", n ? "1" : "0"); } catch {} return n; });
   const [saves, setSaves] = useState<number[]>([]);
   const [sheet, setSheet] = useState<null | { kind: "chapter"; ch: number } | { kind: "ask"; m: Mission; ch: number } | { kind: "menu" } | { kind: "reset" }>(null);
   const [steps, setSteps] = useState(false);
@@ -94,12 +99,14 @@ export default function PerfectPlay() {
   const upNext = now ? storyN.slice(pos, pos + 3) : [];
   const route = MONEY_ROUTE[reach];
 
+  const econCh = now?.ch ?? reach;
   return (
-    <Frame>
+    <Frame split={econ} side={econ ? <EconPanel ch={econCh} missionName={now?.m.name} missionCash={intel?.cash} onClose={() => toggleEcon(false)} /> : null}>
       <header className="pp-top">
         <Link href="/edge/briefing" className="pp-icon" aria-label="Back to the full briefing">←</Link>
         <p className="pp-brand"><img src="/brand/live-from-leonida-avatar-180.png" alt="" /> Perfect Play</p>
         <button className={`pp-star${perfect ? " is-on" : ""}`} onClick={() => { setPerfect(!perfect); savePerfect(!perfect); }} aria-pressed={perfect} title="Show the perfect-play picks">★</button>
+        <button className={`pp-icon pp-econ-btn${econ ? " is-on" : ""}`} onClick={() => toggleEcon()} aria-pressed={econ} title={econ ? "Hide the Economist" : "Show the Economist beside your missions"} aria-label="Economist">💰</button>
         <button className="pp-icon" onClick={() => setSheet({ kind: "menu" })} aria-label="Menu">⋯</button>
       </header>
 
@@ -186,10 +193,10 @@ export default function PerfectPlay() {
           </section>
         )}
 
-        {route && (
-          <Link href="/edge/economist" className="pp-money">
-            <span aria-hidden>💰</span><span><b>{route.headline}</b><small>Best money right now · open the Economist</small></span><i aria-hidden>→</i>
-          </Link>
+        {route && !econ && (
+          <button type="button" onClick={() => toggleEcon(true)} className="pp-money">
+            <span aria-hidden>💰</span><span><b>{route.headline}</b><small>Best money right now · open the Economist here</small></span><i aria-hidden>→</i>
+          </button>
         )}
       </main>
 
@@ -297,9 +304,11 @@ function Row({ m, on, onToggle }: { m: Mission; on: boolean; onToggle: (m: Missi
   );
 }
 
-function Frame({ children }: { children: React.ReactNode }) {
+function Frame({ children, split, side }: { children: React.ReactNode; split?: boolean; side?: React.ReactNode }) {
   useEffect(() => { const o = document.body.style.overflow; document.body.style.overflow = "hidden"; return () => { document.body.style.overflow = o; }; }, []);
-  return <div className="pp-wrap"><div className="pp-app">{children}</div></div>;
+  if (!split) return <div className="pp-wrap"><div className="pp-app">{children}</div></div>;
+  // Split: missions on one side, the Economist on the other (stacked top/bottom on phones).
+  return <div className="pp-wrap"><div className="pp-split"><div className="pp-app">{children}</div>{side}</div></div>;
 }
 function Splash() {
   return (
