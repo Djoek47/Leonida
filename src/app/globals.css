@@ -3270,7 +3270,9 @@ a.mk-card:hover, a.mk-card:focus-visible { transform: translateY(-4px); border-c
 .mk-stage img { width: 100%; height: 100%; object-fit: cover; }
 .mk-stage-mark { position: absolute; right: 4%; top: 6%; width: 20%; color: #ffd87a; opacity: .5; filter: drop-shadow(0 2px 10px #000); }
 .mk-stage-lock { position: absolute; left: 50%; bottom: 1rem; transform: translateX(-50%); padding: .5rem 1rem; border-radius: 999px; background: rgba(10,5,16,.8); border: 1.5px solid rgba(255,255,255,.3); font-weight: 900; font-size: .85rem; white-space: nowrap; backdrop-filter: blur(4px); }
-.mk-stage-n { position: absolute; top: .8rem; left: .8rem; font-size: .7rem; font-weight: 800; padding: .2rem .5rem; border-radius: 6px; background: rgba(0,0,0,.55); }
+/* Bottom-right: the top-left corner of every screenshot carries the burned-in seal + gamertag badge. */
+.mk-stage-n { position: absolute; bottom: .8rem; right: .8rem; font-size: .7rem; font-weight: 800; padding: .2rem .5rem; border-radius: 6px; background: rgba(0,0,0,.62); color: #fff; }
+@media (max-width: 560px) { .mk-stage-n { bottom: 3.6rem; } }
 .mk-thumbs { display: grid; grid-template-columns: repeat(5, 1fr); gap: .45rem; margin-top: .55rem; }
 .mk-thumbs button { aspect-ratio: 16 / 9; overflow: hidden; border-radius: 10px; border: 2px solid transparent; opacity: .6; transition: opacity .15s, border-color .15s; }
 .mk-thumbs button.is-on, .mk-thumbs button:hover { opacity: 1; border-color: var(--tone); }
@@ -3327,7 +3329,7 @@ a.mk-card:hover, a.mk-card:focus-visible { transform: translateY(-4px); border-c
 .mk-stepper { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: .4rem; }
 .mk-stepper button { display: flex; align-items: center; gap: .5rem; width: 100%; padding: .6rem .8rem; border-radius: 12px; font-weight: 900; font-size: .88rem; background: rgba(255,255,255,.05); border: 1.5px solid rgba(255,255,255,.14); }
 .mk-stepper button span { width: 24px; height: 24px; flex: none; border-radius: 50%; display: grid; place-items: center; font-size: .76rem; background: rgba(255,255,255,.15); }
-.mk-stepper button.is-on { border-color: #ff3d8b; background: rgba(255,61,139,.15); } .mk-stepper button.is-on span { background: #ff3d8b; }
+.mk-stepper button.is-on { border-color: #ff3d8b; background: rgba(255,61,139,.15); } .mk-stepper button.is-on span { background: #d81b6a; color: #fff; }
 .mk-stepper button.is-done span { background: #2ef2d0; color: #06201b; }
 @media (max-width: 600px) { .mk-stepper button { font-size: 0; justify-content: center; } .mk-stepper button span { font-size: .76rem; } }
 .mk-sell { display: grid; grid-template-columns: minmax(0, 1.5fr) minmax(260px, .9fr); gap: 1.6rem; align-items: start; }
@@ -3787,10 +3789,21 @@ a.mk-card:hover, a.mk-card:focus-visible { transform: translateY(-4px); border-c
 :root[data-theme="day"] .mk-thread-note { color: rgba(28,20,12,0.62); }
 :root[data-theme="day"] .mk-inbox > li > button { background: rgba(255,255,255,0.70); }
 :root[data-theme="day"] .mk-inbox small { color: rgba(28,20,12,0.62); }
+/* Sell / edit listing form in day mode: the fields were white text on near-white. */
+:root[data-theme="day"] .mk-field input, :root[data-theme="day"] .mk-field textarea, :root[data-theme="day"] .mk-beat-in input {
+  background: rgba(255,255,255,0.86); border-color: rgba(28,20,12,0.24); color: rgb(28,20,12); caret-color: #c2185b; }
+:root[data-theme="day"] .mk-field input::placeholder, :root[data-theme="day"] .mk-field textarea::placeholder, :root[data-theme="day"] .mk-beat-in input::placeholder { color: rgba(28,20,12,0.45); }
+:root[data-theme="day"] .mk-field input:focus, :root[data-theme="day"] .mk-field textarea:focus, :root[data-theme="day"] .mk-beat-in input:focus { border-color: #00796b; background: #fff; }
+:root[data-theme="day"] .mk-imgs { color: #00796b; }
+:root[data-theme="day"] .mk-beat-in b { color: #c2185b; }
+:root[data-theme="day"] .mk-pricer-marks span { color: rgba(28,20,12,0.62); }
 :root[data-theme="day"] .mk-trust { color: rgba(28,20,12,0.75); }
 :root[data-theme="day"] .mk-trust b { color: #00796b; }
 :root[data-theme="day"] .mk-stepper button { background: rgba(255,255,255,0.70); border: 1.5px solid rgba(28,20,12,0.19); }
 :root[data-theme="day"] .mk-stepper button span { background: rgba(255,255,255,0.90); }
+:root[data-theme="day"] .mk-stepper button.is-on { border-color: #c2185b; background: rgba(194,24,91,0.10); }
+:root[data-theme="day"] .mk-stepper button.is-on span { background: #c2185b; color: #fff; }
+:root[data-theme="day"] .mk-stepper button.is-done span { background: #00796b; color: #fff; }
 :root[data-theme="day"] .mk-panel { background: rgba(255,255,255,0.68); border: 1.5px solid rgba(28,20,12,0.17); }
 :root[data-theme="day"] .mk-drop { border: 2px dashed rgba(28,20,12,0.33); }
 :root[data-theme="day"] .mk-drop:hover { border-color: #00796b; }
